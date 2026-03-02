@@ -149,6 +149,9 @@ export default function Leaders() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" onClick={() => navigate(`/leaders/edit/${l.id}?tab=voters`)} title="Cadastrar eleitor">
+                          <Plus className="h-4 w-4" />
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => navigate(`/leaders/edit/${l.id}`)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
