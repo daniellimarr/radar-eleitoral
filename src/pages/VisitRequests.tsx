@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -10,57 +10,224 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, Clock } from "lucide-react";
+import { format, isSameDay, startOfDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+const TIME_SLOTS = [
+  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
+  "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
+  "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+  "17:00", "17:30", "18:00", "18:30", "19:00", "19:30",
+  "20:00",
+];
 
 export default function VisitRequests() {
   const { tenantId, user } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedTime, setSelectedTime] = useState<string>("");
   const [form, setForm] = useState({
-    title: "", description: "", requested_date: "", location: "",
+    title: "", description: "", location: "",
     chairs_needed: "0", needs_political_material: false, needs_banners: false,
     needs_sound: false, material_observations: "",
   });
   const [loading, setLoading] = useState(false);
 
-  const fetch = async () => {
+  const fetchRequests = async () => {
     if (!tenantId) return;
-    const { data } = await supabase.from("visit_requests").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
+    const { data } = await supabase
+      .from("visit_requests")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false });
     setRequests(data || []);
   };
 
-  useEffect(() => { fetch(); }, [tenantId]);
+  useEffect(() => { fetchRequests(); }, [tenantId]);
+
+  // Build a map of booked times per date
+  const bookedMap = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    requests.forEach((r) => {
+      if (!r.requested_date || r.status === "rejeitado" || r.status === "cancelado") return;
+      const d = new Date(r.requested_date);
+      const dateKey = format(d, "yyyy-MM-dd");
+      if (!map.has(dateKey)) map.set(dateKey, new Set());
+      map.get(dateKey)!.add(format(d, "HH:mm"));
+    });
+    return map;
+  }, [requests]);
+
+  // Dates that have ALL slots booked
+  const fullyBookedDates = useMemo(() => {
+    const dates: Date[] = [];
+    bookedMap.forEach((times, dateKey) => {
+      if (times.size >= TIME_SLOTS.length) {
+        dates.push(new Date(dateKey + "T00:00:00"));
+      }
+    });
+    return dates;
+  }, [bookedMap]);
+
+  // Dates that have at least one booking (partially booked)
+  const partiallyBookedDates = useMemo(() => {
+    const dates: Date[] = [];
+    bookedMap.forEach((times, dateKey) => {
+      if (times.size > 0 && times.size < TIME_SLOTS.length) {
+        dates.push(new Date(dateKey + "T00:00:00"));
+      }
+    });
+    return dates;
+  }, [bookedMap]);
+
+  // Get booked times for the selected date
+  const bookedTimesForSelected = useMemo(() => {
+    if (!selectedDate) return new Set<string>();
+    const dateKey = format(selectedDate, "yyyy-MM-dd");
+    return bookedMap.get(dateKey) || new Set<string>();
+  }, [selectedDate, bookedMap]);
 
   const handleSave = async () => {
     if (!tenantId || !form.title) { toast.error("Título é obrigatório"); return; }
+    if (!selectedDate) { toast.error("Selecione uma data"); return; }
+    if (!selectedTime) { toast.error("Selecione um horário"); return; }
+
+    // Build the datetime
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const requestedDate = `${dateStr}T${selectedTime}:00`;
+
+    // Double-check not already booked
+    if (bookedTimesForSelected.has(selectedTime)) {
+      toast.error("Este horário já está reservado!");
+      return;
+    }
+
     setLoading(true);
-    await supabase.from("visit_requests").insert({
-      ...form, tenant_id: tenantId, requested_by: user?.id,
+    const { error } = await supabase.from("visit_requests").insert({
+      title: form.title,
+      description: form.description || null,
+      location: form.location || null,
       chairs_needed: parseInt(form.chairs_needed) || 0,
-      requested_date: form.requested_date || null,
+      needs_political_material: form.needs_political_material,
+      needs_banners: form.needs_banners,
+      needs_sound: form.needs_sound,
+      material_observations: form.material_observations || null,
+      tenant_id: tenantId,
+      requested_by: user?.id,
+      requested_date: requestedDate,
     });
-    toast.success("Solicitação enviada!");
-    setLoading(false); setIsOpen(false);
-    setForm({ title: "", description: "", requested_date: "", location: "", chairs_needed: "0", needs_political_material: false, needs_banners: false, needs_sound: false, material_observations: "" });
-    fetch();
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Solicitação enviada!");
+      setIsOpen(false);
+      setSelectedDate(undefined);
+      setSelectedTime("");
+      setForm({ title: "", description: "", location: "", chairs_needed: "0", needs_political_material: false, needs_banners: false, needs_sound: false, material_observations: "" });
+      fetchRequests();
+    }
+    setLoading(false);
+  };
+
+  const isDateDisabled = (date: Date) => {
+    // Disable past dates
+    if (startOfDay(date) < startOfDay(new Date())) return true;
+    // Disable fully booked dates
+    return fullyBookedDates.some((d) => isSameDay(d, date));
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Solicitações de Visita / Reunião</h1>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) { setSelectedDate(undefined); setSelectedTime(""); } }}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nova Solicitação</Button></DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Solicitar Visita / Reunião</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2"><Label>Título *</Label><Input value={form.title} onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))} /></div>
               <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Data/Hora</Label><Input type="datetime-local" value={form.requested_date} onChange={(e) => setForm(p => ({ ...p, requested_date: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>Local</Label><Input value={form.location} onChange={(e) => setForm(p => ({ ...p, location: e.target.value }))} /></div>
+
+              {/* Calendar + Time Slot Picker */}
+              <div className="space-y-2">
+                <Label>Data e Horário *</Label>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="border rounded-lg p-1">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => { setSelectedDate(date); setSelectedTime(""); }}
+                      disabled={isDateDisabled}
+                      locale={ptBR}
+                      className="pointer-events-auto"
+                      modifiers={{
+                        booked: partiallyBookedDates,
+                      }}
+                      modifiersClassNames={{
+                        booked: "!bg-amber-100 !text-amber-800 dark:!bg-amber-900/30 dark:!text-amber-300",
+                      }}
+                    />
+                    <div className="flex items-center gap-4 px-3 pb-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <span className="h-3 w-3 rounded-sm bg-primary" /> Disponível
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="h-3 w-3 rounded-sm bg-amber-300 dark:bg-amber-700" /> Parcial
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="h-3 w-3 rounded-sm bg-muted opacity-50" /> Indisponível
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Time slots */}
+                  <div className="flex-1 min-w-0">
+                    {selectedDate ? (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          Horários para {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+                        </p>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 max-h-[280px] overflow-y-auto">
+                          {TIME_SLOTS.map((time) => {
+                            const isBooked = bookedTimesForSelected.has(time);
+                            const isSelected = selectedTime === time;
+                            return (
+                              <Button
+                                key={time}
+                                type="button"
+                                variant={isSelected ? "default" : "outline"}
+                                size="sm"
+                                disabled={isBooked}
+                                onClick={() => setSelectedTime(time)}
+                                className={cn(
+                                  "text-xs",
+                                  isBooked && "opacity-40 line-through cursor-not-allowed",
+                                  isSelected && "ring-2 ring-primary"
+                                )}
+                              >
+                                {time}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-sm text-muted-foreground p-4">
+                        Selecione uma data no calendário
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
+
+              <div className="space-y-2"><Label>Local</Label><Input value={form.location} onChange={(e) => setForm(p => ({ ...p, location: e.target.value }))} /></div>
               <div className="space-y-2"><Label>Total de cadeiras necessárias</Label><Input type="number" value={form.chairs_needed} onChange={(e) => setForm(p => ({ ...p, chairs_needed: e.target.value }))} /></div>
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Necessidades</Label>
@@ -80,7 +247,7 @@ export default function VisitRequests() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Título</TableHead><TableHead>Data</TableHead><TableHead>Local</TableHead><TableHead>Cadeiras</TableHead><TableHead>Status</TableHead>
+                <TableHead>Título</TableHead><TableHead>Data</TableHead><TableHead>Horário</TableHead><TableHead>Local</TableHead><TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -89,9 +256,9 @@ export default function VisitRequests() {
               ) : requests.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.title}</TableCell>
-                  <TableCell>{r.requested_date ? new Date(r.requested_date).toLocaleDateString("pt-BR") : "-"}</TableCell>
+                  <TableCell>{r.requested_date ? format(new Date(r.requested_date), "dd/MM/yyyy", { locale: ptBR }) : "-"}</TableCell>
+                  <TableCell>{r.requested_date ? format(new Date(r.requested_date), "HH:mm") : "-"}</TableCell>
                   <TableCell>{r.location || "-"}</TableCell>
-                  <TableCell>{r.chairs_needed}</TableCell>
                   <TableCell>
                     <Badge variant={r.status === "aprovado" ? "default" : r.status === "rejeitado" ? "destructive" : "secondary"}>
                       {r.status}
