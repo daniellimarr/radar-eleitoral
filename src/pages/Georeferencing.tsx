@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, Component, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -6,37 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Users, MapPin, Search, RefreshCw } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 
-// Error boundary to prevent white screen
-class MapErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
-  constructor(props: { children: ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  componentDidCatch(error: Error) {
-    console.error("Map error:", error);
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex flex-col items-center justify-center h-full gap-4">
-          <p className="text-muted-foreground">Erro ao renderizar o mapa.</p>
-          <Button variant="outline" onClick={() => this.setState({ hasError: false })}>
-            <RefreshCw className="h-4 w-4 mr-2" /> Tentar novamente
-          </Button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 // Fix default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -336,53 +308,50 @@ export default function Georeferencing() {
           </p>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center z-[500] bg-background/80">
             <p className="text-muted-foreground">Carregando mapa...</p>
           </div>
-        ) : (
-          <MapErrorBoundary>
-            <MapContainer
-              center={[-15.78, -47.93]}
-              zoom={5}
-              className="h-full w-full"
-              style={{ zIndex: 1 }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {geoContacts.length > 0 && <FitBounds contacts={geoContacts} />}
-
-              {geoLeaders.map((leader) => {
-                const voters = filteredContacts.filter((c) => c.leader_id === leader.id);
-                return (
-                  <Marker
-                    key={leader.id}
-                    position={[leader.latitude!, leader.longitude!]}
-                    icon={voters.length > 0 ? clusterIcon(voters.length, "#2563eb") : leaderIcon}
-                  >
-                    <Popup maxWidth={350} minWidth={280}>
-                      <LeaderPopupContent leader={leader} voters={voters} />
-                    </Popup>
-                  </Marker>
-                );
-              })}
-
-              {geoVoters.map((voter) => (
-                <Marker
-                  key={voter.id}
-                  position={[voter.latitude!, voter.longitude!]}
-                  icon={voterIcon}
-                >
-                  <Popup maxWidth={300}>
-                    <VoterPopupContent voter={voter} />
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          </MapErrorBoundary>
         )}
+        <MapContainer
+          center={[-15.78, -47.93]}
+          zoom={5}
+          className="h-full w-full"
+          style={{ zIndex: 1 }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {!loading && geoContacts.length > 0 && <FitBounds contacts={geoContacts} />}
+
+          {!loading && geoLeaders.map((leader) => {
+            const voters = filteredContacts.filter((c) => c.leader_id === leader.id);
+            return (
+              <Marker
+                key={leader.id}
+                position={[leader.latitude!, leader.longitude!]}
+                icon={voters.length > 0 ? clusterIcon(voters.length, "#2563eb") : leaderIcon}
+              >
+                <Popup maxWidth={350} minWidth={280}>
+                  <LeaderPopupContent leader={leader} voters={voters} />
+                </Popup>
+              </Marker>
+            );
+          })}
+
+          {!loading && geoVoters.map((voter) => (
+            <Marker
+              key={voter.id}
+              position={[voter.latitude!, voter.longitude!]}
+              icon={voterIcon}
+            >
+              <Popup maxWidth={300}>
+                <VoterPopupContent voter={voter} />
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
       </div>
     </div>
   );
