@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trophy, Plus } from "lucide-react";
 
 export default function Leaders() {
   const { tenantId } = useAuth();
+  const navigate = useNavigate();
   const [leaders, setLeaders] = useState<any[]>([]);
 
   useEffect(() => {
@@ -27,7 +30,12 @@ export default function Leaders() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Ranking de Lideranças</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Ranking de Lideranças</h1>
+        <Button onClick={() => navigate("/leaders/new")} className="gap-2">
+          <Plus className="h-4 w-4" /> Nova Liderança
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
