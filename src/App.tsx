@@ -17,6 +17,7 @@ import Materials from "@/pages/Materials";
 import VisitRequests from "@/pages/VisitRequests";
 import RegistrationLinks from "@/pages/RegistrationLinks";
 import PublicRegistration from "@/pages/PublicRegistration";
+import Georeferencing from "@/pages/Georeferencing";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
             <Route path="/visit-requests" element={<ProtectedRoute><VisitRequests /></ProtectedRoute>} />
             <Route path="/registration-links" element={<ProtectedRoute><RegistrationLinks /></ProtectedRoute>} />
+            <Route path="/map" element={<ProtectedRoute><Georeferencing /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
