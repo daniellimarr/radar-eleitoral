@@ -11,6 +11,7 @@ import Contacts from "@/pages/Contacts";
 import Demands from "@/pages/Demands";
 import Appointments from "@/pages/Appointments";
 import Leaders from "@/pages/Leaders";
+import LeaderRegistration from "@/pages/LeaderRegistration";
 import Vehicles from "@/pages/Vehicles";
 import Materials from "@/pages/Materials";
 import VisitRequests from "@/pages/VisitRequests";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/demands" element={<ProtectedRoute><Demands /></ProtectedRoute>} />
             <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
             <Route path="/leaders" element={<ProtectedRoute><Leaders /></ProtectedRoute>} />
+            <Route path="/leaders/new" element={<ProtectedRoute><LeaderRegistration /></ProtectedRoute>} />
             <Route path="/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
             <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
             <Route path="/visit-requests" element={<ProtectedRoute><VisitRequests /></ProtectedRoute>} />
