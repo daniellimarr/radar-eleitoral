@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Search, Download, Trash2, Edit } from "lucide-react";
+import { Plus, Search, Download, Trash2, Edit, Loader2 } from "lucide-react";
+import { geocodeByCep } from "@/lib/geocoding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const engagementOptions = [
@@ -48,6 +49,25 @@ export default function Contacts() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showAddress, setShowAddress] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geoCoords, setGeoCoords] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
+
+  const handleCepBlur = async () => {
+    if (!form.cep || form.cep.replace(/\D/g, "").length !== 8) return;
+    setGeocoding(true);
+    const result = await geocodeByCep(form.cep);
+    if (result) {
+      setForm((prev) => ({
+        ...prev,
+        address: result.address || prev.address,
+        neighborhood: result.neighborhood || prev.neighborhood,
+        city: result.city || prev.city,
+        state: result.state || prev.state,
+      }));
+      setGeoCoords({ latitude: result.latitude || null, longitude: result.longitude || null });
+    }
+    setGeocoding(false);
+  };
 
   const fetchLeaders = async () => {
     if (!tenantId) return;
@@ -117,6 +137,8 @@ export default function Contacts() {
       leader_id: form.leader_id || null,
       tenant_id: tenantId,
       registered_by: user?.id,
+      latitude: geoCoords.latitude,
+      longitude: geoCoords.longitude,
     };
 
     if (editingId) {
@@ -292,8 +314,8 @@ export default function Contacts() {
               <TabsContent value="endereco" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <Label>CEP</Label>
-                    <Input value={form.cep} onChange={(e) => updateField("cep", e.target.value)} />
+                    <Label>CEP {geocoding && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}</Label>
+                    <Input value={form.cep} onChange={(e) => updateField("cep", e.target.value)} onBlur={handleCepBlur} placeholder="00000-000" />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label>Logradouro</Label>

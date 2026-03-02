@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, UserPlus, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Save, UserPlus, Trash2, Users, Loader2 } from "lucide-react";
+import { geocodeByCep } from "@/lib/geocoding";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -44,6 +45,25 @@ export default function LeaderRegistration() {
   const [voterForm, setVoterForm] = useState({
     name: "", phone: "", neighborhood: "", voting_zone: "", voting_section: "",
   });
+  const [geocoding, setGeocoding] = useState(false);
+  const [geoCoords, setGeoCoords] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
+
+  const handleCepBlur = async () => {
+    if (!form.cep || form.cep.replace(/\D/g, "").length !== 8) return;
+    setGeocoding(true);
+    const result = await geocodeByCep(form.cep);
+    if (result) {
+      setForm((prev) => ({
+        ...prev,
+        address: result.address || prev.address,
+        neighborhood: result.neighborhood || prev.neighborhood,
+        city: result.city || prev.city,
+        state: result.state || prev.state,
+      }));
+      setGeoCoords({ latitude: result.latitude || null, longitude: result.longitude || null });
+    }
+    setGeocoding(false);
+  };
 
   const [form, setForm] = useState({
     name: "",
@@ -170,6 +190,8 @@ export default function LeaderRegistration() {
         subcategory: form.subcategory || null,
         engagement: form.engagement as any,
         observations: form.observations || null,
+        latitude: geoCoords.latitude,
+        longitude: geoCoords.longitude,
       };
 
       if (isEditing) {
@@ -181,9 +203,9 @@ export default function LeaderRegistration() {
         if (error) throw error;
         toast({ title: "Liderança atualizada com sucesso!" });
       } else {
-        const { data: contact, error: contactError } = await supabase
-          .from("contacts")
-          .insert({ ...contactData, tenant_id: tenantId, is_leader: true })
+          const { data: contact, error: contactError } = await supabase
+            .from("contacts")
+            .insert({ ...contactData, tenant_id: tenantId, is_leader: true, latitude: geoCoords.latitude, longitude: geoCoords.longitude })
           .select("id")
           .single();
         if (contactError) throw contactError;
@@ -327,8 +349,8 @@ export default function LeaderRegistration() {
             <CardHeader><CardTitle>Endereço</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>CEP</Label>
-                <Input value={form.cep} onChange={(e) => update("cep", e.target.value)} />
+                <Label>CEP {geocoding && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}</Label>
+                <Input value={form.cep} onChange={(e) => update("cep", e.target.value)} onBlur={handleCepBlur} placeholder="00000-000" />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Endereço</Label>

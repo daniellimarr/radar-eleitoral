@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Cloud, CheckCircle } from "lucide-react";
+import { Cloud, CheckCircle, Loader2 } from "lucide-react";
+import { geocodeByCep } from "@/lib/geocoding";
 
 const engagementOptions = [
   { value: "nao_trabalhado", label: "Não trabalhado" },
@@ -36,6 +37,8 @@ export default function PublicRegistration() {
   const [saving, setSaving] = useState(false);
   const [leaderContactId, setLeaderContactId] = useState<string | null>(null);
   const [leaderName, setLeaderName] = useState("");
+  const [geocoding, setGeocoding] = useState(false);
+  const [geoCoords, setGeoCoords] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
 
   const [form, setForm] = useState({
     name: "", nickname: "", cpf: "", gender: "", birth_date: "",
@@ -48,6 +51,23 @@ export default function PublicRegistration() {
   });
 
   const update = (field: string, value: any) => setForm((p) => ({ ...p, [field]: value }));
+
+  const handleCepBlur = async () => {
+    if (!form.cep || form.cep.replace(/\D/g, "").length !== 8) return;
+    setGeocoding(true);
+    const result = await geocodeByCep(form.cep);
+    if (result) {
+      setForm((prev) => ({
+        ...prev,
+        address: result.address || prev.address,
+        neighborhood: result.neighborhood || prev.neighborhood,
+        city: result.city || prev.city,
+        state: result.state || prev.state,
+      }));
+      setGeoCoords({ latitude: result.latitude || null, longitude: result.longitude || null });
+    }
+    setGeocoding(false);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -103,6 +123,8 @@ export default function PublicRegistration() {
       tenant_id: tenantId,
       leader_id: leaderContactId,
       is_leader: false,
+      latitude: geoCoords.latitude,
+      longitude: geoCoords.longitude,
     });
     if (error) toast.error(error.message);
     else setSubmitted(true);
@@ -213,8 +235,8 @@ export default function PublicRegistration() {
               <TabsContent value="endereco" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <Label>CEP</Label>
-                    <Input value={form.cep} onChange={(e) => update("cep", e.target.value)} />
+                    <Label>CEP {geocoding && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}</Label>
+                    <Input value={form.cep} onChange={(e) => update("cep", e.target.value)} onBlur={handleCepBlur} placeholder="00000-000" />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label>Logradouro</Label>
