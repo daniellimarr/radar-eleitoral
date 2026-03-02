@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
@@ -338,6 +338,21 @@ export default function Georeferencing() {
                 </Popup>
               </Marker>
             );
+          })}
+
+          {/* Network lines from leaders to their voters */}
+          {!loading && geoLeaders.map((leader) => {
+            const linkedVoters = geoVoters.filter((v) => v.leader_id === leader.id);
+            return linkedVoters.map((voter) => (
+              <Polyline
+                key={`line-${leader.id}-${voter.id}`}
+                positions={[
+                  [leader.latitude!, leader.longitude!],
+                  [voter.latitude!, voter.longitude!],
+                ]}
+                pathOptions={{ color: "#2563eb", weight: 2, opacity: 0.5, dashArray: "6 4" }}
+              />
+            ));
           })}
 
           {!loading && geoVoters.map((voter) => (
