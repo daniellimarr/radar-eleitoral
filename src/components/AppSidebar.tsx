@@ -1,0 +1,187 @@
+import {
+  Home, Users, FileText, Calendar, Car, Package, MapPin, Settings,
+  BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield
+} from "lucide-react";
+import { NavLink } from "@/components/NavLink";
+import { useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
+  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarFooter, useSidebar,
+} from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Cloud } from "lucide-react";
+
+const mainItems = [
+  { title: "Início", url: "/dashboard", icon: Home },
+  { title: "Cadastro de Contato", url: "/contacts", icon: Users },
+  { title: "Demandas", url: "/demands", icon: ClipboardList },
+  { title: "Agenda", url: "/appointments", icon: Calendar },
+  { title: "Lideranças", url: "/leaders", icon: BarChart3 },
+  { title: "Rel. de Contato", url: "/reports/contacts", icon: FileText },
+  { title: "Rel. de Atendimento", url: "/reports/demands", icon: FileText },
+  { title: "Mapa", url: "/map", icon: MapPin },
+];
+
+const coordinatorItems = [
+  { title: "Veículos", url: "/vehicles", icon: Car },
+  { title: "Material de Campanha", url: "/materials", icon: Package },
+  { title: "Solicitações de Visita", url: "/visit-requests", icon: MessageSquare },
+  { title: "Links de Cadastro", url: "/registration-links", icon: Link2 },
+];
+
+const adminItems = [
+  { title: "Gestão de Tenants", url: "/admin/tenants", icon: Shield },
+  { title: "Gestão de Planos", url: "/admin/plans", icon: Package },
+  { title: "Gestão de Usuários", url: "/admin/users", icon: Users },
+  { title: "Auditoria", url: "/admin/audit", icon: FileText },
+];
+
+const configItems = [
+  { title: "Configurações", url: "/settings", icon: Settings },
+];
+
+export function AppSidebar() {
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const location = useLocation();
+  const { profile, hasRole, signOut } = useAuth();
+
+  const isActive = (path: string) => location.pathname === path;
+  const isSuperAdmin = hasRole("super_admin");
+  const isCoordinator = hasRole("coordenador") || hasRole("admin_gabinete") || isSuperAdmin;
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarContent>
+        {/* Logo */}
+        <div className="p-4 flex items-center gap-2">
+          <Cloud className="h-8 w-8 text-primary shrink-0" />
+          {!collapsed && <span className="font-bold text-lg text-foreground">GABINETE ONLINE</span>}
+        </div>
+
+        {/* User Info */}
+        {!collapsed && (
+          <div className="px-4 pb-4 flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{profile?.full_name || "Usuário"}</p>
+              <p className="text-xs text-muted-foreground truncate">Online</p>
+            </div>
+          </div>
+        )}
+
+        {/* Main Menu */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Principal</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Coordinator Menu */}
+        {isCoordinator && (
+          <SidebarGroup>
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger className="w-full">
+                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer">
+                  Coordenador
+                  <ChevronDown className="h-4 w-4" />
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {coordinatorItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                          <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                            <item.icon className="h-4 w-4" />
+                            {!collapsed && <span>{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
+        )}
+
+        {/* Admin Menu */}
+        {isSuperAdmin && (
+          <SidebarGroup>
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger className="w-full">
+                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer">
+                  Administração
+                  <ChevronDown className="h-4 w-4" />
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {adminItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                          <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                            <item.icon className="h-4 w-4" />
+                            {!collapsed && <span>{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
+        )}
+
+        {/* Config */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {configItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <Button variant="ghost" className="w-full justify-start gap-2" onClick={signOut}>
+          <LogOut className="h-4 w-4" />
+          {!collapsed && "Sair"}
+        </Button>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
