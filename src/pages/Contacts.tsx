@@ -35,18 +35,33 @@ const defaultContact = {
   address_number: "", neighborhood: "", city: "", state: "SP",
   voting_zone: "", voting_section: "", voting_location: "",
   engagement: "nao_trabalhado" as const, is_leader: false, observations: "",
-  category: "", subcategory: "",
+  category: "", subcategory: "", leader_id: "",
 };
 
 export default function Contacts() {
   const { tenantId, user } = useAuth();
   const [contacts, setContacts] = useState<any[]>([]);
+  const [leaders, setLeaders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState(defaultContact);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showAddress, setShowAddress] = useState(false);
+
+  const fetchLeaders = async () => {
+    if (!tenantId) return;
+    const { data } = await supabase
+      .from("contacts")
+      .select("id, name, nickname")
+      .eq("tenant_id", tenantId)
+      .eq("is_leader", true)
+      .is("deleted_at", null)
+      .order("name");
+    setLeaders(data || []);
+  };
+
+  useEffect(() => { fetchLeaders(); }, [tenantId]);
 
   const fetchContacts = async () => {
     if (!tenantId) return;
@@ -99,6 +114,7 @@ export default function Contacts() {
       observations: form.observations || null,
       category: form.category || null,
       subcategory: form.subcategory || null,
+      leader_id: form.leader_id || null,
       tenant_id: tenantId,
       registered_by: user?.id,
     };
@@ -133,6 +149,7 @@ export default function Contacts() {
       engagement: contact.engagement || "nao_trabalhado",
       is_leader: contact.is_leader || false, observations: contact.observations || "",
       category: contact.category || "", subcategory: contact.subcategory || "",
+      leader_id: contact.leader_id || "",
     });
     setEditingId(contact.id);
     setIsOpen(true);
@@ -168,7 +185,7 @@ export default function Contacts() {
               </TabsList>
 
               <TabsContent value="dados" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
                     <Label>Nome *</Label>
                     <Input value={form.name} onChange={(e) => updateField("name", e.target.value)} required />
@@ -176,6 +193,18 @@ export default function Contacts() {
                   <div className="space-y-2">
                     <Label>Apelido</Label>
                     <Input value={form.nickname} onChange={(e) => updateField("nickname", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Liderança (Apelido)</Label>
+                    <Select value={form.leader_id} onValueChange={(v) => updateField("leader_id", v === "none" ? "" : v)}>
+                      <SelectTrigger><SelectValue placeholder="SELECIONE" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhuma</SelectItem>
+                        {leaders.map((l) => (
+                          <SelectItem key={l.id} value={l.id}>{l.nickname || l.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>CPF</Label>
