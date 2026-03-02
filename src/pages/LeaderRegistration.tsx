@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,12 +12,16 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LeaderRegistration() {
+  const { id } = useParams<{ id: string }>();
+  const isEditing = !!id;
   const { tenantId } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -43,6 +47,44 @@ export default function LeaderRegistration() {
     observations: "",
   });
 
+  useEffect(() => {
+    if (!id) return;
+    setLoadingData(true);
+    supabase
+      .from("contacts")
+      .select("*")
+      .eq("id", id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setForm({
+            name: data.name || "",
+            nickname: data.nickname || "",
+            cpf: data.cpf || "",
+            phone: data.phone || "",
+            email: data.email || "",
+            gender: data.gender || "",
+            birth_date: data.birth_date || "",
+            has_whatsapp: data.has_whatsapp || false,
+            cep: data.cep || "",
+            address: data.address || "",
+            address_number: data.address_number || "",
+            neighborhood: data.neighborhood || "",
+            city: data.city || "",
+            state: data.state || "SP",
+            voting_zone: data.voting_zone || "",
+            voting_section: data.voting_section || "",
+            voting_location: data.voting_location || "",
+            category: data.category || "",
+            subcategory: data.subcategory || "",
+            engagement: data.engagement || "nao_trabalhado",
+            observations: data.observations || "",
+          });
+        }
+        setLoadingData(false);
+      });
+  }, [id]);
+
   const update = (field: string, value: any) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleSave = async () => {
@@ -53,48 +95,53 @@ export default function LeaderRegistration() {
     }
     setSaving(true);
     try {
-      // Create contact as leader
-      const { data: contact, error: contactError } = await supabase
-        .from("contacts")
-        .insert({
-          name: form.name,
-          nickname: form.nickname || null,
-          cpf: form.cpf || null,
-          phone: form.phone || null,
-          email: form.email || null,
-          gender: form.gender || null,
-          birth_date: form.birth_date || null,
-          has_whatsapp: form.has_whatsapp,
-          cep: form.cep || null,
-          address: form.address || null,
-          address_number: form.address_number || null,
-          neighborhood: form.neighborhood || null,
-          city: form.city || null,
-          state: form.state || null,
-          voting_zone: form.voting_zone || null,
-          voting_section: form.voting_section || null,
-          voting_location: form.voting_location || null,
-          category: form.category || null,
-          subcategory: form.subcategory || null,
-          engagement: form.engagement as any,
-          observations: form.observations || null,
+      const contactData = {
+        name: form.name,
+        nickname: form.nickname || null,
+        cpf: form.cpf || null,
+        phone: form.phone || null,
+        email: form.email || null,
+        gender: form.gender || null,
+        birth_date: form.birth_date || null,
+        has_whatsapp: form.has_whatsapp,
+        cep: form.cep || null,
+        address: form.address || null,
+        address_number: form.address_number || null,
+        neighborhood: form.neighborhood || null,
+        city: form.city || null,
+        state: form.state || null,
+        voting_zone: form.voting_zone || null,
+        voting_section: form.voting_section || null,
+        voting_location: form.voting_location || null,
+        category: form.category || null,
+        subcategory: form.subcategory || null,
+        engagement: form.engagement as any,
+        observations: form.observations || null,
+      };
+
+      if (isEditing) {
+        const { error } = await supabase
+          .from("contacts")
+          .update(contactData)
+          .eq("id", id);
+        if (error) throw error;
+        toast({ title: "Liderança atualizada com sucesso!" });
+      } else {
+        const { data: contact, error: contactError } = await supabase
+          .from("contacts")
+          .insert({ ...contactData, tenant_id: tenantId, is_leader: true })
+          .select("id")
+          .single();
+        if (contactError) throw contactError;
+
+        const { error: leaderError } = await supabase.from("leaders").insert({
+          contact_id: contact.id,
           tenant_id: tenantId,
-          is_leader: true,
-        })
-        .select("id")
-        .single();
+        });
+        if (leaderError) throw leaderError;
+        toast({ title: "Liderança cadastrada com sucesso!" });
+      }
 
-      if (contactError) throw contactError;
-
-      // Create leader record
-      const { error: leaderError } = await supabase.from("leaders").insert({
-        contact_id: contact.id,
-        tenant_id: tenantId,
-      });
-
-      if (leaderError) throw leaderError;
-
-      toast({ title: "Liderança cadastrada com sucesso!" });
       navigate("/leaders");
     } catch (err: any) {
       toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
@@ -103,13 +150,22 @@ export default function LeaderRegistration() {
     }
   };
 
+  if (loadingData) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate("/leaders")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-2xl font-bold">Cadastrar Liderança</h1>
+        <h1 className="text-2xl font-bold">{isEditing ? "Editar Liderança" : "Cadastrar Liderança"}</h1>
       </div>
 
       <Tabs defaultValue="dados" className="space-y-4">
@@ -248,7 +304,7 @@ export default function LeaderRegistration() {
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving} className="gap-2">
           <Save className="h-4 w-4" />
-          {saving ? "Salvando..." : "Salvar Liderança"}
+          {saving ? "Salvando..." : isEditing ? "Atualizar Liderança" : "Salvar Liderança"}
         </Button>
       </div>
     </div>
