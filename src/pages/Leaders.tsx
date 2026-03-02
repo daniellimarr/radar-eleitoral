@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -131,8 +131,8 @@ export default function Leaders() {
                   </TableCell>
                 </TableRow>
               ) : leaders.map((l, i) => (
-                <>
-                  <TableRow key={l.id} className="cursor-pointer hover:bg-muted/50" onClick={() => toggleExpand(l.id)}>
+                <React.Fragment key={l.id}>
+                  <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => toggleExpand(l.id)}>
                     <TableCell className="w-10">
                       {expandedLeader === l.id ? (
                         <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -149,35 +149,37 @@ export default function Leaders() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/leaders/edit/${l.id}`)}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => navigate(`/leaders/edit/${l.id}`)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteTarget(l)}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(l)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                   {expandedLeader === l.id && (
-                    <TableRow key={`${l.id}-voters`}>
+                    <TableRow>
                       <TableCell colSpan={7} className="bg-muted/30 p-0">
                         <div className="px-6 py-4">
-                          <div className="flex items-center gap-2 mb-3">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-semibold text-muted-foreground">
-                              Eleitores de {l.name}
-                            </span>
-                            <Badge variant="outline" className="ml-1">
-                              {voters[l.id]?.length ?? "..."}
-                            </Badge>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm font-semibold text-muted-foreground">
+                                Eleitores de {l.name}
+                              </span>
+                              <Badge variant="outline" className="ml-1">
+                                {voters[l.id]?.length ?? "..."}
+                              </Badge>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1"
+                              onClick={(e) => { e.stopPropagation(); navigate(`/leaders/edit/${l.id}?tab=voters`); }}
+                            >
+                              <Plus className="h-3 w-3" /> Novo Eleitor
+                            </Button>
                           </div>
                           {loadingVoters === l.id ? (
                             <p className="text-sm text-muted-foreground">Carregando...</p>
@@ -211,7 +213,7 @@ export default function Leaders() {
                       </TableCell>
                     </TableRow>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </TableBody>
           </Table>
