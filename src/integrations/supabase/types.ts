@@ -182,7 +182,9 @@ export type Database = {
           has_whatsapp: boolean | null
           id: string
           is_leader: boolean | null
+          latitude: number | null
           leader_id: string | null
+          longitude: number | null
           name: string
           neighborhood: string | null
           nickname: string | null
@@ -214,7 +216,9 @@ export type Database = {
           has_whatsapp?: boolean | null
           id?: string
           is_leader?: boolean | null
+          latitude?: number | null
           leader_id?: string | null
+          longitude?: number | null
           name: string
           neighborhood?: string | null
           nickname?: string | null
@@ -246,7 +250,9 @@ export type Database = {
           has_whatsapp?: boolean | null
           id?: string
           is_leader?: boolean | null
+          latitude?: number | null
           leader_id?: string | null
+          longitude?: number | null
           name?: string
           neighborhood?: string | null
           nickname?: string | null
