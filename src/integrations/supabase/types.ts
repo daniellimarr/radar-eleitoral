@@ -464,6 +464,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_active: boolean | null
+          leader_contact_id: string | null
           slug: string
           tenant_id: string
         }
@@ -473,6 +474,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
+          leader_contact_id?: string | null
           slug: string
           tenant_id: string
         }
@@ -482,10 +484,18 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
+          leader_contact_id?: string | null
           slug?: string
           tenant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "registration_links_leader_contact_id_fkey"
+            columns: ["leader_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "registration_links_tenant_id_fkey"
             columns: ["tenant_id"]
