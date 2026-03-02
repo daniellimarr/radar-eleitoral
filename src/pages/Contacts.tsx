@@ -69,18 +69,38 @@ export default function Contacts() {
   useEffect(() => { fetchContacts(); }, [tenantId, search]);
 
   const handleSave = async () => {
-    if (!tenantId || !form.name) {
+    const trimmedName = form.name?.trim();
+    if (!tenantId || !trimmedName) {
       toast.error("Nome é obrigatório");
       return;
     }
     setLoading(true);
 
     const payload = {
-      ...form,
+      name: trimmedName,
+      nickname: form.nickname || null,
+      cpf: form.cpf || null,
+      gender: form.gender || null,
+      birth_date: form.birth_date || null,
+      phone: form.phone || null,
+      has_whatsapp: form.has_whatsapp,
+      email: form.email || null,
+      cep: form.cep || null,
+      address: form.address || null,
+      address_number: form.address_number || null,
+      neighborhood: form.neighborhood || null,
+      city: form.city || null,
+      state: form.state || null,
+      voting_zone: form.voting_zone || null,
+      voting_section: form.voting_section || null,
+      voting_location: form.voting_location || null,
+      engagement: form.engagement as "nao_trabalhado" | "em_prospeccao" | "conquistado" | "criando_envolvimento" | "falta_trabalhar" | "envolvimento_perdido",
+      is_leader: form.is_leader,
+      observations: form.observations || null,
+      category: form.category || null,
+      subcategory: form.subcategory || null,
       tenant_id: tenantId,
       registered_by: user?.id,
-      birth_date: form.birth_date || null,
-      engagement: form.engagement as "nao_trabalhado" | "em_prospeccao" | "conquistado" | "criando_envolvimento" | "falta_trabalhar" | "envolvimento_perdido",
     };
 
     if (editingId) {
