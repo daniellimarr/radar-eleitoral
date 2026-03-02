@@ -1,14 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface ViaCepResponse {
-  cep: string;
-  logradouro: string;
-  complemento: string;
-  bairro: string;
-  localidade: string;
-  uf: string;
-  erro?: boolean;
-}
 
 interface GeoResult {
   address?: string;
@@ -24,38 +15,29 @@ export async function geocodeByCep(cep: string): Promise<GeoResult | null> {
   if (cleanCep.length !== 8) return null;
 
   try {
-    // Step 1: Fetch address from ViaCEP
-    const viaRes = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-    const viaData: ViaCepResponse = await viaRes.json();
-    if (viaData.erro) {
-      toast.error("CEP não encontrado");
+    const { data, error } = await supabase.functions.invoke("geocode-cep", {
+      body: { cep: cleanCep },
+    });
+
+    if (error) {
+      console.error("Geocoding error:", error);
+      toast.error("Erro ao buscar CEP");
       return null;
     }
 
-    const result: GeoResult = {
-      address: viaData.logradouro || undefined,
-      neighborhood: viaData.bairro || undefined,
-      city: viaData.localidade || undefined,
-      state: viaData.uf || undefined,
-    };
-
-    // Step 2: Geocode using Nominatim (OpenStreetMap)
-    const query = [viaData.logradouro, viaData.bairro, viaData.localidade, viaData.uf, "Brazil"]
-      .filter(Boolean)
-      .join(", ");
-
-    const geoRes = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
-      { headers: { "Accept-Language": "pt-BR" } }
-    );
-    const geoData = await geoRes.json();
-
-    if (geoData.length > 0) {
-      result.latitude = parseFloat(geoData[0].lat);
-      result.longitude = parseFloat(geoData[0].lon);
+    if (data?.error) {
+      toast.error(data.error);
+      return null;
     }
 
-    return result;
+    return {
+      address: data.address || undefined,
+      neighborhood: data.neighborhood || undefined,
+      city: data.city || undefined,
+      state: data.state || undefined,
+      latitude: data.latitude || undefined,
+      longitude: data.longitude || undefined,
+    };
   } catch (err) {
     console.error("Geocoding error:", err);
     return null;
