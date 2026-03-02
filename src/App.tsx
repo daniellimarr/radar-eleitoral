@@ -18,6 +18,7 @@ import VisitRequests from "@/pages/VisitRequests";
 import RegistrationLinks from "@/pages/RegistrationLinks";
 import PublicRegistration from "@/pages/PublicRegistration";
 import Georeferencing from "@/pages/Georeferencing";
+import UserManagement from "@/pages/UserManagement";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ function App() {
             <Route path="/visit-requests" element={<ProtectedRoute><VisitRequests /></ProtectedRoute>} />
             <Route path="/registration-links" element={<ProtectedRoute><RegistrationLinks /></ProtectedRoute>} />
             <Route path="/map" element={<ProtectedRoute><Georeferencing /></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
