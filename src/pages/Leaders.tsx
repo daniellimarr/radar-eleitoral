@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, Plus, Pencil, Trash2 } from "lucide-react";
+import { Trophy, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -25,6 +25,9 @@ export default function Leaders() {
   const { toast } = useToast();
   const [leaders, setLeaders] = useState<any[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [expandedLeader, setExpandedLeader] = useState<string | null>(null);
+  const [voters, setVoters] = useState<Record<string, any[]>>({});
+  const [loadingVoters, setLoadingVoters] = useState<string | null>(null);
 
   const fetchLeaders = async () => {
     if (!tenantId) return;
@@ -42,23 +45,38 @@ export default function Leaders() {
     fetchLeaders();
   }, [tenantId]);
 
+  const toggleExpand = async (leaderId: string) => {
+    if (expandedLeader === leaderId) {
+      setExpandedLeader(null);
+      return;
+    }
+    setExpandedLeader(leaderId);
+    if (!voters[leaderId]) {
+      setLoadingVoters(leaderId);
+      const { data } = await supabase
+        .from("contacts")
+        .select("id, name, phone, city, engagement")
+        .eq("leader_id", leaderId)
+        .is("deleted_at", null)
+        .order("name");
+      setVoters((prev) => ({ ...prev, [leaderId]: data || [] }));
+      setLoadingVoters(null);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      // Soft delete the contact
       const { error: contactError } = await supabase
         .from("contacts")
         .update({ deleted_at: new Date().toISOString(), is_leader: false })
         .eq("id", deleteTarget.id);
-
       if (contactError) throw contactError;
 
-      // Delete from leaders table
       const { error: leaderError } = await supabase
         .from("leaders")
         .delete()
         .eq("contact_id", deleteTarget.id);
-
       if (leaderError) throw leaderError;
 
       toast({ title: "Liderança excluída com sucesso" });
@@ -96,6 +114,7 @@ export default function Leaders() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10"></TableHead>
                 <TableHead>#</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Cidade</TableHead>
@@ -107,38 +126,92 @@ export default function Leaders() {
             <TableBody>
               {leaders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     Nenhuma liderança cadastrada
                   </TableCell>
                 </TableRow>
               ) : leaders.map((l, i) => (
-                <TableRow key={l.id}>
-                  <TableCell className="font-bold">{i + 1}</TableCell>
-                  <TableCell className="font-medium">{l.name}</TableCell>
-                  <TableCell>{l.city}</TableCell>
-                  <TableCell>{l.phone}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{l.engagement}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => navigate(`/leaders/edit/${l.id}`)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleteTarget(l)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <>
+                  <TableRow key={l.id} className="cursor-pointer hover:bg-muted/50" onClick={() => toggleExpand(l.id)}>
+                    <TableCell className="w-10">
+                      {expandedLeader === l.id ? (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </TableCell>
+                    <TableCell className="font-bold">{i + 1}</TableCell>
+                    <TableCell className="font-medium">{l.name}</TableCell>
+                    <TableCell>{l.city}</TableCell>
+                    <TableCell>{l.phone}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{l.engagement}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => navigate(`/leaders/edit/${l.id}`)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeleteTarget(l)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  {expandedLeader === l.id && (
+                    <TableRow key={`${l.id}-voters`}>
+                      <TableCell colSpan={7} className="bg-muted/30 p-0">
+                        <div className="px-6 py-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-semibold text-muted-foreground">
+                              Eleitores de {l.name}
+                            </span>
+                            <Badge variant="outline" className="ml-1">
+                              {voters[l.id]?.length ?? "..."}
+                            </Badge>
+                          </div>
+                          {loadingVoters === l.id ? (
+                            <p className="text-sm text-muted-foreground">Carregando...</p>
+                          ) : (voters[l.id]?.length ?? 0) === 0 ? (
+                            <p className="text-sm text-muted-foreground">Nenhum eleitor cadastrado para esta liderança.</p>
+                          ) : (
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Nome</TableHead>
+                                  <TableHead>Celular</TableHead>
+                                  <TableHead>Cidade</TableHead>
+                                  <TableHead>Engajamento</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {voters[l.id].map((v) => (
+                                  <TableRow key={v.id}>
+                                    <TableCell>{v.name}</TableCell>
+                                    <TableCell>{v.phone}</TableCell>
+                                    <TableCell>{v.city}</TableCell>
+                                    <TableCell>
+                                      <Badge variant="outline">{v.engagement}</Badge>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
               ))}
             </TableBody>
           </Table>
