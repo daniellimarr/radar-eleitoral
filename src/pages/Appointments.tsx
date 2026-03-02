@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Calendar as CalendarIcon, Clock, MapPin, Users, Volume2, Flag, Armchair } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, Clock, MapPin, Users, Volume2, Flag, Armchair, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,10 +46,19 @@ export default function Appointments() {
     setLoading(false);
   };
 
-  // Merge both into a unified timeline
+  const handleComplete = async (id: string, type: "appointment" | "visit") => {
+    if (type === "visit") {
+      const { error } = await supabase.from("visit_requests").update({ status: "concluido" }).eq("id", id);
+      if (error) toast.error(error.message);
+      else { toast.success("Visita concluída!"); fetchData(); }
+    }
+  };
+
+  // Merge both into a unified timeline — exclude completed visits
+  const activeVisits = visitRequests.filter((v) => v.status !== "concluido");
   const allEvents = [
     ...appointments.map((a) => ({ ...a, type: "appointment" as const, date: a.start_time })),
-    ...visitRequests.map((v) => ({ ...v, type: "visit" as const, date: v.requested_date })),
+    ...activeVisits.map((v) => ({ ...v, type: "visit" as const, date: v.requested_date })),
   ].sort((a, b) => new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime());
 
   const statusColor = (status: string) => {
@@ -99,24 +108,24 @@ export default function Appointments() {
         <TabsList>
           <TabsTrigger value="all">Todos ({allEvents.length})</TabsTrigger>
           <TabsTrigger value="appointments">Compromissos ({appointments.length})</TabsTrigger>
-          <TabsTrigger value="visits">Visitas ({visitRequests.length})</TabsTrigger>
+          <TabsTrigger value="visits">Visitas ({activeVisits.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-4">
-          <EventList events={allEvents} statusColor={statusColor} statusLabel={statusLabel} />
+          <EventList events={allEvents} statusColor={statusColor} statusLabel={statusLabel} onComplete={handleComplete} />
         </TabsContent>
         <TabsContent value="appointments" className="mt-4">
-          <EventList events={allEvents.filter(e => e.type === "appointment")} statusColor={statusColor} statusLabel={statusLabel} />
+          <EventList events={allEvents.filter(e => e.type === "appointment")} statusColor={statusColor} statusLabel={statusLabel} onComplete={handleComplete} />
         </TabsContent>
         <TabsContent value="visits" className="mt-4">
-          <EventList events={allEvents.filter(e => e.type === "visit")} statusColor={statusColor} statusLabel={statusLabel} />
+          <EventList events={allEvents.filter(e => e.type === "visit")} statusColor={statusColor} statusLabel={statusLabel} onComplete={handleComplete} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function EventList({ events, statusColor, statusLabel }: { events: any[]; statusColor: (s: string) => any; statusLabel: (s: string) => string }) {
+function EventList({ events, statusColor, statusLabel, onComplete }: { events: any[]; statusColor: (s: string) => any; statusLabel: (s: string) => string; onComplete: (id: string, type: "appointment" | "visit") => void }) {
   if (events.length === 0) {
     return <Card><CardContent className="py-8 text-center text-muted-foreground">Nenhum evento na agenda</CardContent></Card>;
   }
@@ -162,6 +171,11 @@ function EventList({ events, statusColor, statusLabel }: { events: any[]; status
                 </div>
               )}
             </div>
+            {e.type === "visit" && e.status !== "concluido" && (
+              <Button variant="outline" size="sm" className="shrink-0 self-center" onClick={() => onComplete(e.id, e.type)}>
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Concluir
+              </Button>
+            )}
           </CardContent>
         </Card>
       ))}
