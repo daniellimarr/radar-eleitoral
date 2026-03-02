@@ -21,20 +21,28 @@ export default function PublicRegistration() {
     has_whatsapp: false, birth_date: "",
   });
 
+  const [leaderContactId, setLeaderContactId] = useState<string | null>(null);
+  const [leaderName, setLeaderName] = useState("");
+
   useEffect(() => {
     const load = async () => {
       if (!slug) return;
       const { data: link } = await supabase
         .from("registration_links")
-        .select("tenant_id")
+        .select("tenant_id, leader_contact_id")
         .eq("slug", slug)
         .eq("is_active", true)
-        .single();
+        .maybeSingle();
 
       if (link) {
         setTenantId(link.tenant_id);
-        const { data: tenant } = await supabase.from("tenants").select("name").eq("id", link.tenant_id).single();
+        setLeaderContactId(link.leader_contact_id);
+        const { data: tenant } = await supabase.from("tenants").select("name").eq("id", link.tenant_id).maybeSingle();
         if (tenant) setTenantName(tenant.name);
+        if (link.leader_contact_id) {
+          const { data: leader } = await supabase.from("contacts").select("name, nickname").eq("id", link.leader_contact_id).maybeSingle();
+          if (leader) setLeaderName(leader.nickname || leader.name);
+        }
       }
       setLoading(false);
     };
@@ -47,6 +55,7 @@ export default function PublicRegistration() {
     setSaving(true);
     const { error } = await supabase.from("contacts").insert({
       ...form, tenant_id: tenantId, birth_date: form.birth_date || null,
+      leader_id: leaderContactId,
     });
     if (error) toast.error(error.message);
     else setSubmitted(true);
@@ -79,6 +88,7 @@ export default function PublicRegistration() {
             <span className="font-bold text-lg">GABINETE ONLINE</span>
           </div>
           <CardTitle>{tenantName}</CardTitle>
+          {leaderName && <p className="text-sm text-muted-foreground">Liderança: <strong>{leaderName}</strong></p>}
           <p className="text-sm text-muted-foreground">Preencha seus dados</p>
         </CardHeader>
         <CardContent>
