@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Component, type ReactNode } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -8,7 +8,35 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, MapPin, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, MapPin, Search, RefreshCw } from "lucide-react";
+
+// Error boundary to prevent white screen
+class MapErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    console.error("Map error:", error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full gap-4">
+          <p className="text-muted-foreground">Erro ao renderizar o mapa.</p>
+          <Button variant="outline" onClick={() => this.setState({ hasError: false })}>
+            <RefreshCw className="h-4 w-4 mr-2" /> Tentar novamente
+          </Button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Fix default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -67,13 +95,72 @@ interface ContactWithGeo {
 function FitBounds({ contacts }: { contacts: ContactWithGeo[] }) {
   const map = useMap();
   useEffect(() => {
-    const withGeo = contacts.filter((c) => c.latitude && c.longitude);
-    if (withGeo.length > 0) {
-      const bounds = L.latLngBounds(withGeo.map((c) => [c.latitude!, c.longitude!]));
-      map.fitBounds(bounds, { padding: [50, 50] });
+    try {
+      const withGeo = contacts.filter((c) => c.latitude && c.longitude);
+      if (withGeo.length > 0) {
+        const bounds = L.latLngBounds(withGeo.map((c) => [c.latitude!, c.longitude!]));
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    } catch (err) {
+      console.error("FitBounds error:", err);
     }
   }, [contacts, map]);
   return null;
+}
+
+function LeaderPopupContent({ leader, voters }: { leader: ContactWithGeo; voters: ContactWithGeo[] }) {
+  return (
+    <div style={{ padding: 4 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <div style={{ background: "#2563eb", color: "white", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: "bold", flexShrink: 0 }}>
+          👤
+        </div>
+        <div>
+          <p style={{ fontWeight: "bold", fontSize: 14, margin: 0 }}>{leader.name}</p>
+          <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>
+            {leader.address && `${leader.address}, `}{leader.neighborhood}{leader.city ? ` - ${leader.city}` : ""}
+          </p>
+        </div>
+      </div>
+      <p style={{ fontSize: 12, background: "#f3f4f6", padding: "2px 8px", borderRadius: 4, display: "inline-block", marginBottom: 4 }}>
+        {voters.length} eleitor{voters.length !== 1 ? "es" : ""} vinculado{voters.length !== 1 ? "s" : ""}
+      </p>
+      {voters.length > 0 && (
+        <div style={{ maxHeight: 160, overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 4, marginTop: 4 }}>
+          <table style={{ width: "100%", fontSize: 11, borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: "#f3f4f6" }}>
+                <th style={{ padding: "4px 8px", textAlign: "left" }}>Nome</th>
+                <th style={{ padding: "4px 8px", textAlign: "left" }}>Telefone</th>
+              </tr>
+            </thead>
+            <tbody>
+              {voters.map((v) => (
+                <tr key={v.id} style={{ borderTop: "1px solid #e5e7eb" }}>
+                  <td style={{ padding: "4px 8px" }}>{v.nickname || v.name}</td>
+                  <td style={{ padding: "4px 8px" }}>{v.phone || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VoterPopupContent({ voter }: { voter: ContactWithGeo }) {
+  return (
+    <div style={{ padding: 4 }}>
+      <p style={{ fontWeight: "bold", fontSize: 14, margin: 0 }}>{voter.name}</p>
+      {voter.nickname && <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>{voter.nickname}</p>}
+      <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>
+        {voter.address && `${voter.address}, `}{voter.neighborhood}{voter.city ? ` - ${voter.city}` : ""}
+      </p>
+      {voter.phone && <p style={{ fontSize: 11, marginTop: 4 }}>📞 {voter.phone}</p>}
+      {voter.category && <span style={{ fontSize: 10, border: "1px solid #d1d5db", borderRadius: 4, padding: "1px 6px" }}>{voter.category}</span>}
+    </div>
+  );
 }
 
 export default function Georeferencing() {
@@ -90,14 +177,19 @@ export default function Georeferencing() {
   useEffect(() => {
     if (!profile?.tenant_id) return;
     const fetchContacts = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("contacts")
-        .select("id, name, nickname, phone, city, neighborhood, address, latitude, longitude, is_leader, leader_id, category, gender")
-        .eq("tenant_id", profile.tenant_id!)
-        .is("deleted_at", null);
-      if (!error && data) setContacts(data as ContactWithGeo[]);
-      setLoading(false);
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("contacts")
+          .select("id, name, nickname, phone, city, neighborhood, address, latitude, longitude, is_leader, leader_id, category, gender")
+          .eq("tenant_id", profile.tenant_id!)
+          .is("deleted_at", null);
+        if (!error && data) setContacts(data as ContactWithGeo[]);
+      } catch (err) {
+        console.error("Error fetching contacts:", err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchContacts();
   }, [profile?.tenant_id]);
@@ -119,7 +211,6 @@ export default function Georeferencing() {
     });
   }, [contacts, searchName, filterCity, filterNeighborhood, filterGender, filterCategory, selectedLeader]);
 
-  // All contacts with geo, split by type
   const geoContacts = useMemo(() => filteredContacts.filter((c) => c.latitude && c.longitude), [filteredContacts]);
   const geoLeaders = useMemo(() => geoContacts.filter((c) => c.is_leader), [geoContacts]);
   const geoVoters = useMemo(() => geoContacts.filter((c) => !c.is_leader), [geoContacts]);
@@ -237,7 +328,6 @@ export default function Georeferencing() {
 
       {/* Map Area */}
       <div className="flex-1 relative">
-        {/* Stats bar */}
         <div className="absolute top-3 left-3 z-[1000] bg-card/95 backdrop-blur rounded-lg px-4 py-2 shadow-md border">
           <p className="text-sm">
             TOTAL DE CONTATOS: <strong>{filteredContacts.length}</strong>
@@ -251,92 +341,47 @@ export default function Georeferencing() {
             <p className="text-muted-foreground">Carregando mapa...</p>
           </div>
         ) : (
-          <MapContainer
-            center={[-15.78, -47.93]}
-            zoom={5}
-            className="h-full w-full"
-            style={{ zIndex: 1 }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {geoContacts.length > 0 && <FitBounds contacts={geoContacts} />}
+          <MapErrorBoundary>
+            <MapContainer
+              center={[-15.78, -47.93]}
+              zoom={5}
+              className="h-full w-full"
+              style={{ zIndex: 1 }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {geoContacts.length > 0 && <FitBounds contacts={geoContacts} />}
 
-            {/* Leader pins (blue) */}
-            {geoLeaders.map((leader) => {
-              const voters = filteredContacts.filter((c) => c.leader_id === leader.id);
-              return (
+              {geoLeaders.map((leader) => {
+                const voters = filteredContacts.filter((c) => c.leader_id === leader.id);
+                return (
+                  <Marker
+                    key={leader.id}
+                    position={[leader.latitude!, leader.longitude!]}
+                    icon={voters.length > 0 ? clusterIcon(voters.length, "#2563eb") : leaderIcon}
+                  >
+                    <Popup maxWidth={350} minWidth={280}>
+                      <LeaderPopupContent leader={leader} voters={voters} />
+                    </Popup>
+                  </Marker>
+                );
+              })}
+
+              {geoVoters.map((voter) => (
                 <Marker
-                  key={leader.id}
-                  position={[leader.latitude!, leader.longitude!]}
-                  icon={voters.length > 0 ? clusterIcon(voters.length, "#2563eb") : leaderIcon}
+                  key={voter.id}
+                  position={[voter.latitude!, voter.longitude!]}
+                  icon={voterIcon}
                 >
-                  <Popup maxWidth={350} minWidth={280}>
-                    <div className="p-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div style={{ background: "#2563eb" }} className="text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold shrink-0">
-                          <Users size={16} />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm">{leader.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {leader.address && `${leader.address}, `}{leader.neighborhood}{leader.city ? ` - ${leader.city}` : ""}
-                          </p>
-                        </div>
-                      </div>
-
-                      <Badge variant="secondary" className="mb-2">
-                        {voters.length} eleitor{voters.length !== 1 ? "es" : ""} vinculado{voters.length !== 1 ? "s" : ""}
-                      </Badge>
-
-                      {voters.length > 0 && (
-                        <div className="max-h-40 overflow-y-auto border rounded mt-1">
-                          <table className="w-full text-xs">
-                            <thead>
-                              <tr className="bg-gray-100">
-                                <th className="px-2 py-1 text-left">Nome</th>
-                                <th className="px-2 py-1 text-left">Telefone</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {voters.map((v) => (
-                                <tr key={v.id} className="border-t">
-                                  <td className="px-2 py-1">{v.nickname || v.name}</td>
-                                  <td className="px-2 py-1">{v.phone || "-"}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
+                  <Popup maxWidth={300}>
+                    <VoterPopupContent voter={voter} />
                   </Popup>
                 </Marker>
-              );
-            })}
-
-            {/* Voter/Contact pins (pink) */}
-            {geoVoters.map((voter) => (
-              <Marker
-                key={voter.id}
-                position={[voter.latitude!, voter.longitude!]}
-                icon={voterIcon}
-              >
-                <Popup maxWidth={300}>
-                  <div className="p-1">
-                    <p className="font-bold text-sm">{voter.name}</p>
-                    {voter.nickname && <p className="text-xs text-gray-500">{voter.nickname}</p>}
-                    <p className="text-xs text-gray-500">
-                      {voter.address && `${voter.address}, `}{voter.neighborhood}{voter.city ? ` - ${voter.city}` : ""}
-                    </p>
-                    {voter.phone && <p className="text-xs mt-1">📞 {voter.phone}</p>}
-                    {voter.category && <Badge variant="outline" className="mt-1 text-[10px]">{voter.category}</Badge>}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+              ))}
+            </MapContainer>
+          </MapErrorBoundary>
         )}
       </div>
     </div>
