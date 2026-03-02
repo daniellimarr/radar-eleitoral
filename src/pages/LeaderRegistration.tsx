@@ -88,7 +88,10 @@ export default function LeaderRegistration() {
   const update = (field: string, value: any) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleSave = async () => {
-    if (!tenantId) return;
+    if (!tenantId) {
+      toast({ title: "Erro: usuário sem vínculo a um gabinete. Faça login novamente.", variant: "destructive" });
+      return;
+    }
     if (!form.name.trim()) {
       toast({ title: "Nome é obrigatório", variant: "destructive" });
       return;
