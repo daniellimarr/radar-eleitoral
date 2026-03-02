@@ -1,0 +1,92 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Verify caller is authenticated admin
+    const authHeader = req.headers.get("Authorization")!;
+    const callerClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user: caller } } = await callerClient.auth.getUser();
+    if (!caller) throw new Error("Não autenticado");
+
+    // Check caller is admin
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    const { data: callerRoles } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", caller.id);
+    const roles = callerRoles?.map((r: any) => r.role) || [];
+    if (!roles.includes("super_admin") && !roles.includes("admin_gabinete")) {
+      throw new Error("Sem permissão");
+    }
+
+    // Get caller tenant
+    const { data: callerProfile } = await adminClient
+      .from("profiles")
+      .select("tenant_id")
+      .eq("user_id", caller.id)
+      .single();
+    if (!callerProfile?.tenant_id) throw new Error("Tenant não encontrado");
+
+    const { email, full_name, password, role, modules } = await req.json();
+    if (!email || !password || !full_name) throw new Error("Dados incompletos");
+
+    // Create user via admin API
+    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name },
+    });
+    if (createError) throw createError;
+
+    const userId = newUser.user.id;
+
+    // Set profile tenant
+    await adminClient
+      .from("profiles")
+      .update({ tenant_id: callerProfile.tenant_id, full_name })
+      .eq("user_id", userId);
+
+    // Set role
+    if (role) {
+      await adminClient.from("user_roles").insert({
+        user_id: userId,
+        role,
+        tenant_id: callerProfile.tenant_id,
+      });
+    }
+
+    // Set module permissions
+    if (modules && Array.isArray(modules) && modules.length > 0) {
+      const permRows = modules.map((m: string) => ({
+        user_id: userId,
+        tenant_id: callerProfile.tenant_id,
+        module: m,
+      }));
+      await adminClient.from("user_permissions").insert(permRows);
+    }
+
+    return new Response(JSON.stringify({ success: true, user_id: userId }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
