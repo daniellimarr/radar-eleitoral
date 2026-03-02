@@ -10,9 +10,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, UserPlus, Trash2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
+interface Voter {
+  id: string;
+  name: string;
+  phone: string | null;
+  neighborhood: string | null;
+  voting_zone: string | null;
+}
 
 export default function LeaderRegistration() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +32,18 @@ export default function LeaderRegistration() {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
+
+  // Leader's contact_id (from leaders table)
+  const [leaderContactId, setLeaderContactId] = useState<string | null>(null);
+
+  // Voters state
+  const [voters, setVoters] = useState<Voter[]>([]);
+  const [loadingVoters, setLoadingVoters] = useState(false);
+  const [voterDialogOpen, setVoterDialogOpen] = useState(false);
+  const [savingVoter, setSavingVoter] = useState(false);
+  const [voterForm, setVoterForm] = useState({
+    name: "", phone: "", neighborhood: "", voting_zone: "", voting_section: "",
+  });
 
   const [form, setForm] = useState({
     name: "",
@@ -50,40 +72,68 @@ export default function LeaderRegistration() {
   useEffect(() => {
     if (!id) return;
     setLoadingData(true);
-    supabase
-      .from("contacts")
-      .select("*")
-      .eq("id", id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setForm({
-            name: data.name || "",
-            nickname: data.nickname || "",
-            cpf: data.cpf || "",
-            phone: data.phone || "",
-            email: data.email || "",
-            gender: data.gender || "",
-            birth_date: data.birth_date || "",
-            has_whatsapp: data.has_whatsapp || false,
-            cep: data.cep || "",
-            address: data.address || "",
-            address_number: data.address_number || "",
-            neighborhood: data.neighborhood || "",
-            city: data.city || "",
-            state: data.state || "SP",
-            voting_zone: data.voting_zone || "",
-            voting_section: data.voting_section || "",
-            voting_location: data.voting_location || "",
-            category: data.category || "",
-            subcategory: data.subcategory || "",
-            engagement: data.engagement || "nao_trabalhado",
-            observations: data.observations || "",
-          });
-        }
-        setLoadingData(false);
-      });
+    const loadLeader = async () => {
+      const { data: leader } = await supabase
+        .from("leaders")
+        .select("id, contact_id")
+        .or(`id.eq.${id},contact_id.eq.${id}`)
+        .limit(1)
+        .single();
+      const contactId = leader?.contact_id || id;
+      setLeaderContactId(contactId);
+
+      const { data } = await supabase
+        .from("contacts")
+        .select("*")
+        .eq("id", contactId)
+        .single();
+      if (data) {
+        setForm({
+          name: data.name || "",
+          nickname: data.nickname || "",
+          cpf: data.cpf || "",
+          phone: data.phone || "",
+          email: data.email || "",
+          gender: data.gender || "",
+          birth_date: data.birth_date || "",
+          has_whatsapp: data.has_whatsapp || false,
+          cep: data.cep || "",
+          address: data.address || "",
+          address_number: data.address_number || "",
+          neighborhood: data.neighborhood || "",
+          city: data.city || "",
+          state: data.state || "SP",
+          voting_zone: data.voting_zone || "",
+          voting_section: data.voting_section || "",
+          voting_location: data.voting_location || "",
+          category: data.category || "",
+          subcategory: data.subcategory || "",
+          engagement: data.engagement || "nao_trabalhado",
+          observations: data.observations || "",
+        });
+      }
+      setLoadingData(false);
+    };
+    loadLeader();
   }, [id]);
+
+  // Load voters linked to this leader
+  const loadVoters = async () => {
+    if (!leaderContactId) return;
+    setLoadingVoters(true);
+    const { data } = await supabase
+      .from("contacts")
+      .select("id, name, phone, neighborhood, voting_zone")
+      .eq("leader_id", leaderContactId)
+      .is("deleted_at", null)
+      .order("name");
+    setVoters(data || []);
+    setLoadingVoters(false);
+  };
+
+  useEffect(() => {
+    if (leaderContactId) loadVoters();
+  }, [leaderContactId]);
 
   const update = (field: string, value: any) => setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -123,10 +173,11 @@ export default function LeaderRegistration() {
       };
 
       if (isEditing) {
+        const contactId = leaderContactId || id;
         const { error } = await supabase
           .from("contacts")
           .update(contactData)
-          .eq("id", id);
+          .eq("id", contactId);
         if (error) throw error;
         toast({ title: "Liderança atualizada com sucesso!" });
       } else {
@@ -153,6 +204,51 @@ export default function LeaderRegistration() {
     }
   };
 
+  // Add voter linked to this leader
+  const handleAddVoter = async () => {
+    if (!tenantId || !leaderContactId) return;
+    if (!voterForm.name.trim()) {
+      toast({ title: "Nome do eleitor é obrigatório", variant: "destructive" });
+      return;
+    }
+    setSavingVoter(true);
+    try {
+      const { error } = await supabase.from("contacts").insert({
+        name: voterForm.name,
+        phone: voterForm.phone || null,
+        neighborhood: voterForm.neighborhood || null,
+        voting_zone: voterForm.voting_zone || null,
+        voting_section: voterForm.voting_section || null,
+        tenant_id: tenantId,
+        leader_id: leaderContactId,
+        is_leader: false,
+      });
+      if (error) throw error;
+      toast({ title: "Eleitor cadastrado com sucesso!" });
+      setVoterForm({ name: "", phone: "", neighborhood: "", voting_zone: "", voting_section: "" });
+      setVoterDialogOpen(false);
+      loadVoters();
+    } catch (err: any) {
+      toast({ title: "Erro ao cadastrar eleitor", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingVoter(false);
+    }
+  };
+
+  const handleRemoveVoter = async (voterId: string) => {
+    try {
+      const { error } = await supabase
+        .from("contacts")
+        .update({ leader_id: null })
+        .eq("id", voterId);
+      if (error) throw error;
+      toast({ title: "Eleitor desvinculado" });
+      loadVoters();
+    } catch (err: any) {
+      toast({ title: "Erro ao desvincular", description: err.message, variant: "destructive" });
+    }
+  };
+
   if (loadingData) {
     return (
       <div className="space-y-6">
@@ -176,6 +272,7 @@ export default function LeaderRegistration() {
           <TabsTrigger value="dados">Dados Pessoais</TabsTrigger>
           <TabsTrigger value="endereco">Endereço</TabsTrigger>
           <TabsTrigger value="politico">Dados Políticos</TabsTrigger>
+          {isEditing && <TabsTrigger value="eleitores" className="gap-1"><Users className="h-4 w-4" /> Eleitores</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="dados">
@@ -302,6 +399,93 @@ export default function LeaderRegistration() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isEditing && (
+          <TabsContent value="eleitores">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Eleitores Vinculados ({voters.length})
+                </CardTitle>
+                <Dialog open={voterDialogOpen} onOpenChange={setVoterDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="gap-1">
+                      <UserPlus className="h-4 w-4" /> Cadastrar Eleitor
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Cadastrar Eleitor</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Nome Completo *</Label>
+                        <Input value={voterForm.name} onChange={(e) => setVoterForm(p => ({ ...p, name: e.target.value }))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Celular</Label>
+                        <Input value={voterForm.phone} onChange={(e) => setVoterForm(p => ({ ...p, phone: e.target.value }))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Bairro</Label>
+                        <Input value={voterForm.neighborhood} onChange={(e) => setVoterForm(p => ({ ...p, neighborhood: e.target.value }))} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Zona Eleitoral</Label>
+                          <Input value={voterForm.voting_zone} onChange={(e) => setVoterForm(p => ({ ...p, voting_zone: e.target.value }))} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Seção Eleitoral</Label>
+                          <Input value={voterForm.voting_section} onChange={(e) => setVoterForm(p => ({ ...p, voting_section: e.target.value }))} />
+                        </div>
+                      </div>
+                      <Button onClick={handleAddVoter} disabled={savingVoter} className="w-full gap-2">
+                        <Save className="h-4 w-4" />
+                        {savingVoter ? "Salvando..." : "Salvar Eleitor"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </CardHeader>
+              <CardContent>
+                {loadingVoters ? (
+                  <Skeleton className="h-32 w-full" />
+                ) : voters.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">Nenhum eleitor vinculado a esta liderança.</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Celular</TableHead>
+                        <TableHead>Bairro</TableHead>
+                        <TableHead>Zona</TableHead>
+                        <TableHead className="w-12"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {voters.map((v) => (
+                        <TableRow key={v.id}>
+                          <TableCell className="font-medium">{v.name}</TableCell>
+                          <TableCell>{v.phone || "—"}</TableCell>
+                          <TableCell>{v.neighborhood || "—"}</TableCell>
+                          <TableCell>{v.voting_zone || "—"}</TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="icon" onClick={() => handleRemoveVoter(v.id)} title="Desvincular eleitor">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
 
       <div className="flex justify-end">
