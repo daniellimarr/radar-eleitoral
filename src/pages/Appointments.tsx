@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X } from "lucide-react";
+import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -105,6 +105,23 @@ export default function Appointments() {
     if (error) toast.error(error.message);
     else { toast.success("Compromisso adicionado!"); setIsOpen(false); setForm({ title: "", description: "", start_time: "", end_time: "", location: "" }); fetchData(); }
     setLoading(false);
+  };
+
+  const handleDelete = async (id: string, type: "appointment" | "visit") => {
+    const table = type === "appointment" ? "appointments" : "visit_requests";
+    const { error } = await supabase.from(table).delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Compromisso excluído!"); fetchData(); }
+  };
+
+  const handleConfirm = async (id: string, type: "appointment" | "visit") => {
+    if (type === "visit") {
+      const { error } = await supabase.from("visit_requests").update({ status: "confirmado" }).eq("id", id);
+      if (error) toast.error(error.message);
+      else { toast.success("Visita confirmada!"); fetchData(); }
+    } else {
+      toast.success("Compromisso confirmado!");
+    }
   };
 
   const clearFilters = () => {
@@ -437,7 +454,7 @@ export default function Appointments() {
                           {event.title}
                         </TableCell>
                         <TableCell>
-                          <span className="text-xs font-semibold text-info uppercase">
+                          <span className="text-xs font-semibold text-success uppercase">
                             CONFIRMADO
                           </span>
                         </TableCell>
@@ -449,10 +466,10 @@ export default function Appointments() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <button className="text-info hover:text-info/70">
-                              <MessageSquare className="h-4 w-4" />
+                            <button className="text-success hover:text-success/70" title="Confirmar" onClick={() => handleConfirm(event.id, event.type)}>
+                              <CheckCircle2 className="h-4 w-4" />
                             </button>
-                            <button className="text-destructive hover:text-destructive/70">
+                            <button className="text-destructive hover:text-destructive/70" title="Excluir" onClick={() => handleDelete(event.id, event.type)}>
                               <X className="h-4 w-4" />
                             </button>
                           </div>
@@ -556,7 +573,7 @@ export default function Appointments() {
                           {event.title}
                         </TableCell>
                         <TableCell>
-                          <span className="text-xs font-semibold text-info uppercase">
+                          <span className="text-xs font-semibold text-success uppercase">
                             CONFIRMADO
                           </span>
                         </TableCell>
@@ -568,10 +585,10 @@ export default function Appointments() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <button className="text-info hover:text-info/70">
-                              <MessageSquare className="h-4 w-4" />
+                            <button className="text-success hover:text-success/70" title="Confirmar" onClick={() => handleConfirm(event.id, event.type)}>
+                              <CheckCircle2 className="h-4 w-4" />
                             </button>
-                            <button className="text-destructive hover:text-destructive/70">
+                            <button className="text-destructive hover:text-destructive/70" title="Excluir" onClick={() => handleDelete(event.id, event.type)}>
                               <X className="h-4 w-4" />
                             </button>
                           </div>
