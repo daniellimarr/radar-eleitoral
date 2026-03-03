@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Calendar as CalendarIcon, Clock, MapPin, Users, Volume2, Flag, Armchair, CheckCircle2 } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, Clock, MapPin, Users, Volume2, Flag, Armchair, CheckCircle2, Navigation } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -158,6 +158,16 @@ function EventList({ events, statusColor, statusLabel, onComplete }: { events: a
                 )}
                 {(e.location) && (
                   <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{e.location}</span>
+                )}
+                {(e.location) && (
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                  >
+                    <Navigation className="h-3 w-3" /> Rota GPS
+                  </a>
                 )}
               </div>
               {/* Visit request details */}
