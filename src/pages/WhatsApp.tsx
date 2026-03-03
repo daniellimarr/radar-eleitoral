@@ -11,8 +11,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { MessageSquare, Settings, Plus, Send, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { MessageSquare, Settings, Plus, Send, Clock, CheckCircle, XCircle, AlertCircle, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 
 const SCHEDULE_OPTIONS = [
@@ -57,6 +58,7 @@ export default function WhatsApp() {
   const [automations, setAutomations] = useState<Automation[]>([]);
   const [sendLogs, setSendLogs] = useState<SendLog[]>([]);
   const [loading, setLoading] = useState(false);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
 
   // Form state
   const [scheduleTime, setScheduleTime] = useState("08:00");
@@ -66,6 +68,10 @@ export default function WhatsApp() {
   );
   const [isActive, setIsActive] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const handleOpenWhatsAppWeb = () => {
+    window.open("https://web.whatsapp.com", "_blank", "noopener,noreferrer");
+  };
 
   useEffect(() => {
     if (tenantId) {
@@ -161,11 +167,61 @@ export default function WhatsApp() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Automação</h1>
-        <p className="text-muted-foreground">
-          Disparo de WhatsApp para Aniversariantes AUTOMÁTICO
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Automação</h1>
+          <p className="text-muted-foreground">
+            Disparo de WhatsApp para Aniversariantes AUTOMÁTICO
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" onClick={handleOpenWhatsAppWeb}>
+            <MessageSquare className="h-4 w-4" />
+            Conectar WhatsApp
+          </Button>
+
+          <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Settings className="h-4 w-4" />
+                Configurar
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-primary">
+                  <MessageSquare className="h-5 w-5" />
+                  Configurar WhatsApp
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6 py-4">
+                <div className="space-y-4">
+                  {[
+                    { step: 1, text: "Abra o WhatsApp 📱 no seu celular." },
+                    { step: 2, text: "Toque em Mais opções ⋮ no Android ou em Configurações ⚙ no iPhone." },
+                    { step: 3, text: "Toque em Dispositivos conectados e, em seguida, em Conectar dispositivo." },
+                    { step: 4, text: "Escaneie o QR code para confirmar." },
+                  ].map((item, idx) => (
+                    <div key={item.step} className="flex items-start gap-4">
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-primary text-primary font-semibold text-sm">
+                          {item.step}
+                        </div>
+                        {idx < 3 && <div className="w-0.5 h-6 bg-border mt-1" />}
+                      </div>
+                      <p className="text-sm pt-1.5 leading-relaxed">{item.text}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <Button className="w-full gap-2" onClick={handleOpenWhatsAppWeb}>
+                  <ExternalLink className="h-4 w-4" />
+                  Abrir WhatsApp Web
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
