@@ -80,6 +80,9 @@ export default function Appointments() {
   const [dateTo, setDateTo] = useState(format(new Date(), "yyyy-MM-dd"));
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
+  // Selected date from calendar click
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
   const fetchData = async () => {
     if (!tenantId) return;
     const [apptRes, visitRes] = await Promise.all([
@@ -159,6 +162,34 @@ export default function Appointments() {
 
   const selectAllRows = () => setSelectedRows(new Set(listEvents.map(e => e.id)));
   const deselectAllRows = () => setSelectedRows(new Set());
+
+  // Events for the selected calendar date
+  const selectedDateEvents = useMemo(() => {
+    if (!selectedDate) return [];
+    const from = new Date(selectedDate + "T00:00:00");
+    const to = new Date(selectedDate + "T23:59:59");
+    return [
+      ...appointments.map(a => ({ ...a, type: "appointment" as const, date: a.start_time })),
+      ...visitRequests.map(v => ({ ...v, type: "visit" as const, date: v.requested_date })),
+    ].filter(e => {
+      if (!e.date) return false;
+      const d = new Date(e.date);
+      return d >= from && d <= to;
+    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [appointments, visitRequests, selectedDate]);
+
+  const toggleSelectedRow = (id: string) => {
+    setSelectedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleDayClick = (day: Date) => {
+    const dateStr = format(day, "yyyy-MM-dd");
+    setSelectedDate(prev => prev === dateStr ? null : dateStr);
+  };
 
   const today = new Date();
 
@@ -309,11 +340,13 @@ export default function Appointments() {
                       return (
                         <div
                           key={di}
+                          onClick={() => handleDayClick(day)}
                           className={`h-10 flex items-center justify-center text-sm relative cursor-pointer transition-colors
                             ${!isCurrentMonth ? "text-muted-foreground/40" : ""}
                             ${isToday ? "bg-info/20 font-bold text-info" : ""}
                             ${hasAppointment ? "bg-info/30 text-info font-semibold" : ""}
                             ${isHoliday ? "text-destructive font-semibold" : ""}
+                            ${selectedDate === dateStr ? "ring-2 ring-primary ring-inset" : ""}
                             hover:bg-info/10
                           `}
                         >
@@ -345,7 +378,100 @@ export default function Appointments() {
         </span>
       </div>
 
-      {/* List / Table view */}
+      {/* Selected date events */}
+      {selectedDate && (activeTab === "geral" || activeTab === "mensal") && (
+        <Card>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-lg font-bold text-info">
+                {format(new Date(selectedDate + "T12:00:00"), "dd/MM/yyyy")}
+              </h3>
+              <div className="flex gap-2">
+                <Button size="sm" className="bg-info text-info-foreground hover:bg-info/90" onClick={() => setSelectedRows(new Set(selectedDateEvents.map(e => e.id)))}>
+                  ☑ Marcar todos
+                </Button>
+                <Button size="sm" variant="destructive" onClick={() => setSelectedRows(new Set())}>
+                  ☐ Desmarcar todos
+                </Button>
+              </div>
+            </div>
+
+            {selectedDateEvents.length === 0 ? (
+              <p className="text-center py-6 text-muted-foreground">Nenhum compromisso nesta data</p>
+            ) : (
+              <div className="border border-border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-info/10">
+                      <TableHead className="w-12">Marcar</TableHead>
+                      <TableHead>Quem Agendou</TableHead>
+                      <TableHead>Período</TableHead>
+                      <TableHead>Compromisso</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Local</TableHead>
+                      <TableHead>Observação</TableHead>
+                      <TableHead className="w-20"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedDateEvents.map(event => (
+                      <TableRow key={event.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedRows.has(event.id)}
+                            onCheckedChange={() => toggleSelectedRow(event.id)}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium text-xs uppercase">
+                          {event.created_by ? "USUÁRIO" : "-"}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {event.start_time
+                            ? format(new Date(event.start_time || event.date), "HH:mm")
+                            : "-"}
+                          {event.end_time && (
+                            <><br />{format(new Date(event.end_time), "HH:mm")}</>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs uppercase font-medium">
+                          {event.title}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs font-semibold text-info uppercase">
+                            CONFIRMADO
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs uppercase">
+                          {event.location || "-"}
+                        </TableCell>
+                        <TableCell className="text-xs max-w-[200px]">
+                          {event.description || ""}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <button className="text-info hover:text-info/70">
+                              <MessageSquare className="h-4 w-4" />
+                            </button>
+                            <button className="text-destructive hover:text-destructive/70">
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            <div className="bg-success/10 border border-success/30 rounded px-4 py-2 text-sm">
+              Total de compromissos nesta data: <strong className="text-info">{selectedDateEvents.length}</strong>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
       {activeTab === "semanal" && (
         <Card>
           <CardContent className="p-4 space-y-4">
