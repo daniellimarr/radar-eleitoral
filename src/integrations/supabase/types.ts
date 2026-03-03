@@ -25,6 +25,7 @@ export type Database = {
           is_public: boolean | null
           location: string | null
           start_time: string
+          status: string
           tenant_id: string
           title: string
           updated_at: string
@@ -39,6 +40,7 @@ export type Database = {
           is_public?: boolean | null
           location?: string | null
           start_time: string
+          status?: string
           tenant_id: string
           title: string
           updated_at?: string
@@ -53,6 +55,7 @@ export type Database = {
           is_public?: boolean | null
           location?: string | null
           start_time?: string
+          status?: string
           tenant_id?: string
           title?: string
           updated_at?: string
