@@ -16,21 +16,21 @@ import { Button } from "@/components/ui/button";
 import { Cloud } from "lucide-react";
 
 const mainItems = [
-  { title: "Início", url: "/dashboard", icon: Home },
-  { title: "Cadastro de Contato", url: "/contacts", icon: Users },
-  { title: "Demandas", url: "/demands", icon: ClipboardList },
-  { title: "Agenda", url: "/appointments", icon: Calendar },
-  { title: "Lideranças", url: "/leaders", icon: BarChart3 },
-  { title: "Rel. de Contato", url: "/reports/contacts", icon: FileText },
-  { title: "Rel. de Atendimento", url: "/reports/demands", icon: FileText },
-  { title: "Mapa", url: "/map", icon: MapPin },
+  { title: "Início", url: "/dashboard", icon: Home, module: "dashboard" },
+  { title: "Cadastro de Contato", url: "/contacts", icon: Users, module: "contacts" },
+  { title: "Demandas", url: "/demands", icon: ClipboardList, module: "demands" },
+  { title: "Agenda", url: "/appointments", icon: Calendar, module: "appointments" },
+  { title: "Lideranças", url: "/leaders", icon: BarChart3, module: "leaders" },
+  { title: "Rel. de Contato", url: "/reports/contacts", icon: FileText, module: "reports" },
+  { title: "Rel. de Atendimento", url: "/reports/demands", icon: FileText, module: "reports" },
+  { title: "Mapa", url: "/map", icon: MapPin, module: "map" },
 ];
 
 const coordinatorItems = [
-  { title: "Veículos", url: "/vehicles", icon: Car },
-  { title: "Material de Campanha", url: "/materials", icon: Package },
-  { title: "Solicitações de Visita", url: "/visit-requests", icon: MessageSquare },
-  { title: "Links de Cadastro", url: "/registration-links", icon: Link2 },
+  { title: "Veículos", url: "/vehicles", icon: Car, module: "vehicles" },
+  { title: "Material de Campanha", url: "/materials", icon: Package, module: "materials" },
+  { title: "Solicitações de Visita", url: "/visit-requests", icon: MessageSquare, module: "visit_requests" },
+  { title: "Links de Cadastro", url: "/registration-links", icon: Link2, module: "registration_links" },
 ];
 
 const adminItems = [
@@ -48,11 +48,15 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { profile, hasRole, signOut } = useAuth();
+  const { profile, hasRole, hasPermission, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
   const isSuperAdmin = hasRole("super_admin");
-  const isCoordinator = hasRole("coordenador") || hasRole("admin_gabinete") || isSuperAdmin;
+  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin;
+  const isCoordinator = hasRole("coordenador") || isAdmin;
+
+  const visibleMainItems = mainItems.filter((item) => hasPermission(item.module));
+  const visibleCoordinatorItems = coordinatorItems.filter((item) => hasPermission(item.module));
 
   return (
     <Sidebar collapsible="icon">
@@ -83,7 +87,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {visibleMainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
@@ -98,7 +102,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Coordinator Menu */}
-        {isCoordinator && (
+        {isCoordinator && visibleCoordinatorItems.length > 0 && (
           <SidebarGroup>
             <Collapsible defaultOpen>
               <CollapsibleTrigger className="w-full">
@@ -110,7 +114,7 @@ export function AppSidebar() {
               <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {coordinatorItems.map((item) => (
+                    {visibleCoordinatorItems.map((item) => (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton asChild isActive={isActive(item.url)}>
                           <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
@@ -128,7 +132,7 @@ export function AppSidebar() {
         )}
 
         {/* Admin Menu */}
-        {isSuperAdmin && (
+        {isAdmin && (
           <SidebarGroup>
             <Collapsible defaultOpen>
               <CollapsibleTrigger className="w-full">
