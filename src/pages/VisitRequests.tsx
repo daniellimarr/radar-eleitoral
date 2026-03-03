@@ -12,10 +12,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Plus, Clock } from "lucide-react";
+import { Plus, Clock, MapPin, Search } from "lucide-react";
 import { format, isSameDay, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { geocodeByCep } from "@/lib/geocoding";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+const visitIcon = new L.Icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
 
 const TIME_SLOTS = [
   "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
@@ -32,11 +46,35 @@ export default function VisitRequests() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [form, setForm] = useState({
-    title: "", description: "", location: "",
+    title: "", description: "", location: "", cep: "",
+    address: "", neighborhood: "", city: "", state: "",
     chairs_needed: "0", needs_political_material: false, needs_banners: false,
     needs_sound: false, material_observations: "",
   });
   const [loading, setLoading] = useState(false);
+  const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [cepLoading, setCepLoading] = useState(false);
+
+  const handleCepSearch = async () => {
+    if (!form.cep) return;
+    setCepLoading(true);
+    const result = await geocodeByCep(form.cep);
+    if (result) {
+      const fullAddress = [result.address, result.neighborhood, result.city, result.state].filter(Boolean).join(", ");
+      setForm(p => ({
+        ...p,
+        address: result.address || "",
+        neighborhood: result.neighborhood || "",
+        city: result.city || "",
+        state: result.state || "",
+        location: fullAddress,
+      }));
+      if (result.latitude && result.longitude) {
+        setLocationCoords({ lat: result.latitude, lng: result.longitude });
+      }
+    }
+    setCepLoading(false);
+  };
 
   const fetchRequests = async () => {
     if (!tenantId) return;
@@ -129,7 +167,8 @@ export default function VisitRequests() {
       setIsOpen(false);
       setSelectedDate(undefined);
       setSelectedTime("");
-      setForm({ title: "", description: "", location: "", chairs_needed: "0", needs_political_material: false, needs_banners: false, needs_sound: false, material_observations: "" });
+      setForm({ title: "", description: "", location: "", cep: "", address: "", neighborhood: "", city: "", state: "", chairs_needed: "0", needs_political_material: false, needs_banners: false, needs_sound: false, material_observations: "" });
+      setLocationCoords(null);
       fetchRequests();
     }
     setLoading(false);
@@ -227,7 +266,42 @@ export default function VisitRequests() {
                 </div>
               </div>
 
-              <div className="space-y-2"><Label>Local</Label><Input value={form.location} onChange={(e) => setForm(p => ({ ...p, location: e.target.value }))} /></div>
+              {/* CEP + Endereço + Mapa */}
+              <div className="space-y-3">
+                <Label className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Localização</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="CEP (ex: 69301-000)"
+                    value={form.cep}
+                    onChange={(e) => setForm(p => ({ ...p, cep: e.target.value }))}
+                    className="max-w-[180px]"
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={handleCepSearch} disabled={cepLoading}>
+                    <Search className="h-4 w-4 mr-1" /> {cepLoading ? "Buscando..." : "Buscar"}
+                  </Button>
+                </div>
+                <Input
+                  placeholder="Endereço completo"
+                  value={form.location}
+                  onChange={(e) => setForm(p => ({ ...p, location: e.target.value }))}
+                />
+                {locationCoords && (
+                  <div className="rounded-lg overflow-hidden border h-[200px]">
+                    <MapContainer
+                      key={`${locationCoords.lat}-${locationCoords.lng}`}
+                      center={[locationCoords.lat, locationCoords.lng]}
+                      zoom={15}
+                      style={{ height: "100%", width: "100%" }}
+                      scrollWheelZoom={false}
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <Marker position={[locationCoords.lat, locationCoords.lng]} icon={visitIcon}>
+                        <Popup>{form.location}</Popup>
+                      </Marker>
+                    </MapContainer>
+                  </div>
+                )}
+              </div>
               <div className="space-y-2"><Label>Total de cadeiras necessárias</Label><Input type="number" value={form.chairs_needed} onChange={(e) => setForm(p => ({ ...p, chairs_needed: e.target.value }))} /></div>
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Necessidades</Label>
