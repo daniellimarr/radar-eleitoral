@@ -67,7 +67,7 @@ export function AppSidebar() {
         {/* Logo */}
         <div className="p-4 flex items-center gap-2">
           <Cloud className="h-8 w-8 text-primary shrink-0" />
-          {!collapsed && <span className="font-bold text-lg text-foreground">GABINETE ONLINE</span>}
+          {!collapsed && <span className="font-bold text-lg text-foreground">RADAR ELEITORAL</span>}
         </div>
 
         {/* User Info */}

@@ -51,7 +51,7 @@ export default function Auth() {
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Cloud className="h-10 w-10 text-primary" />
-              <span className="text-2xl font-bold text-foreground tracking-tight">GABINETE ONLINE</span>
+              <span className="text-2xl font-bold text-foreground tracking-tight">RADAR ELEITORAL</span>
             </div>
             <div className="w-24 h-24 rounded-full bg-muted mx-auto flex items-center justify-center">
               <Users className="h-12 w-12 text-muted-foreground" />
