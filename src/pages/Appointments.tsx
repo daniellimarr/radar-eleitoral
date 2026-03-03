@@ -681,10 +681,16 @@ export default function Appointments() {
                   value={importCalendarId}
                   onChange={(e) => setImportCalendarId(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  O calendário precisa estar configurado como <strong>público</strong> no Google Agenda.
-                  O ID geralmente é o email da conta ou está em Configurações → Integrar calendário.
-                </p>
+                <div className="text-xs text-muted-foreground space-y-2 bg-muted/30 p-3 rounded-md">
+                  <p><strong>⚠️ Pré-requisito:</strong> O calendário precisa estar <strong>público</strong>.</p>
+                  <p><strong>Como tornar público:</strong></p>
+                  <ol className="list-decimal ml-4 space-y-1">
+                    <li>No Google Agenda, clique nos 3 pontos ao lado do calendário → <strong>Configurações e compartilhamento</strong></li>
+                    <li>Em "Permissões de acesso", marque <strong>"Disponibilizar para o público"</strong></li>
+                    <li>Copie o <strong>ID do calendário</strong> em "Integrar calendário" (ex: abc123@group.calendar.google.com)</li>
+                  </ol>
+                  <p className="text-destructive">Se o calendário não estiver público, a importação retornará erro 404.</p>
+                </div>
               </div>
               <Button
                 onClick={handleImportGoogleCalendar}
