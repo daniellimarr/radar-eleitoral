@@ -40,7 +40,7 @@ const defaultContact = {
 };
 
 export default function Contacts() {
-  const { tenantId, user } = useAuth();
+  const { tenantId, user, hasRole } = useAuth();
   const [contacts, setContacts] = useState<any[]>([]);
   const [leaders, setLeaders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -400,9 +400,11 @@ export default function Contacts() {
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        {(hasRole("super_admin") || hasRole("admin_gabinete")) && (
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
