@@ -154,7 +154,7 @@ export default function PublicRegistration() {
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Cloud className="h-8 w-8 text-primary" />
-            <span className="font-bold text-lg">GABINETE ONLINE</span>
+            <span className="font-bold text-lg">RADAR ELEITORAL</span>
           </div>
           <CardTitle>{tenantName}</CardTitle>
           {leaderName && <p className="text-sm text-muted-foreground">Liderança: <strong>{leaderName}</strong></p>}
