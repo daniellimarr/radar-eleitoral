@@ -115,13 +115,10 @@ export default function Appointments() {
   };
 
   const handleConfirm = async (id: string, type: "appointment" | "visit") => {
-    if (type === "visit") {
-      const { error } = await supabase.from("visit_requests").update({ status: "confirmado" }).eq("id", id);
-      if (error) toast.error(error.message);
-      else { toast.success("Visita confirmada!"); fetchData(); }
-    } else {
-      toast.success("Compromisso confirmado!");
-    }
+    const table = type === "appointment" ? "appointments" : "visit_requests";
+    const { error } = await supabase.from(table).update({ status: "confirmado" }).eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Confirmado!"); fetchData(); }
   };
 
   const clearFilters = () => {
@@ -454,8 +451,8 @@ export default function Appointments() {
                           {event.title}
                         </TableCell>
                         <TableCell>
-                          <span className="text-xs font-semibold text-success uppercase">
-                            CONFIRMADO
+                          <span className={`text-xs font-semibold uppercase ${event.status === "confirmado" ? "text-success" : "text-warning"}`}>
+                            {event.status === "confirmado" ? "CONFIRMADO" : "A CONFIRMAR"}
                           </span>
                         </TableCell>
                         <TableCell className="text-xs uppercase">
@@ -573,8 +570,8 @@ export default function Appointments() {
                           {event.title}
                         </TableCell>
                         <TableCell>
-                          <span className="text-xs font-semibold text-success uppercase">
-                            CONFIRMADO
+                          <span className={`text-xs font-semibold uppercase ${event.status === "confirmado" ? "text-success" : "text-warning"}`}>
+                            {event.status === "confirmado" ? "CONFIRMADO" : "A CONFIRMAR"}
                           </span>
                         </TableCell>
                         <TableCell className="text-xs uppercase">

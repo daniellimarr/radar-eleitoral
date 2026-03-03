@@ -1,0 +1,1 @@
+ALTER TABLE public.appointments ADD COLUMN status text NOT NULL DEFAULT 'a_confirmar';
