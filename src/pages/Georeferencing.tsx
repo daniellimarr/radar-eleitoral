@@ -53,9 +53,13 @@ interface ContactWithGeo {
   name: string;
   nickname: string | null;
   phone: string | null;
+  email: string | null;
   city: string | null;
   neighborhood: string | null;
   address: string | null;
+  address_number: string | null;
+  cep: string | null;
+  state: string | null;
   latitude: number | null;
   longitude: number | null;
   is_leader: boolean | null;
@@ -81,6 +85,8 @@ function FitBounds({ contacts }: { contacts: ContactWithGeo[] }) {
 }
 
 function LeaderPopupContent({ leader, voters }: { leader: ContactWithGeo; voters: ContactWithGeo[] }) {
+  const fullAddress = [leader.address, leader.address_number].filter(Boolean).join(", ");
+  const locationParts = [fullAddress, leader.neighborhood, leader.city, leader.state].filter(Boolean).join(" - ");
   return (
     <div style={{ padding: 4 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -89,11 +95,16 @@ function LeaderPopupContent({ leader, voters }: { leader: ContactWithGeo; voters
         </div>
         <div>
           <p style={{ fontWeight: "bold", fontSize: 14, margin: 0 }}>{leader.name}</p>
-          <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>
-            {leader.address && `${leader.address}, `}{leader.neighborhood}{leader.city ? ` - ${leader.city}` : ""}
-          </p>
+          {leader.nickname && <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>Apelido: {leader.nickname}</p>}
         </div>
       </div>
+
+      <div style={{ fontSize: 12, lineHeight: 1.6, marginBottom: 8 }}>
+        <p style={{ margin: 0 }}>📱 <strong>Tel:</strong> {leader.phone || "Não tem"}</p>
+        <p style={{ margin: 0 }}>📧 <strong>Rede social:</strong> {leader.email || "Não tem"}</p>
+        <p style={{ margin: 0 }}>📍 <strong>Endereço:</strong> {locationParts || "Não informado"}</p>
+      </div>
+
       <p style={{ fontSize: 12, background: "#f3f4f6", padding: "2px 8px", borderRadius: 4, display: "inline-block", marginBottom: 4 }}>
         {voters.length} eleitor{voters.length !== 1 ? "es" : ""} vinculado{voters.length !== 1 ? "s" : ""}
       </p>
@@ -121,16 +132,28 @@ function LeaderPopupContent({ leader, voters }: { leader: ContactWithGeo; voters
   );
 }
 
-function VoterPopupContent({ voter }: { voter: ContactWithGeo }) {
+function VoterPopupContent({ voter, leaderName }: { voter: ContactWithGeo; leaderName: string | null }) {
+  const fullAddress = [voter.address, voter.address_number].filter(Boolean).join(", ");
+  const locationParts = [fullAddress, voter.neighborhood, voter.city, voter.state].filter(Boolean).join(" - ");
   return (
-    <div style={{ padding: 4 }}>
+    <div style={{ padding: 4, minWidth: 220 }}>
       <p style={{ fontWeight: "bold", fontSize: 14, margin: 0 }}>{voter.name}</p>
-      {voter.nickname && <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>{voter.nickname}</p>}
-      <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>
-        {voter.address && `${voter.address}, `}{voter.neighborhood}{voter.city ? ` - ${voter.city}` : ""}
-      </p>
-      {voter.phone && <p style={{ fontSize: 11, marginTop: 4 }}>📞 {voter.phone}</p>}
-      {voter.category && <span style={{ fontSize: 10, border: "1px solid #d1d5db", borderRadius: 4, padding: "1px 6px" }}>{voter.category}</span>}
+      {voter.nickname && <p style={{ fontSize: 12, color: "#6b7280", margin: "2px 0 0" }}>Apelido: {voter.nickname}</p>}
+      
+      <div style={{ marginTop: 8, fontSize: 12, lineHeight: 1.6 }}>
+        <p style={{ margin: 0 }}>📱 <strong>Tel:</strong> {voter.phone || "Não tem"}</p>
+        <p style={{ margin: 0 }}>📧 <strong>Rede social:</strong> {voter.email || "Não tem"}</p>
+        <p style={{ margin: 0 }}>📍 <strong>Endereço:</strong> {locationParts || "Não informado"}</p>
+        {voter.cep && <p style={{ margin: 0 }}>📮 <strong>CEP:</strong> {voter.cep}</p>}
+      </div>
+
+      <div style={{ marginTop: 8, padding: "4px 8px", background: "#eff6ff", borderRadius: 4, fontSize: 12, borderLeft: "3px solid #2563eb" }}>
+        <strong>Liderança:</strong> {leaderName || "Sem liderança vinculada"}
+      </div>
+
+      {voter.category && (
+        <span style={{ fontSize: 10, border: "1px solid #d1d5db", borderRadius: 4, padding: "1px 6px", marginTop: 6, display: "inline-block" }}>{voter.category}</span>
+      )}
     </div>
   );
 }
@@ -153,7 +176,7 @@ export default function Georeferencing() {
         setLoading(true);
         const { data, error } = await supabase
           .from("contacts")
-          .select("id, name, nickname, phone, city, neighborhood, address, latitude, longitude, is_leader, leader_id, category, gender")
+          .select("id, name, nickname, phone, email, city, neighborhood, address, address_number, cep, state, latitude, longitude, is_leader, leader_id, category, gender")
           .eq("tenant_id", profile.tenant_id!)
           .is("deleted_at", null);
         if (!error && data) setContacts(data as ContactWithGeo[]);
@@ -355,17 +378,20 @@ export default function Georeferencing() {
             ));
           })}
 
-          {!loading && geoVoters.map((voter) => (
-            <Marker
-              key={voter.id}
-              position={[voter.latitude!, voter.longitude!]}
-              icon={voterIcon}
-            >
-              <Popup maxWidth={300}>
-                <VoterPopupContent voter={voter} />
-              </Popup>
-            </Marker>
-          ))}
+          {!loading && geoVoters.map((voter) => {
+            const leader = voter.leader_id ? contacts.find((c) => c.id === voter.leader_id) : null;
+            return (
+              <Marker
+                key={voter.id}
+                position={[voter.latitude!, voter.longitude!]}
+                icon={voterIcon}
+              >
+                <Popup maxWidth={320}>
+                  <VoterPopupContent voter={voter} leaderName={leader?.name || null} />
+                </Popup>
+              </Marker>
+            );
+          })}
         </MapContainer>
       </div>
     </div>
