@@ -1,7 +1,1 @@
-project_id = "nkfookfndbmahnqtgwts"
-
-[functions.invite-user]
-verify_jwt = false
-
-[functions.geocode-cep]
-verify_jwt = false
+project_id = "wlfjgondrmbklbyuiqnd"
