@@ -22,6 +22,7 @@ import UserManagement from "@/pages/UserManagement";
 import Campaigns from "@/pages/Campaigns";
 import Financial from "@/pages/Financial";
 import Marketing from "@/pages/Marketing";
+import WhatsApp from "@/pages/WhatsApp";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ function App() {
             <Route path="/leaders/edit/:id" element={<ProtectedRoute><LeaderRegistration /></ProtectedRoute>} />
             <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
             <Route path="/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
+            <Route path="/whatsapp" element={<ProtectedRoute><WhatsApp /></ProtectedRoute>} />
             <Route path="/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
             <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
             <Route path="/visit-requests" element={<ProtectedRoute><VisitRequests /></ProtectedRoute>} />

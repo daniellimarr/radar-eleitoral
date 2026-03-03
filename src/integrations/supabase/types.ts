@@ -1085,6 +1085,117 @@ export type Database = {
           },
         ]
       }
+      whatsapp_automations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          include_variable: string | null
+          is_active: boolean
+          message_template: string
+          name: string
+          schedule_time: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          include_variable?: string | null
+          is_active?: boolean
+          message_template?: string
+          name?: string
+          schedule_time?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          include_variable?: string | null
+          is_active?: boolean
+          message_template?: string
+          name?: string
+          schedule_time?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_automations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_send_logs: {
+        Row: {
+          automation_id: string | null
+          contact_id: string | null
+          contact_name: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          message: string | null
+          phone: string | null
+          sent_at: string | null
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          automation_id?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string | null
+          phone?: string | null
+          sent_at?: string | null
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          automation_id?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string | null
+          phone?: string | null
+          sent_at?: string | null
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_send_logs_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_automations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_send_logs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_send_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

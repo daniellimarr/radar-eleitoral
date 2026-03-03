@@ -1,7 +1,7 @@
 import {
   Home, Users, FileText, Calendar, Car, Package, MapPin, Settings,
   BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield,
-  Flag, DollarSign, Megaphone
+  Flag, DollarSign, Megaphone, Phone
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -25,6 +25,7 @@ const mainItems = [
   { title: "Lideranças", url: "/leaders", icon: BarChart3, module: "leaders" },
   { title: "Financeiro", url: "/financial", icon: DollarSign, module: "financial" },
   { title: "Marketing", url: "/marketing", icon: Megaphone, module: "marketing" },
+  { title: "WhatsApp", url: "/whatsapp", icon: Phone, module: "whatsapp" },
   { title: "Mapa", url: "/map", icon: MapPin, module: "map" },
 ];
 
