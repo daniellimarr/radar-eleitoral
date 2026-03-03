@@ -9,10 +9,13 @@ interface AuthContextType {
   profile: any;
   roles: string[];
   tenantId: string | null;
+  userPermissions: string[];
+  permissionsLoading: boolean;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, fullName: string) => Promise<any>;
   signOut: () => Promise<void>;
   hasRole: (role: string) => boolean;
+  hasPermission: (module: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -24,6 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<any>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [tenantId, setTenantId] = useState<string | null>(null);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [permissionsLoading, setPermissionsLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
     const { data: profileData } = await supabase
@@ -45,6 +50,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (rolesData) {
       setRoles(rolesData.map((r: any) => r.role));
     }
+
+    // Fetch module permissions
+    setPermissionsLoading(true);
+    const { data: permsData } = await supabase
+      .from("user_permissions")
+      .select("module")
+      .eq("user_id", userId);
+    
+    if (permsData) {
+      setUserPermissions(permsData.map((p: any) => p.module));
+    }
+    setPermissionsLoading(false);
   };
 
   useEffect(() => {
@@ -58,6 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null);
           setRoles([]);
           setTenantId(null);
+          setUserPermissions([]);
+          setPermissionsLoading(false);
         }
         setLoading(false);
       }
@@ -95,9 +114,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const hasRole = (role: string) => roles.includes(role);
+  
+  const hasPermission = (module: string) => {
+    // Super admins and admin_gabinete always have access to everything
+    if (roles.includes("super_admin") || roles.includes("admin_gabinete")) return true;
+    // If user has no permissions set at all, allow everything (backwards compat)
+    if (userPermissions.length === 0 && !permissionsLoading) return true;
+    return userPermissions.includes(module);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, roles, tenantId, signIn, signUp, signOut, hasRole }}>
+    <AuthContext.Provider value={{ user, session, loading, profile, roles, tenantId, userPermissions, permissionsLoading, signIn, signUp, signOut, hasRole, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );
