@@ -61,6 +61,9 @@ export default function Appointments() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [importCalendarId, setImportCalendarId] = useState("");
   const [importing, setImporting] = useState(false);
+  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
+  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
+  const [loadingGoogleAuth, setLoadingGoogleAuth] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", start_time: "", end_time: "", location: "" });
   const [loading, setLoading] = useState(false);
 
@@ -124,9 +127,52 @@ export default function Appointments() {
     else { toast.success("Confirmado!"); fetchData(); }
   };
 
+  // Fetch Google Client ID
+  const fetchGoogleClientId = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("google-calendar-config");
+      if (error) throw error;
+      if (data?.clientId) setGoogleClientId(data.clientId);
+    } catch (err) {
+      console.error("Failed to fetch Google Client ID:", err);
+    }
+  };
+
+  useEffect(() => { fetchGoogleClientId(); }, []);
+
+  const handleGoogleAuth = () => {
+    if (!googleClientId) {
+      toast.error("Configuração do Google não encontrada");
+      return;
+    }
+    setLoadingGoogleAuth(true);
+
+    const tokenClient = (window as any).google?.accounts?.oauth2?.initTokenClient({
+      client_id: googleClientId,
+      scope: "https://www.googleapis.com/auth/calendar.readonly",
+      callback: (response: any) => {
+        setLoadingGoogleAuth(false);
+        if (response.error) {
+          toast.error("Falha na autenticação com o Google: " + response.error);
+          return;
+        }
+        setGoogleAccessToken(response.access_token);
+        toast.success("Conectado ao Google Agenda! Clique em 'Importar eventos' para continuar.");
+      },
+    });
+
+    if (!tokenClient) {
+      setLoadingGoogleAuth(false);
+      toast.error("Biblioteca do Google não carregada. Recarregue a página.");
+      return;
+    }
+
+    tokenClient.requestAccessToken();
+  };
+
   const handleImportGoogleCalendar = async () => {
-    if (!importCalendarId.trim()) {
-      toast.error("Informe o ID do calendário do Google");
+    if (!googleAccessToken && !importCalendarId.trim()) {
+      toast.error("Conecte ao Google ou informe o ID do calendário");
       return;
     }
     setImporting(true);
@@ -135,9 +181,15 @@ export default function Appointments() {
       const timeMin = new Date(now.getFullYear(), 0, 1).toISOString();
       const timeMax = new Date(now.getFullYear(), 11, 31, 23, 59, 59).toISOString();
 
-      const { data, error } = await supabase.functions.invoke("import-google-calendar", {
-        body: { calendarId: importCalendarId.trim(), timeMin, timeMax },
-      });
+      const body: any = { timeMin, timeMax };
+      if (googleAccessToken) {
+        body.accessToken = googleAccessToken;
+        body.calendarId = "all"; // Import from all calendars
+      } else {
+        body.calendarId = importCalendarId.trim();
+      }
+
+      const { data, error } = await supabase.functions.invoke("import-google-calendar", { body });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -145,6 +197,7 @@ export default function Appointments() {
       toast.success(`Importação concluída! ${data.imported} eventos importados, ${data.skipped} ignorados.`);
       setIsImportOpen(false);
       setImportCalendarId("");
+      setGoogleAccessToken(null);
       fetchData();
     } catch (err: any) {
       toast.error(err.message || "Erro ao importar eventos");
@@ -671,33 +724,58 @@ export default function Appointments() {
               <CalendarSync className="h-4 w-4 mr-2" /> Importar do Google Agenda
             </Button>
           </DialogTrigger>
-          <DialogContent>
+           <DialogContent>
             <DialogHeader><DialogTitle>Importar do Google Agenda</DialogTitle></DialogHeader>
             <div className="space-y-4">
+              {/* OAuth Flow */}
               <div className="space-y-2">
-                <Label>ID do Calendário *</Label>
+                <Label className="font-semibold">Opção 1: Conectar sua conta Google (recomendado)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Importa todos os eventos de todos os seus calendários, incluindo privados.
+                </p>
+                {googleAccessToken ? (
+                  <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/30 rounded-md">
+                    <CheckCircle2 className="h-5 w-5 text-success" />
+                    <span className="text-sm text-success font-medium">Conectado ao Google Agenda!</span>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleGoogleAuth}
+                    disabled={loadingGoogleAuth || !googleClientId}
+                    variant="outline"
+                    className="w-full border-info text-info hover:bg-info/10"
+                  >
+                    {loadingGoogleAuth ? "Conectando..." : "🔗 Conectar ao Google Agenda"}
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground">OU</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              {/* Public calendar flow */}
+              <div className="space-y-2">
+                <Label className="font-semibold">Opção 2: Calendário público (via ID)</Label>
                 <Input
                   placeholder="exemplo@gmail.com ou ID do calendário"
                   value={importCalendarId}
                   onChange={(e) => setImportCalendarId(e.target.value)}
+                  disabled={!!googleAccessToken}
                 />
-                <div className="text-xs text-muted-foreground space-y-2 bg-muted/30 p-3 rounded-md">
-                  <p><strong>⚠️ Pré-requisito:</strong> O calendário precisa estar <strong>público</strong>.</p>
-                  <p><strong>Como tornar público:</strong></p>
-                  <ol className="list-decimal ml-4 space-y-1">
-                    <li>No Google Agenda, clique nos 3 pontos ao lado do calendário → <strong>Configurações e compartilhamento</strong></li>
-                    <li>Em "Permissões de acesso", marque <strong>"Disponibilizar para o público"</strong></li>
-                    <li>Copie o <strong>ID do calendário</strong> em "Integrar calendário" (ex: abc123@group.calendar.google.com)</li>
-                  </ol>
-                  <p className="text-destructive">Se o calendário não estiver público, a importação retornará erro 404.</p>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  Apenas para calendários configurados como públicos no Google Agenda.
+                </p>
               </div>
+
               <Button
                 onClick={handleImportGoogleCalendar}
-                disabled={importing}
+                disabled={importing || (!googleAccessToken && !importCalendarId.trim())}
                 className="w-full bg-info text-info-foreground hover:bg-info/90"
               >
-                {importing ? "Importando..." : "Importar eventos"}
+                {importing ? "Importando..." : googleAccessToken ? "Importar todos os eventos" : "Importar eventos"}
               </Button>
             </div>
           </DialogContent>
