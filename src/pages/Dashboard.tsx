@@ -233,63 +233,30 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Vote Projection & Financial */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" />Projeção de Votos</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            {campaign ? (
-              <>
+      {/* Vote Projection */}
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" />Projeção de Votos</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          {campaign ? (
+            <>
+              <div className="flex justify-between text-sm">
+                <span>Campanha: <strong>{campaign.nome_campanha}</strong></span>
+                <span>{campaign.cargo} - {campaign.partido} {campaign.numero}</span>
+              </div>
+              <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Campanha: <strong>{campaign.nome_campanha}</strong></span>
-                  <span>{campaign.cargo} - {campaign.partido} {campaign.numero}</span>
+                  <span>Projeção estimada</span>
+                  <span className="font-bold">{projectedVotes.toLocaleString()} / {metaVotos.toLocaleString()}</span>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Projeção estimada</span>
-                    <span className="font-bold">{projectedVotes.toLocaleString()} / {metaVotos.toLocaleString()}</span>
-                  </div>
-                  <Progress value={projPct} className="h-3" />
-                  <p className="text-xs text-muted-foreground text-right">{projPct.toFixed(1)}% da meta</p>
-                </div>
-              </>
-            ) : (
-              <p className="text-muted-foreground text-center py-4">Nenhuma campanha cadastrada.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><DollarSign className="h-5 w-5 text-primary" />Resumo Financeiro</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-success/10 rounded-lg p-4 text-center">
-                <p className="text-xs text-muted-foreground">Arrecadado</p>
-                <p className="text-xl font-bold">R$ {financialSummary.donations.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                <Progress value={projPct} className="h-3" />
+                <p className="text-xs text-muted-foreground text-right">{projPct.toFixed(1)}% da meta</p>
               </div>
-              <div className="bg-destructive/10 rounded-lg p-4 text-center">
-                <p className="text-xs text-muted-foreground">Gasto</p>
-                <p className="text-xl font-bold">R$ {financialSummary.expenses.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-              </div>
-            </div>
-            <div className="bg-card border rounded-lg p-4 text-center">
-              <p className="text-xs text-muted-foreground">Saldo</p>
-              <p className={`text-2xl font-bold ${(financialSummary.donations - financialSummary.expenses) < 0 ? "text-destructive" : "text-success"}`}>
-                R$ {(financialSummary.donations - financialSummary.expenses).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-            {campaign?.limite_gastos > 0 && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Limite legal</span>
-                  <span>R$ {Number(campaign.limite_gastos).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                </div>
-                <Progress value={Math.min((financialSummary.expenses / Number(campaign.limite_gastos)) * 100, 100)} className="h-2" />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </>
+          ) : (
+            <p className="text-muted-foreground text-center py-4">Nenhuma campanha cadastrada.</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Neighborhood ranking */}
       {neighborhoodData.length > 0 && (
