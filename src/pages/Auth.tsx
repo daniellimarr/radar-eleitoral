@@ -124,19 +124,20 @@ export default function Auth() {
 
       {/* Right - Hero */}
       <div className="hidden lg:flex flex-1 bg-primary items-center justify-center p-12">
-        <div className="text-primary-foreground space-y-6 max-w-lg">
+        <div className="text-primary-foreground space-y-8 max-w-lg text-center flex flex-col items-center">
+          <img src={logoRadar} alt="Radar Eleitoral" className="h-40 w-40 rounded-2xl shadow-2xl" />
           <h1 className="text-5xl font-black leading-tight">
-            SUA INDICAÇÃO<br />
-            <span className="text-warning">VALE DINHEIRO</span>
+            RADAR<br />
+            <span className="text-warning">ELEITORAL</span>
           </h1>
           <p className="text-xl font-semibold">
-            Indicou. Fechou. Ganhou.<br />
-            Cada indicação convertida<br />
-            = 1 mensalidade grátis
+            Gestão inteligente de gabinete.<br />
+            Contatos, demandas e campanhas<br />
+            em um só lugar.
           </p>
-          <Button variant="outline" size="lg" className="bg-warning text-warning-foreground border-warning hover:bg-warning/90 text-lg font-bold px-8">
-            Clique aqui e indique agora
-          </Button>
+          <p className="text-sm opacity-75">
+            Tecnologia a serviço da política
+          </p>
         </div>
       </div>
     </div>
