@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2, CalendarSync } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -58,6 +58,9 @@ export default function Appointments() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [visitRequests, setVisitRequests] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importCalendarId, setImportCalendarId] = useState("");
+  const [importing, setImporting] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", start_time: "", end_time: "", location: "" });
   const [loading, setLoading] = useState(false);
 
@@ -119,6 +122,35 @@ export default function Appointments() {
     const { error } = await supabase.from(table).update({ status: "confirmado" }).eq("id", id);
     if (error) toast.error(error.message);
     else { toast.success("Confirmado!"); fetchData(); }
+  };
+
+  const handleImportGoogleCalendar = async () => {
+    if (!importCalendarId.trim()) {
+      toast.error("Informe o ID do calendário do Google");
+      return;
+    }
+    setImporting(true);
+    try {
+      const now = new Date();
+      const timeMin = new Date(now.getFullYear(), 0, 1).toISOString();
+      const timeMax = new Date(now.getFullYear(), 11, 31, 23, 59, 59).toISOString();
+
+      const { data, error } = await supabase.functions.invoke("import-google-calendar", {
+        body: { calendarId: importCalendarId.trim(), timeMin, timeMax },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(`Importação concluída! ${data.imported} eventos importados, ${data.skipped} ignorados.`);
+      setIsImportOpen(false);
+      setImportCalendarId("");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao importar eventos");
+    } finally {
+      setImporting(false);
+    }
   };
 
   const clearFilters = () => {
@@ -610,27 +642,61 @@ export default function Appointments() {
         </Card>
       )}
 
-      {/* Add appointment button */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button className="bg-success text-success-foreground hover:bg-success/90">
-            <Plus className="h-4 w-4 mr-2" /> Cadastrar compromisso
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Novo Compromisso</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2"><Label>Título *</Label><Input value={form.title} onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))} /></div>
-            <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Início *</Label><Input type="datetime-local" value={form.start_time} onChange={(e) => setForm(p => ({ ...p, start_time: e.target.value }))} /></div>
-              <div className="space-y-2"><Label>Fim</Label><Input type="datetime-local" value={form.end_time} onChange={(e) => setForm(p => ({ ...p, end_time: e.target.value }))} /></div>
+      {/* Action buttons */}
+      <div className="flex gap-2">
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-success text-success-foreground hover:bg-success/90">
+              <Plus className="h-4 w-4 mr-2" /> Cadastrar compromisso
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Novo Compromisso</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2"><Label>Título *</Label><Input value={form.title} onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))} /></div>
+              <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2"><Label>Início *</Label><Input type="datetime-local" value={form.start_time} onChange={(e) => setForm(p => ({ ...p, start_time: e.target.value }))} /></div>
+                <div className="space-y-2"><Label>Fim</Label><Input type="datetime-local" value={form.end_time} onChange={(e) => setForm(p => ({ ...p, end_time: e.target.value }))} /></div>
+              </div>
+              <div className="space-y-2"><Label>Local</Label><Input value={form.location} onChange={(e) => setForm(p => ({ ...p, location: e.target.value }))} /></div>
+              <Button onClick={handleSave} disabled={loading} className="w-full">{loading ? "Salvando..." : "Adicionar"}</Button>
             </div>
-            <div className="space-y-2"><Label>Local</Label><Input value={form.location} onChange={(e) => setForm(p => ({ ...p, location: e.target.value }))} /></div>
-            <Button onClick={handleSave} disabled={loading} className="w-full">{loading ? "Salvando..." : "Adicionar"}</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="border-info text-info hover:bg-info/10">
+              <CalendarSync className="h-4 w-4 mr-2" /> Importar do Google Agenda
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Importar do Google Agenda</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>ID do Calendário *</Label>
+                <Input
+                  placeholder="exemplo@gmail.com ou ID do calendário"
+                  value={importCalendarId}
+                  onChange={(e) => setImportCalendarId(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  O calendário precisa estar configurado como <strong>público</strong> no Google Agenda.
+                  O ID geralmente é o email da conta ou está em Configurações → Integrar calendário.
+                </p>
+              </div>
+              <Button
+                onClick={handleImportGoogleCalendar}
+                disabled={importing}
+                className="w-full bg-info text-info-foreground hover:bg-info/90"
+              >
+                {importing ? "Importando..." : "Importar eventos"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
