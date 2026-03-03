@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, MessageSquare, Gift, Megaphone, Calendar as CalendarIcon, Target, TrendingUp, DollarSign, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
+import { Progress } from "@/components/ui/progress";
 
 const engagementLabels: Record<string, string> = {
   nao_trabalhado: "Não trabalhado",
@@ -16,16 +17,25 @@ const engagementLabels: Record<string, string> = {
   conquistado: "Conquistado",
   criando_envolvimento: "Criando envolvimento",
   falta_trabalhar: "Falta trabalhar",
-  envolvimento_perdido: "Envolvimento perdido",
+  envolvimento_perdido: "Envolvimento Perdido",
 };
 
-const engagementColors: Record<string, string> = {
-  nao_trabalhado: "bg-primary",
-  em_prospeccao: "bg-warning",
-  conquistado: "bg-success",
-  criando_envolvimento: "bg-info",
+const engagementBarColors: Record<string, string> = {
+  nao_trabalhado: "bg-info",
+  em_prospeccao: "bg-success",
+  conquistado: "bg-purple-400",
+  criando_envolvimento: "bg-warning",
   falta_trabalhar: "bg-muted-foreground",
   envolvimento_perdido: "bg-destructive",
+};
+
+const engagementBadgeColors: Record<string, string> = {
+  nao_trabalhado: "border-info text-info",
+  em_prospeccao: "border-success text-success",
+  conquistado: "border-purple-400 text-purple-500",
+  criando_envolvimento: "border-warning text-warning",
+  falta_trabalhar: "border-muted-foreground text-muted-foreground",
+  envolvimento_perdido: "border-destructive text-destructive",
 };
 
 const engagementWeight: Record<string, number> = {
@@ -37,26 +47,28 @@ const engagementWeight: Record<string, number> = {
   envolvimento_perdido: 0.05,
 };
 
-const PIE_COLORS = ["hsl(205, 85%, 50%)", "hsl(145, 65%, 42%)", "hsl(38, 95%, 55%)", "hsl(0, 72%, 55%)", "hsl(270, 60%, 55%)"];
-
 export default function Dashboard() {
   const { tenantId } = useAuth();
-  const [stats, setStats] = useState({ contacts: 0, demandsOpen: 0, birthdays: 0, strongSupporters: 0, undecided: 0 });
+  const [stats, setStats] = useState({ contacts: 0, appointmentsToday: 0, birthdays: 0, citizenParticipates: 0 });
   const [engagementData, setEngagementData] = useState<Record<string, number>>({});
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [campaign, setCampaign] = useState<any>(null);
   const [projectedVotes, setProjectedVotes] = useState(0);
-  const [neighborhoodData, setNeighborhoodData] = useState<any[]>([]);
   const [financialSummary, setFinancialSummary] = useState({ donations: 0, expenses: 0 });
+  const [neighborhoodData, setNeighborhoodData] = useState<any[]>([]);
+  const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
 
   useEffect(() => {
     if (!tenantId) return;
 
     const fetchStats = async () => {
-      // Parallel fetches
-      const [contactRes, demandsRes, birthdayRes, engagementRes, allContactsRes, campaignRes, donationsRes, expensesRes] = await Promise.all([
+      const now = new Date();
+      const todayStart = format(now, "yyyy-MM-dd") + "T00:00:00";
+      const todayEnd = format(now, "yyyy-MM-dd") + "T23:59:59";
+
+      const [contactRes, appointmentsRes, birthdayRes, engagementRes, allContactsRes, campaignRes, donationsRes, expensesRes] = await Promise.all([
         supabase.from("contacts").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).is("deleted_at", null),
-        supabase.from("demands").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("status", "aberta"),
+        supabase.from("appointments").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
         supabase.from("contacts").select("birth_date").eq("tenant_id", tenantId).is("deleted_at", null).not("birth_date", "is", null),
         supabase.from("contacts").select("engagement, neighborhood").eq("tenant_id", tenantId).is("deleted_at", null),
         supabase.from("contacts").select("created_at").eq("tenant_id", tenantId).is("deleted_at", null),
@@ -66,24 +78,21 @@ export default function Dashboard() {
       ]);
 
       // Birthdays
-      const now = new Date();
       const todayMMDD = `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
       const birthdayCount = (birthdayRes.data || []).filter((c: any) => {
         const [, month, day] = c.birth_date.split("-");
         return `${month}-${day}` === todayMMDD;
       }).length;
 
-      // Engagement analysis
+      // Engagement
       const contacts = engagementRes.data || [];
       const engagement: Record<string, number> = {};
-      let strong = 0, undecided = 0, projVotes = 0;
+      let projVotes = 0;
       const neighborhoodMap: Record<string, number> = {};
 
       contacts.forEach((c: any) => {
         const e = c.engagement || "nao_trabalhado";
         engagement[e] = (engagement[e] || 0) + 1;
-        if (e === "conquistado" || e === "criando_envolvimento") strong++;
-        if (e === "nao_trabalhado" || e === "em_prospeccao") undecided++;
         projVotes += engagementWeight[e] || 0;
         if (c.neighborhood) {
           neighborhoodMap[c.neighborhood] = (neighborhoodMap[c.neighborhood] || 0) + 1;
@@ -93,26 +102,20 @@ export default function Dashboard() {
       setEngagementData(engagement);
       setProjectedVotes(Math.round(projVotes));
       setNeighborhoodData(
-        Object.entries(neighborhoodMap)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 10)
-          .map(([name, value]) => ({ name, value }))
+        Object.entries(neighborhoodMap).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, value]) => ({ name, value }))
       );
 
-      // Campaign
       if (campaignRes.data && campaignRes.data.length > 0) setCampaign(campaignRes.data[0]);
 
-      // Financial
       const totalDonations = (donationsRes.data || []).reduce((s: number, d: any) => s + Number(d.valor), 0);
       const totalExpenses = (expensesRes.data || []).reduce((s: number, e: any) => s + Number(e.valor), 0);
       setFinancialSummary({ donations: totalDonations, expenses: totalExpenses });
 
       setStats({
         contacts: contactRes.count || 0,
-        demandsOpen: demandsRes.count || 0,
+        appointmentsToday: appointmentsRes.count || 0,
         birthdays: birthdayCount,
-        strongSupporters: strong,
-        undecided,
+        citizenParticipates: 0,
       });
 
       // Monthly chart
@@ -129,43 +132,103 @@ export default function Dashboard() {
   const metaVotos = campaign?.meta_votos || 0;
   const projPct = metaVotos > 0 ? Math.min((projectedVotes / metaVotos) * 100, 100) : 0;
 
+  const statCards = [
+    { label: "Contatos", value: stats.contacts, icon: Users, bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
+    { label: "Atendimentos hoje", value: stats.appointmentsToday, icon: MessageSquare, bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+    { label: "Aniversariantes hoje", value: stats.birthdays, icon: Gift, bgColor: "bg-purple-100", iconColor: "text-purple-600" },
+    { label: "Cidadão participa", value: stats.citizenParticipates, icon: Megaphone, bgColor: "bg-orange-100", iconColor: "text-orange-600" },
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">Painel Estratégico</p>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card px-4 py-2 rounded-lg border">
+        <h1 className="text-3xl font-bold">Início</h1>
+        <div className="flex items-center gap-2 text-sm bg-foreground text-background px-4 py-2 rounded-lg font-medium">
           <CalendarIcon className="h-4 w-4" />
           {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stat Cards */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {statCards.map((card) => (
+              <div key={card.label} className="flex items-center gap-4">
+                <div className={`h-14 w-14 rounded-full ${card.bgColor} flex items-center justify-center shrink-0`}>
+                  <card.icon className={`h-7 w-7 ${card.iconColor}`} />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{card.label}</p>
+                  <p className="text-3xl font-bold">{card.value.toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Charts Row: Visão Geral + Termômetro */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="h-14 w-14 rounded-full bg-success/10 flex items-center justify-center"><Users className="h-7 w-7 text-success" /></div>
-            <div><p className="text-sm text-muted-foreground">Eleitores Cadastrados</p><p className="text-3xl font-bold">{stats.contacts.toLocaleString()}</p></div>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Visão geral</CardTitle>
+              <div className="flex gap-2">
+                <Select value={yearFilter} onValueChange={setYearFilter}>
+                  <SelectTrigger className="w-20 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[2024, 2025, 2026, 2027].map(y => (
+                      <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select defaultValue="cadastros">
+                  <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cadastros">Cadastros</SelectItem>
+                    <SelectItem value="atendimentos">Atendimentos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip />
+                <Bar dataKey="cadastros" fill="hsl(220, 70%, 85%)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
+
         <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center"><Target className="h-7 w-7 text-primary" /></div>
-            <div><p className="text-sm text-muted-foreground">Apoiadores Fortes</p><p className="text-3xl font-bold">{stats.strongSupporters}</p><p className="text-xs text-muted-foreground">Grau 4-5</p></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="h-14 w-14 rounded-full bg-warning/10 flex items-center justify-center"><MessageSquare className="h-7 w-7 text-warning" /></div>
-            <div><p className="text-sm text-muted-foreground">Indecisos</p><p className="text-3xl font-bold">{stats.undecided}</p></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="h-14 w-14 rounded-full bg-info/10 flex items-center justify-center"><Gift className="h-7 w-7 text-info" /></div>
-            <div><p className="text-sm text-muted-foreground">Aniversariantes Hoje</p><p className="text-3xl font-bold">{stats.birthdays}</p></div>
+          <CardHeader><CardTitle>Termômetro de envolvimento</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid grid-cols-[1fr_auto] gap-x-4 text-sm font-medium text-muted-foreground border-b pb-2">
+              <span>Status</span>
+              <span>Progresso</span>
+            </div>
+            {Object.entries(engagementLabels).map(([key, label]) => {
+              const count = engagementData[key] || 0;
+              const pct = Math.max((count / totalEngagement) * 100, 2);
+              return (
+                <div key={key} className="flex items-center gap-4">
+                  <span className="text-sm font-medium w-44 shrink-0">{label}</span>
+                  <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
+                    <div className={`h-full rounded-full ${engagementBarColors[key]}`} style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className={`text-xs font-bold border rounded-full px-3 py-0.5 ${engagementBadgeColors[key]}`}>
+                    {count.toLocaleString()}
+                  </span>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       </div>
@@ -189,19 +252,9 @@ export default function Dashboard() {
                   <Progress value={projPct} className="h-3" />
                   <p className="text-xs text-muted-foreground text-right">{projPct.toFixed(1)}% da meta</p>
                 </div>
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="bg-success/10 rounded-lg p-3 text-center">
-                    <p className="text-xs text-muted-foreground">Apoiadores fortes</p>
-                    <p className="text-xl font-bold text-success">{stats.strongSupporters}</p>
-                  </div>
-                  <div className="bg-warning/10 rounded-lg p-3 text-center">
-                    <p className="text-xs text-muted-foreground">A conquistar</p>
-                    <p className="text-xl font-bold text-warning">{stats.undecided}</p>
-                  </div>
-                </div>
               </>
             ) : (
-              <p className="text-muted-foreground text-center py-4">Nenhuma campanha cadastrada. Crie uma campanha para ver a projeção.</p>
+              <p className="text-muted-foreground text-center py-4">Nenhuma campanha cadastrada.</p>
             )}
           </CardContent>
         </Card>
@@ -238,41 +291,19 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader><CardTitle>Cadastros por Mês</CardTitle></CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" fontSize={12} /><YAxis fontSize={12} /><Tooltip /><Bar dataKey="cadastros" fill="hsl(205, 85%, 50%)" radius={[4, 4, 0, 0]} /></BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>Termômetro de Envolvimento</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            {Object.entries(engagementLabels).map(([key, label]) => {
-              const count = engagementData[key] || 0;
-              const pct = (count / totalEngagement) * 100;
-              return (
-                <div key={key} className="space-y-1">
-                  <div className="flex justify-between text-sm"><span>{label}</span><span className="font-medium border rounded px-2 py-0.5 text-xs">{count}</span></div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden"><div className={`h-full rounded-full ${engagementColors[key]}`} style={{ width: `${pct}%` }} /></div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Neighborhood ranking */}
       {neighborhoodData.length > 0 && (
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" />Top 10 Bairros por Apoiadores</CardTitle></CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={neighborhoodData} layout="vertical"><CartesianGrid strokeDasharray="3 3" /><XAxis type="number" fontSize={12} /><YAxis type="category" dataKey="name" fontSize={11} width={120} /><Tooltip /><Bar dataKey="value" fill="hsl(145, 65%, 42%)" radius={[0, 4, 4, 0]} /></BarChart>
+              <BarChart data={neighborhoodData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" fontSize={12} />
+                <YAxis type="category" dataKey="name" fontSize={11} width={120} />
+                <Tooltip />
+                <Bar dataKey="value" fill="hsl(145, 65%, 42%)" radius={[0, 4, 4, 0]} />
+              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
