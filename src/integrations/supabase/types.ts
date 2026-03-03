@@ -165,6 +165,62 @@ export type Database = {
           },
         ]
       }
+      campaigns: {
+        Row: {
+          cargo: string
+          cidade: string | null
+          created_at: string
+          estado: string | null
+          id: string
+          limite_gastos: number | null
+          meta_votos: number | null
+          nome_campanha: string
+          numero: string | null
+          partido: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          cargo?: string
+          cidade?: string | null
+          created_at?: string
+          estado?: string | null
+          id?: string
+          limite_gastos?: number | null
+          meta_votos?: number | null
+          nome_campanha: string
+          numero?: string | null
+          partido?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          cargo?: string
+          cidade?: string | null
+          created_at?: string
+          estado?: string | null
+          id?: string
+          limite_gastos?: number | null
+          meta_votos?: number | null
+          nome_campanha?: string
+          numero?: string | null
+          partido?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           address: string | null
@@ -278,6 +334,69 @@ export type Database = {
           },
         ]
       }
+      content_plans: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          custo_impulsionamento: number | null
+          data_publicacao: string | null
+          descricao: string | null
+          id: string
+          plataforma: string | null
+          responsavel_id: string | null
+          status: string
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          custo_impulsionamento?: number | null
+          data_publicacao?: string | null
+          descricao?: string | null
+          id?: string
+          plataforma?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tenant_id: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          custo_impulsionamento?: number | null
+          data_publicacao?: string | null
+          descricao?: string | null
+          id?: string
+          plataforma?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_plans_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_plans_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demands: {
         Row: {
           contact_id: string | null
@@ -334,6 +453,140 @@ export type Database = {
           },
           {
             foreignKeyName: "demands_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      donations: {
+        Row: {
+          campaign_id: string | null
+          comprovante_url: string | null
+          cpf_cnpj: string | null
+          created_at: string
+          data: string
+          forma_pagamento: string | null
+          id: string
+          nome_doador: string
+          tenant_id: string
+          tipo: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          campaign_id?: string | null
+          comprovante_url?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          data?: string
+          forma_pagamento?: string | null
+          id?: string
+          nome_doador: string
+          tenant_id: string
+          tipo?: string
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          campaign_id?: string | null
+          comprovante_url?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          data?: string
+          forma_pagamento?: string | null
+          id?: string
+          nome_doador?: string
+          tenant_id?: string
+          tipo?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          campaign_id: string | null
+          categoria: string | null
+          comprovante_url: string | null
+          created_at: string
+          data: string
+          descricao: string
+          evento_id: string | null
+          id: string
+          supplier_id: string | null
+          tenant_id: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          campaign_id?: string | null
+          categoria?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          data?: string
+          descricao: string
+          evento_id?: string | null
+          id?: string
+          supplier_id?: string | null
+          tenant_id: string
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          campaign_id?: string | null
+          categoria?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          data?: string
+          descricao?: string
+          evento_id?: string | null
+          id?: string
+          supplier_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -504,6 +757,50 @@ export type Database = {
           },
           {
             foreignKeyName: "registration_links_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          contato: string | null
+          cpf_cnpj: string | null
+          created_at: string
+          email: string | null
+          endereco: string | null
+          id: string
+          nome: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          contato?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          contato?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -733,6 +1030,54 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "visit_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voter_interactions: {
+        Row: {
+          contact_id: string
+          created_at: string
+          data: string
+          descricao: string | null
+          id: string
+          tenant_id: string
+          tipo: string
+          user_id: string | null
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          id?: string
+          tenant_id: string
+          tipo?: string
+          user_id?: string | null
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          id?: string
+          tenant_id?: string
+          tipo?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voter_interactions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voter_interactions_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
