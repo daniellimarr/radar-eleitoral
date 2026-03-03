@@ -1,6 +1,7 @@
 import {
   Home, Users, FileText, Calendar, Car, Package, MapPin, Settings,
-  BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield
+  BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield,
+  Flag, DollarSign, Megaphone
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -17,12 +18,13 @@ import { Cloud } from "lucide-react";
 
 const mainItems = [
   { title: "Início", url: "/dashboard", icon: Home, module: "dashboard" },
+  { title: "Campanhas", url: "/campaigns", icon: Flag, module: "campaigns" },
   { title: "Cadastro de Contato", url: "/contacts", icon: Users, module: "contacts" },
   { title: "Demandas", url: "/demands", icon: ClipboardList, module: "demands" },
   { title: "Agenda", url: "/appointments", icon: Calendar, module: "appointments" },
   { title: "Lideranças", url: "/leaders", icon: BarChart3, module: "leaders" },
-  { title: "Rel. de Contato", url: "/reports/contacts", icon: FileText, module: "reports" },
-  { title: "Rel. de Atendimento", url: "/reports/demands", icon: FileText, module: "reports" },
+  { title: "Financeiro", url: "/financial", icon: DollarSign, module: "financial" },
+  { title: "Marketing", url: "/marketing", icon: Megaphone, module: "marketing" },
   { title: "Mapa", url: "/map", icon: MapPin, module: "map" },
 ];
 

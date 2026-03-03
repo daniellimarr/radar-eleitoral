@@ -19,6 +19,9 @@ import RegistrationLinks from "@/pages/RegistrationLinks";
 import PublicRegistration from "@/pages/PublicRegistration";
 import Georeferencing from "@/pages/Georeferencing";
 import UserManagement from "@/pages/UserManagement";
+import Campaigns from "@/pages/Campaigns";
+import Financial from "@/pages/Financial";
+import Marketing from "@/pages/Marketing";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,12 +44,15 @@ function App() {
             <Route path="/cadastro/:slug" element={<PublicRegistration />} />
             
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
             <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
             <Route path="/demands" element={<ProtectedRoute><Demands /></ProtectedRoute>} />
             <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
             <Route path="/leaders" element={<ProtectedRoute><Leaders /></ProtectedRoute>} />
             <Route path="/leaders/new" element={<ProtectedRoute><LeaderRegistration /></ProtectedRoute>} />
             <Route path="/leaders/edit/:id" element={<ProtectedRoute><LeaderRegistration /></ProtectedRoute>} />
+            <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
+            <Route path="/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
             <Route path="/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
             <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
             <Route path="/visit-requests" element={<ProtectedRoute><VisitRequests /></ProtectedRoute>} />
