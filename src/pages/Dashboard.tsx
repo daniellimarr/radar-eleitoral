@@ -50,13 +50,19 @@ export default function Dashboard() {
         .eq("tenant_id", tenantId)
         .eq("status", "aberta");
 
-      const today = format(new Date(), "MM-dd");
-      const { count: birthdayCount } = await supabase
+      const now = new Date();
+      const todayMMDD = `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const { data: birthdayData } = await supabase
         .from("contacts")
-        .select("*", { count: "exact", head: true })
+        .select("birth_date")
         .eq("tenant_id", tenantId)
         .is("deleted_at", null)
         .not("birth_date", "is", null);
+
+      const birthdayCount = (birthdayData || []).filter((c: any) => {
+        const [year, month, day] = c.birth_date.split("-");
+        return `${month}-${day}` === todayMMDD;
+      }).length;
 
       setStats({
         contacts: contactCount || 0,
