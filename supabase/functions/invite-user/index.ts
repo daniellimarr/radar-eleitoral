@@ -15,23 +15,38 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify caller is authenticated
+    // Verify caller is authenticated using getClaims (works with ES256)
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) throw new Error("Não autenticado");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const token = authHeader.replace("Bearer ", "");
 
     const callerClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user: caller }, error: authErr } = await callerClient.auth.getUser(token);
-    if (authErr || !caller) throw new Error("Não autenticado");
 
-    // Check caller is admin
+    // Use getClaims instead of getUser for ES256 token compatibility
+    const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      console.error("Claims error:", claimsError);
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const callerId = claimsData.claims.sub;
+
+    // Check caller is admin using service role client
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const { data: callerRoles } = await adminClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", caller.id);
+      .eq("user_id", callerId);
     const roles = callerRoles?.map((r: any) => r.role) || [];
     if (!roles.includes("super_admin") && !roles.includes("admin_gabinete")) {
       throw new Error("Sem permissão");
@@ -41,7 +56,7 @@ Deno.serve(async (req) => {
     const { data: callerProfile } = await adminClient
       .from("profiles")
       .select("tenant_id")
-      .eq("user_id", caller.id)
+      .eq("user_id", callerId)
       .single();
     if (!callerProfile?.tenant_id) throw new Error("Tenant não encontrado");
 
@@ -88,6 +103,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
+    console.error("invite-user error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
