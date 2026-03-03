@@ -8,6 +8,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Lora&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Mono&display=swap");
 
 #lovable-badge {
   display: none !important;
@@ -19,7 +22,7 @@
 
 @layer base {
   :root {
-    --background: 209 40% 96%;
+    --background: 210 40% 98.0392%;
     --foreground: 222 47% 11%;
 
     --card: 210 40% 98%;
@@ -32,7 +35,7 @@
     --primary-foreground: 204 100% 97%;
 
     --secondary: 215 24% 26%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary-foreground: 210 40% 98.0392%;
 
     --muted: 215 20% 65%;
     --muted-foreground: 222 47% 11%;
