@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Cloud, CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
+import logoRadar from "@/assets/logo-radar-eleitoral.png";
 import { geocodeByCep } from "@/lib/geocoding";
 
 const engagementOptions = [
@@ -153,7 +154,7 @@ export default function PublicRegistration() {
       <Card className="max-w-2xl w-full">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Cloud className="h-8 w-8 text-primary" />
+            <img src={logoRadar} alt="Radar Eleitoral" className="h-8 w-8 rounded" />
             <span className="font-bold text-lg">RADAR ELEITORAL</span>
           </div>
           <CardTitle>{tenantName}</CardTitle>

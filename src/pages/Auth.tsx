@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Cloud, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import logoRadar from "@/assets/logo-radar-eleitoral.png";
 
 export default function Auth() {
   const [loginEmail, setLoginEmail] = useState("");
@@ -50,7 +51,7 @@ export default function Auth() {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <Cloud className="h-10 w-10 text-primary" />
+              <img src={logoRadar} alt="Radar Eleitoral" className="h-10 w-10 rounded" />
               <span className="text-2xl font-bold text-foreground tracking-tight">RADAR ELEITORAL</span>
             </div>
             <div className="w-24 h-24 rounded-full bg-muted mx-auto flex items-center justify-center">
