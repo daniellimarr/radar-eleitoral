@@ -187,37 +187,50 @@ export default function WhatsApp() {
                 Configurar
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="sm:max-w-4xl h-[85vh] flex flex-col">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-primary">
                   <MessageSquare className="h-5 w-5" />
                   Configurar WhatsApp
                 </DialogTitle>
               </DialogHeader>
-              <div className="space-y-6 py-4">
-                <div className="space-y-4">
-                  {[
-                    { step: 1, text: "Abra o WhatsApp 📱 no seu celular." },
-                    { step: 2, text: "Toque em Mais opções ⋮ no Android ou em Configurações ⚙ no iPhone." },
-                    { step: 3, text: "Toque em Dispositivos conectados e, em seguida, em Conectar dispositivo." },
-                    { step: 4, text: "Escaneie o QR code para confirmar." },
-                  ].map((item, idx) => (
-                    <div key={item.step} className="flex items-start gap-4">
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-primary text-primary font-semibold text-sm">
-                          {item.step}
+              <div className="flex-1 flex flex-col gap-4 min-h-0">
+                <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 flex-1 min-h-0">
+                  {/* Instructions */}
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-muted-foreground">Siga os passos para conectar:</p>
+                    {[
+                      { step: 1, text: "Abra o WhatsApp 📱 no seu celular." },
+                      { step: 2, text: "Toque em Mais opções ⋮ no Android ou em Configurações ⚙ no iPhone." },
+                      { step: 3, text: "Toque em Dispositivos conectados e, em seguida, em Conectar dispositivo." },
+                      { step: 4, text: "Escaneie o QR code ao lado para confirmar." },
+                    ].map((item, idx) => (
+                      <div key={item.step} className="flex items-start gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="flex items-center justify-center w-7 h-7 rounded-full border-2 border-primary text-primary font-semibold text-xs">
+                            {item.step}
+                          </div>
+                          {idx < 3 && <div className="w-0.5 h-4 bg-border mt-1" />}
                         </div>
-                        {idx < 3 && <div className="w-0.5 h-6 bg-border mt-1" />}
+                        <p className="text-sm pt-1 leading-relaxed">{item.text}</p>
                       </div>
-                      <p className="text-sm pt-1.5 leading-relaxed">{item.text}</p>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                    <Button variant="outline" size="sm" className="w-full gap-2 mt-4" onClick={handleOpenWhatsAppWeb}>
+                      <ExternalLink className="h-4 w-4" />
+                      Abrir em nova aba
+                    </Button>
+                  </div>
 
-                <Button className="w-full gap-2" onClick={handleOpenWhatsAppWeb}>
-                  <ExternalLink className="h-4 w-4" />
-                  Abrir WhatsApp Web
-                </Button>
+                  {/* WhatsApp Web Embed */}
+                  <div className="flex-1 min-h-0 rounded-lg border border-border overflow-hidden bg-background">
+                    <iframe
+                      src="https://web.whatsapp.com"
+                      className="w-full h-full min-h-[400px]"
+                      title="WhatsApp Web"
+                      sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                    />
+                  </div>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
