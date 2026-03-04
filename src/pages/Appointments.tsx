@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2, MapPin } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -464,6 +464,17 @@ export default function Appointments() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
+                            {event.location && (
+                              <a
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-info hover:text-info/70"
+                                title="Rota GPS"
+                              >
+                                <MapPin className="h-4 w-4" />
+                              </a>
+                            )}
                             <button className="text-success hover:text-success/70" title="Confirmar" onClick={() => handleConfirm(event.id, event.type)}>
                               <CheckCircle2 className="h-4 w-4" />
                             </button>
@@ -583,6 +594,17 @@ export default function Appointments() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
+                            {event.location && (
+                              <a
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-info hover:text-info/70"
+                                title="Rota GPS"
+                              >
+                                <MapPin className="h-4 w-4" />
+                              </a>
+                            )}
                             <button className="text-success hover:text-success/70" title="Confirmar" onClick={() => handleConfirm(event.id, event.type)}>
                               <CheckCircle2 className="h-4 w-4" />
                             </button>
