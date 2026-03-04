@@ -142,32 +142,53 @@ export default function Appointments() {
 
   const handleGoogleAuth = () => {
     if (!googleClientId) {
-      toast.error("Configuração do Google não encontrada");
+      toast.error("Configuração do Google não encontrada. Verifique se o GOOGLE_CLIENT_ID está configurado.");
       return;
     }
+    
+    const gis = (window as any).google?.accounts?.oauth2;
+    if (!gis) {
+      toast.error("Biblioteca do Google não carregada. Recarregue a página e tente novamente.");
+      return;
+    }
+
     setLoadingGoogleAuth(true);
 
-    const tokenClient = (window as any).google?.accounts?.oauth2?.initTokenClient({
-      client_id: googleClientId,
-      scope: "https://www.googleapis.com/auth/calendar.readonly",
-      callback: (response: any) => {
-        setLoadingGoogleAuth(false);
-        if (response.error) {
-          toast.error("Falha na autenticação com o Google: " + response.error);
-          return;
-        }
-        setGoogleAccessToken(response.access_token);
-        toast.success("Conectado ao Google Agenda! Clique em 'Importar eventos' para continuar.");
-      },
-    });
+    try {
+      const tokenClient = gis.initTokenClient({
+        client_id: googleClientId,
+        scope: "https://www.googleapis.com/auth/calendar.readonly",
+        callback: (response: any) => {
+          setLoadingGoogleAuth(false);
+          if (response.error) {
+            console.error("Google OAuth error:", response);
+            if (response.error === "popup_closed_by_user") {
+              toast.info("Login cancelado. Tente novamente quando estiver pronto.");
+            } else {
+              toast.error("Falha na autenticação: " + (response.error_description || response.error));
+            }
+            return;
+          }
+          setGoogleAccessToken(response.access_token);
+          toast.success("Conectado ao Google Agenda! Clique em 'Importar todos os eventos' para continuar.");
+        },
+        error_callback: (err: any) => {
+          setLoadingGoogleAuth(false);
+          console.error("Google OAuth error callback:", err);
+          if (err.type === "popup_failed_to_open") {
+            toast.error("O popup foi bloqueado. Permita popups para este site e tente novamente.");
+          } else {
+            toast.error("Erro ao conectar com o Google: " + (err.message || err.type || "Erro desconhecido"));
+          }
+        },
+      });
 
-    if (!tokenClient) {
+      tokenClient.requestAccessToken({ prompt: "consent" });
+    } catch (err: any) {
       setLoadingGoogleAuth(false);
-      toast.error("Biblioteca do Google não carregada. Recarregue a página.");
-      return;
+      console.error("Google auth error:", err);
+      toast.error("Erro ao iniciar autenticação: " + (err.message || "Erro desconhecido"));
     }
-
-    tokenClient.requestAccessToken();
   };
 
   const handleImportGoogleCalendar = async () => {
