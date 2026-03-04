@@ -58,7 +58,7 @@ export default function OperatorDashboard() {
       {/* Welcome */}
       <Card>
         <CardContent className="p-6">
-          <p className="text-lg">Olá, <strong>{profile?.full_name || "Operador"}</strong>! Veja seus atalhos rápidos abaixo.</p>
+          <p className="text-lg">Olá, <strong>{profile?.full_name || "Liderança"}</strong>! Veja seus atalhos rápidos abaixo.</p>
         </CardContent>
       </Card>
 
