@@ -28,6 +28,7 @@ const mainItems = [
 ];
 
 const coordinatorItems = [
+  { title: "Gestão de Usuários", url: "/admin/users", icon: Users, module: "user_management" },
   { title: "Veículos", url: "/vehicles", icon: Car, module: "vehicles" },
   { title: "Material de Campanha", url: "/materials", icon: Package, module: "materials" },
   { title: "Solicitações de Visita", url: "/visit-requests", icon: MessageSquare, module: "visit_requests" },
