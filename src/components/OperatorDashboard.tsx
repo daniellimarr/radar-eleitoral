@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, ClipboardList, UserPlus, MapPin } from "lucide-react";
+import { CalendarIcon, ClipboardList, UserPlus, MapPin, Navigation } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,6 +42,7 @@ export default function OperatorDashboard() {
 
   const quickActions = [
     { label: "Novo Contato", icon: UserPlus, path: "/contacts", color: "bg-emerald-100 text-emerald-600" },
+    { label: "Solicitar Visita", icon: Navigation, path: "/visit-requests", color: "bg-blue-100 text-blue-600" },
   ];
 
   return (
