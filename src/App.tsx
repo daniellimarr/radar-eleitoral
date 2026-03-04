@@ -21,6 +21,7 @@ import Georeferencing from "@/pages/Georeferencing";
 import UserManagement from "@/pages/UserManagement";
 import Campaigns from "@/pages/Campaigns";
 import Marketing from "@/pages/Marketing";
+import Backup from "@/pages/Backup";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ function App() {
             <Route path="/registration-links" element={<ProtectedRoute><RegistrationLinks /></ProtectedRoute>} />
             <Route path="/map" element={<ProtectedRoute><Georeferencing /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+            <Route path="/backup" element={<ProtectedRoute><Backup /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
