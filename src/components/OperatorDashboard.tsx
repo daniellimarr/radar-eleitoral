@@ -43,7 +43,6 @@ export default function OperatorDashboard() {
   const quickActions = [
     { label: "Novo Contato", icon: UserPlus, path: "/contacts", color: "bg-emerald-100 text-emerald-600" },
     { label: "Solicitar Visita", icon: Navigation, path: "/visit-requests", color: "bg-blue-100 text-blue-600" },
-    { label: "Início", icon: Home, path: "/dashboard", color: "bg-gray-100 text-gray-600" },
   ];
 
   return (
