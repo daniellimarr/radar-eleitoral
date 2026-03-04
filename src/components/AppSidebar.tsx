@@ -1,7 +1,7 @@
 import {
   Home, Users, FileText, Calendar, Car, Package, MapPin, Settings,
   BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield,
-  Flag, Megaphone, Database
+  Flag, Megaphone, Database, FolderDown
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -24,6 +24,7 @@ const mainItems = [
   { title: "Agenda", url: "/appointments", icon: Calendar, module: "appointments" },
   { title: "Lideranças", url: "/leaders", icon: BarChart3, module: "leaders" },
   { title: "Marketing", url: "/marketing", icon: Megaphone, module: "marketing" },
+  { title: "Arquivos da Campanha", url: "/campaign-files", icon: FolderDown, module: "campaign_files" },
   { title: "Mapa", url: "/map", icon: MapPin, module: "map" },
 ];
 
