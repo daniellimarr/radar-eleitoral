@@ -237,8 +237,8 @@ export default function Contacts() {
                   </div>
                   <div className="space-y-2">
                     <Label>Liderança (Apelido)</Label>
-                    {isOperador && leaders.length === 1 ? (
-                      <Input value={leaders[0].nickname || leaders[0].name} disabled />
+                    {isOperador ? (
+                      <Input value={profile?.full_name || "Operador"} disabled />
                     ) : (
                       <Select value={form.leader_id} onValueChange={(v) => updateField("leader_id", v === "none" ? "" : v)}>
                         <SelectTrigger><SelectValue placeholder="SELECIONE" /></SelectTrigger>
