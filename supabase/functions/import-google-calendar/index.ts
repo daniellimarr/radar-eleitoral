@@ -49,30 +49,82 @@ Deno.serve(async (req) => {
 
     const { accessToken, calendarId, timeMin, timeMax } = await req.json();
 
-    // If accessToken is provided, use OAuth flow (private calendars)
-    // Otherwise, fall back to API Key (public calendars only)
-    let gcalUrl: string;
-    let gcalHeaders: Record<string, string> = {};
+    if (!accessToken && !calendarId) {
+      return new Response(JSON.stringify({ error: "accessToken ou calendarId é obrigatório" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Fetch events
+    let allEvents: any[] = [];
 
     if (accessToken) {
       // OAuth2 flow - can access private calendars
-      const targetCalendarId = calendarId || "primary";
-      const params = new URLSearchParams({
-        singleEvents: "true",
-        orderBy: "startTime",
-        maxResults: "2500",
-      });
-      if (timeMin) params.set("timeMin", timeMin);
-      if (timeMax) params.set("timeMax", timeMax);
+      if (!calendarId || calendarId === "all") {
+        // Fetch all calendars
+        const calListRes = await fetch(
+          "https://www.googleapis.com/calendar/v3/users/me/calendarList",
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
 
-      gcalUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(targetCalendarId)}/events?${params}`;
-      gcalHeaders = { Authorization: `Bearer ${accessToken}` };
-    } else if (calendarId) {
-      // API Key flow - public calendars only
+        if (!calListRes.ok) {
+          const errBody = await calListRes.text();
+          console.error("Calendar list error:", calListRes.status, errBody);
+          throw new Error(`Erro ao listar calendários (${calListRes.status}). Verifique se a permissão foi concedida.`);
+        }
+
+        const calListData = await calListRes.json();
+        const calendars = calListData.items || [];
+
+        for (const cal of calendars) {
+          const params = new URLSearchParams({
+            singleEvents: "true",
+            orderBy: "startTime",
+            maxResults: "2500",
+          });
+          if (timeMin) params.set("timeMin", timeMin);
+          if (timeMax) params.set("timeMax", timeMax);
+
+          const eventsUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?${params}`;
+          const eventsRes = await fetch(eventsUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
+
+          if (eventsRes.ok) {
+            const eventsData = await eventsRes.json();
+            allEvents.push(...(eventsData.items || []));
+          } else {
+            console.warn(`Failed to fetch events from calendar ${cal.id}: ${eventsRes.status}`);
+          }
+        }
+      } else {
+        // OAuth with specific calendar
+        const params = new URLSearchParams({
+          singleEvents: "true",
+          orderBy: "startTime",
+          maxResults: "2500",
+        });
+        if (timeMin) params.set("timeMin", timeMin);
+        if (timeMax) params.set("timeMax", timeMax);
+
+        const eventsUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
+        const eventsRes = await fetch(eventsUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
+
+        if (!eventsRes.ok) {
+          const errBody = await eventsRes.text();
+          console.error("Google Calendar API error:", eventsRes.status, errBody);
+          throw new Error(`Erro ao acessar calendário (${eventsRes.status}).`);
+        }
+
+        const eventsData = await eventsRes.json();
+        allEvents = eventsData.items || [];
+      }
+    } else {
+      // Public calendar via API Key
       const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY");
       if (!GOOGLE_API_KEY) {
         throw new Error("GOOGLE_API_KEY não configurada");
       }
+
       const params = new URLSearchParams({
         key: GOOGLE_API_KEY,
         singleEvents: "true",
@@ -82,56 +134,8 @@ Deno.serve(async (req) => {
       if (timeMin) params.set("timeMin", timeMin);
       if (timeMax) params.set("timeMax", timeMax);
 
-      gcalUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
-    } else {
-      return new Response(JSON.stringify({ error: "accessToken ou calendarId é obrigatório" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // First, fetch list of calendars if using OAuth (to import all)
-    let allEvents: any[] = [];
-
-    if (accessToken && (!calendarId || calendarId === "all")) {
-      // Fetch all calendars
-      const calListRes = await fetch(
-        "https://www.googleapis.com/calendar/v3/users/me/calendarList",
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-
-      if (!calListRes.ok) {
-        const errBody = await calListRes.text();
-        console.error("Calendar list error:", calListRes.status, errBody);
-        throw new Error(`Erro ao listar calendários (${calListRes.status}). Verifique se a permissão foi concedida.`);
-      }
-
-      const calListData = await calListRes.json();
-      const calendars = calListData.items || [];
-
-      // Fetch events from each calendar
-      for (const cal of calendars) {
-        const params = new URLSearchParams({
-          singleEvents: "true",
-          orderBy: "startTime",
-          maxResults: "2500",
-        });
-        if (timeMin) params.set("timeMin", timeMin);
-        if (timeMax) params.set("timeMax", timeMax);
-
-        const eventsUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?${params}`;
-        const eventsRes = await fetch(eventsUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
-
-        if (eventsRes.ok) {
-          const eventsData = await eventsRes.json();
-          allEvents.push(...(eventsData.items || []));
-        } else {
-          console.warn(`Failed to fetch events from calendar ${cal.id}: ${eventsRes.status}`);
-        }
-      }
-    } else {
-      // Single calendar
-      const gcalRes = await fetch(gcalUrl, { headers: gcalHeaders });
+      const gcalUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
+      const gcalRes = await fetch(gcalUrl);
 
       if (!gcalRes.ok) {
         const errBody = await gcalRes.text();
