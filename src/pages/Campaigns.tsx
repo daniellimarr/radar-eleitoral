@@ -20,7 +20,7 @@ const statusOptions = [
 ];
 
 const defaultForm = {
-  nome_campanha: "", cargo: "Vereador", cidade: "", estado: "SP",
+  nome_campanha: "", cargo: "Vereador", cidade: "Boa Vista", estado: "RR",
   partido: "", numero: "", meta_votos: 0, limite_gastos: 0, status: "pre_campanha",
 };
 
@@ -59,7 +59,7 @@ export default function Campaigns() {
   };
 
   const handleEdit = (item: any) => {
-    setForm({ nome_campanha: item.nome_campanha, cargo: item.cargo, cidade: item.cidade || "", estado: item.estado || "SP", partido: item.partido || "", numero: item.numero || "", meta_votos: item.meta_votos || 0, limite_gastos: item.limite_gastos || 0, status: item.status });
+    setForm({ nome_campanha: item.nome_campanha, cargo: item.cargo, cidade: item.cidade || "Boa Vista", estado: item.estado || "RR", partido: item.partido || "", numero: item.numero || "", meta_votos: item.meta_votos || 0, limite_gastos: item.limite_gastos || 0, status: item.status });
     setEditingId(item.id); setIsOpen(true);
   };
 
