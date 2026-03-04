@@ -40,7 +40,7 @@ const defaultContact = {
 };
 
 export default function Contacts() {
-  const { tenantId, user, hasRole } = useAuth();
+  const { tenantId, user, hasRole, profile } = useAuth();
   const [contacts, setContacts] = useState<any[]>([]);
   const [leaders, setLeaders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -69,19 +69,38 @@ export default function Contacts() {
     setGeocoding(false);
   };
 
+  const isOperador = hasRole("operador");
+
   const fetchLeaders = async () => {
     if (!tenantId) return;
-    const { data } = await supabase
+    let query = supabase
       .from("contacts")
       .select("id, name, nickname")
       .eq("tenant_id", tenantId)
       .eq("is_leader", true)
       .is("deleted_at", null)
       .order("name");
-    setLeaders(data || []);
+
+    const { data } = await query;
+    const allLeaders = data || [];
+
+    if (isOperador && profile?.full_name) {
+      // For operators, show only the leader matching their profile name
+      const matched = allLeaders.filter(
+        (l) => l.name.toLowerCase() === profile.full_name.toLowerCase() ||
+               (l.nickname && l.nickname.toLowerCase() === profile.full_name.toLowerCase())
+      );
+      setLeaders(matched);
+      // Auto-select if only one match
+      if (matched.length === 1) {
+        setForm((prev) => ({ ...prev, leader_id: matched[0].id }));
+      }
+    } else {
+      setLeaders(allLeaders);
+    }
   };
 
-  useEffect(() => { fetchLeaders(); }, [tenantId]);
+  useEffect(() => { fetchLeaders(); }, [tenantId, profile?.full_name]);
 
   const fetchContacts = async () => {
     if (!tenantId) return;
@@ -218,15 +237,19 @@ export default function Contacts() {
                   </div>
                   <div className="space-y-2">
                     <Label>Liderança (Apelido)</Label>
-                    <Select value={form.leader_id} onValueChange={(v) => updateField("leader_id", v === "none" ? "" : v)}>
-                      <SelectTrigger><SelectValue placeholder="SELECIONE" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhuma</SelectItem>
-                        {leaders.map((l) => (
-                          <SelectItem key={l.id} value={l.id}>{l.nickname || l.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {isOperador && leaders.length === 1 ? (
+                      <Input value={leaders[0].nickname || leaders[0].name} disabled />
+                    ) : (
+                      <Select value={form.leader_id} onValueChange={(v) => updateField("leader_id", v === "none" ? "" : v)}>
+                        <SelectTrigger><SelectValue placeholder="SELECIONE" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Nenhuma</SelectItem>
+                          {leaders.map((l) => (
+                            <SelectItem key={l.id} value={l.id}>{l.nickname || l.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>CPF</Label>
