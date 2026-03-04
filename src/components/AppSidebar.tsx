@@ -1,7 +1,7 @@
 import {
   Home, Users, FileText, Calendar, Car, Package, MapPin, Settings,
   BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield,
-  Flag, Megaphone
+  Flag, Megaphone, Database
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -43,6 +43,7 @@ const adminItems = [
 ];
 
 const configItems = [
+  { title: "Backup", url: "/backup", icon: Database },
   { title: "Configurações", url: "/settings", icon: Settings },
 ];
 
