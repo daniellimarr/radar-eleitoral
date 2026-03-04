@@ -10,6 +10,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { Progress } from "@/components/ui/progress";
+import OperatorDashboard from "@/components/OperatorDashboard";
 
 const engagementLabels: Record<string, string> = {
   nao_trabalhado: "Não trabalhado",
@@ -48,7 +49,8 @@ const engagementWeight: Record<string, number> = {
 };
 
 export default function Dashboard() {
-  const { tenantId } = useAuth();
+  const { tenantId, hasRole } = useAuth();
+  const isOperador = hasRole("operador");
   const [stats, setStats] = useState({ contacts: 0, appointmentsToday: 0, birthdays: 0, citizenParticipates: 0 });
   const [engagementData, setEngagementData] = useState<Record<string, number>>({});
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
@@ -57,9 +59,8 @@ export default function Dashboard() {
   const [financialSummary, setFinancialSummary] = useState({ donations: 0, expenses: 0 });
   const [neighborhoodData, setNeighborhoodData] = useState<any[]>([]);
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
-
   useEffect(() => {
-    if (!tenantId) return;
+    if (!tenantId || isOperador) return;
 
     const fetchStats = async () => {
       const now = new Date();
@@ -126,7 +127,11 @@ export default function Dashboard() {
     };
 
     fetchStats();
-  }, [tenantId]);
+  }, [tenantId, isOperador]);
+
+  if (isOperador) {
+    return <OperatorDashboard />;
+  }
 
   const totalEngagement = Object.values(engagementData).reduce((a, b) => a + b, 0) || 1;
   const metaVotos = campaign?.meta_votos || 0;
