@@ -27,9 +27,9 @@ export default function OperatorDashboard() {
           .eq("tenant_id", tenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
         supabase.from("demands").select("*", { count: "exact", head: true })
           .eq("tenant_id", tenantId).in("status", ["aberta", "em_andamento"]),
-        supabase.from("contacts").select("id, name, created_at")
+        supabase.from("contacts").select("id, name, birth_date, created_at")
           .eq("tenant_id", tenantId).is("deleted_at", null)
-          .order("created_at", { ascending: false }).limit(5),
+          .order("created_at", { ascending: false }).limit(10),
       ]);
 
       setTodayAppointments(apptRes.count || 0);
@@ -112,12 +112,19 @@ export default function OperatorDashboard() {
       {/* Recent contacts */}
       {recentContacts.length > 0 && (
         <Card>
-          <CardHeader><CardTitle>Últimos cadastros</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Meus cadastros</CardTitle></CardHeader>
           <CardContent>
             <ul className="divide-y">
               {recentContacts.map((c) => (
                 <li key={c.id} className="py-3 flex justify-between items-center">
-                  <span className="font-medium">{c.name}</span>
+                  <div>
+                    <span className="font-medium">{c.name}</span>
+                    {c.birth_date && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        🎂 {new Date(c.birth_date + "T00:00:00").toLocaleDateString("pt-BR")}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs text-muted-foreground">
                     {new Date(c.created_at).toLocaleDateString("pt-BR")}
                   </span>
