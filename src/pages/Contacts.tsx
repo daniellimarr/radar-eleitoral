@@ -397,9 +397,11 @@ export default function Contacts() {
                     <TableCell>{new Date(c.created_at).toLocaleDateString("pt-BR")}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        {!hasRole("operador") && (
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
                         {(hasRole("super_admin") || hasRole("admin_gabinete")) && (
                           <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
