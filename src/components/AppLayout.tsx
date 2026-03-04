@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import NotificationBell from "@/components/NotificationBell";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading, profile } = useAuth();
@@ -31,6 +32,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <SidebarTrigger />
             </div>
             <div className="flex items-center gap-3">
+              <NotificationBell />
               <span className="text-sm text-muted-foreground hidden sm:block">
                 Olá, <strong>{profile?.full_name || "Usuário"}</strong>
               </span>
