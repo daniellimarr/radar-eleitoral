@@ -39,7 +39,7 @@ export default function Auth() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Cadastro realizado! Verifique seu e-mail.");
+      toast.success("Cadastro realizado! Aguarde a aprovação de um administrador.");
     }
     setIsLoading(false);
   };

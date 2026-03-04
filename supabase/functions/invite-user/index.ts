@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     // Set profile tenant
     await adminClient
       .from("profiles")
-      .update({ tenant_id: callerProfile.tenant_id, full_name })
+      .update({ tenant_id: callerProfile.tenant_id, full_name, status: "approved" })
       .eq("user_id", userId);
 
     // Set role

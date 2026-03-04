@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, UserPlus, Shield, Loader2 } from "lucide-react";
+import { Plus, UserPlus, Shield, Loader2, CheckCircle, XCircle, Clock } from "lucide-react";
 
 const AVAILABLE_MODULES = [
   { key: "dashboard", label: "Início / Dashboard" },
@@ -41,6 +41,7 @@ interface UserRow {
   email: string;
   role: string | null;
   modules: string[];
+  status: string;
 }
 
 export default function UserManagement() {
@@ -69,12 +70,21 @@ export default function UserManagement() {
     // Get profiles for this tenant
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id, full_name")
+      .select("user_id, full_name, status" as any)
       .eq("tenant_id", tenantId);
 
-    if (!profiles || profiles.length === 0) { setUsers([]); setLoading(false); return; }
+    // Also fetch pending profiles without tenant
+    const { data: pendingProfiles } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, status" as any)
+      .is("tenant_id", null)
+      .filter("status", "eq", "pending");
 
-    const userIds = profiles.map((p) => p.user_id);
+    const allProfiles: any[] = [...(profiles as any[] || []), ...(pendingProfiles as any[] || [])];
+
+    if (allProfiles.length === 0) { setUsers([]); setLoading(false); return; }
+
+    const userIds = allProfiles.map((p) => p.user_id);
 
     // Get roles
     const { data: rolesData } = await supabase
@@ -97,12 +107,13 @@ export default function UserManagement() {
       permsMap.get(p.user_id)!.push(p.module);
     });
 
-    const rows: UserRow[] = profiles.map((p) => ({
+    const rows: UserRow[] = allProfiles.map((p: any) => ({
       user_id: p.user_id,
       full_name: p.full_name,
-      email: "", // we don't have email from profiles
+      email: "",
       role: rolesMap.get(p.user_id) || null,
       modules: permsMap.get(p.user_id) || [],
+      status: p.status || "approved",
     }));
 
     setUsers(rows);
@@ -147,7 +158,6 @@ export default function UserManagement() {
     if (!editUserId || !tenantId) return;
     setSaving(true);
 
-    // Delete existing then re-insert
     await supabase.from("user_permissions").delete().eq("user_id", editUserId).eq("tenant_id", tenantId);
 
     if (editModules.length > 0) {
@@ -160,6 +170,58 @@ export default function UserManagement() {
     setSaving(false);
     fetchUsers();
   };
+
+  const handleApprove = async (userId: string) => {
+    if (!tenantId) return;
+    setSaving(true);
+    try {
+      // Update profile status and assign tenant
+      await supabase
+        .from("profiles")
+        .update({ status: "approved" as any, tenant_id: tenantId })
+        .eq("user_id", userId);
+
+      // Assign default role (operador/Liderança)
+      const { data: existingRole } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", userId)
+        .limit(1);
+
+      if (!existingRole || existingRole.length === 0) {
+        await supabase.from("user_roles").insert({
+          user_id: userId,
+          role: "operador",
+          tenant_id: tenantId,
+        });
+      }
+
+      toast.success("Usuário aprovado com sucesso!");
+      fetchUsers();
+    } catch (err: any) {
+      toast.error("Erro ao aprovar usuário");
+    }
+    setSaving(false);
+  };
+
+  const handleReject = async (userId: string) => {
+    setSaving(true);
+    try {
+      await supabase
+        .from("profiles")
+        .update({ status: "rejected" as any })
+        .eq("user_id", userId);
+
+      toast.success("Usuário rejeitado.");
+      fetchUsers();
+    } catch (err: any) {
+      toast.error("Erro ao rejeitar usuário");
+    }
+    setSaving(false);
+  };
+
+  const pendingUsers = users.filter((u) => u.status === "pending");
+  const activeUsers = users.filter((u) => u.status === "approved");
 
   return (
     <div className="space-y-6">
@@ -251,7 +313,48 @@ export default function UserManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Users table */}
+      {/* Pending Users */}
+      {pendingUsers.length > 0 && (
+        <Card className="border-warning/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-warning">
+              <Clock className="h-5 w-5" />
+              Cadastros Pendentes ({pendingUsers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingUsers.map((u) => (
+                  <TableRow key={u.user_id}>
+                    <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-warning border-warning">Pendente</Badge>
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button size="sm" variant="default" onClick={() => handleApprove(u.user_id)} disabled={saving}>
+                        <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleReject(u.user_id)} disabled={saving}>
+                        <XCircle className="h-4 w-4 mr-1" /> Rejeitar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Active Users table */}
       <Card>
         <CardHeader>
           <CardTitle>Usuários do Sistema</CardTitle>
@@ -259,7 +362,7 @@ export default function UserManagement() {
         <CardContent>
           {loading ? (
             <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-          ) : users.length === 0 ? (
+          ) : activeUsers.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground">Nenhum usuário cadastrado</p>
           ) : (
             <Table>
@@ -272,7 +375,7 @@ export default function UserManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((u) => (
+                {activeUsers.map((u) => (
                   <TableRow key={u.user_id}>
                     <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
                     <TableCell>

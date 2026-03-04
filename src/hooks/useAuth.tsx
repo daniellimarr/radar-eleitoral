@@ -11,6 +11,7 @@ interface AuthContextType {
   tenantId: string | null;
   userPermissions: string[];
   permissionsLoading: boolean;
+  profileStatus: string | null;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, fullName: string) => Promise<any>;
   signOut: () => Promise<void>;
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [permissionsLoading, setPermissionsLoading] = useState(true);
+  const [profileStatus, setProfileStatus] = useState<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
     const { data: profileData } = await supabase
@@ -40,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (profileData) {
       setProfile(profileData);
       setTenantId(profileData.tenant_id);
+      setProfileStatus((profileData as any).status || 'pending');
     }
 
     const { data: rolesData } = await supabase
@@ -76,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRoles([]);
           setTenantId(null);
           setUserPermissions([]);
+          setProfileStatus(null);
           setPermissionsLoading(false);
         }
         setLoading(false);
@@ -124,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, roles, tenantId, userPermissions, permissionsLoading, signIn, signUp, signOut, hasRole, hasPermission }}>
+    <AuthContext.Provider value={{ user, session, loading, profile, roles, tenantId, userPermissions, permissionsLoading, profileStatus, signIn, signUp, signOut, hasRole, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );
