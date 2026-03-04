@@ -6,9 +6,10 @@ import { Navigate } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import NotificationBell from "@/components/NotificationBell";
+import PendingApproval from "@/pages/PendingApproval";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const { user, loading, profile } = useAuth();
+  const { user, loading, profile, profileStatus, roles } = useAuth();
 
   if (loading) {
     return (
@@ -20,6 +21,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // Users created via invite-user are auto-approved; self-registered need approval
+  const isAdminRole = roles.includes("super_admin") || roles.includes("admin_gabinete");
+  if (profileStatus && profileStatus !== "approved" && !isAdminRole) {
+    return <PendingApproval />;
   }
 
   return (
