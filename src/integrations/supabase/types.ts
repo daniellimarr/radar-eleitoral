@@ -121,6 +121,59 @@ export type Database = {
           },
         ]
       }
+      campaign_files: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          file_name: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          name: string
+          storage_path: string
+          tenant_id: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          name: string
+          storage_path: string
+          tenant_id: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          name?: string
+          storage_path?: string
+          tenant_id?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_files_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_materials: {
         Row: {
           created_at: string
