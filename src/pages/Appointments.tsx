@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2, CalendarSync } from "lucide-react";
+import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -58,12 +58,6 @@ export default function Appointments() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [visitRequests, setVisitRequests] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
-  const [importCalendarId, setImportCalendarId] = useState("");
-  const [importing, setImporting] = useState(false);
-  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
-  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
-  const [loadingGoogleAuth, setLoadingGoogleAuth] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", start_time: "", end_time: "", location: "" });
   const [loading, setLoading] = useState(false);
 
@@ -127,105 +121,6 @@ export default function Appointments() {
     else { toast.success("Confirmado!"); fetchData(); }
   };
 
-  // Fetch Google Client ID
-  const fetchGoogleClientId = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke("google-calendar-config");
-      if (error) throw error;
-      if (data?.clientId) setGoogleClientId(data.clientId);
-    } catch (err) {
-      console.error("Failed to fetch Google Client ID:", err);
-    }
-  };
-
-  useEffect(() => { fetchGoogleClientId(); }, []);
-
-  const handleGoogleAuth = () => {
-    if (!googleClientId) {
-      toast.error("Configuração do Google não encontrada. Verifique se o GOOGLE_CLIENT_ID está configurado.");
-      return;
-    }
-    
-    const gis = (window as any).google?.accounts?.oauth2;
-    if (!gis) {
-      toast.error("Biblioteca do Google não carregada. Recarregue a página e tente novamente.");
-      return;
-    }
-
-    setLoadingGoogleAuth(true);
-
-    try {
-      const tokenClient = gis.initTokenClient({
-        client_id: googleClientId,
-        scope: "https://www.googleapis.com/auth/calendar.readonly",
-        callback: (response: any) => {
-          setLoadingGoogleAuth(false);
-          if (response.error) {
-            console.error("Google OAuth error:", response);
-            if (response.error === "popup_closed_by_user") {
-              toast.info("Login cancelado. Tente novamente quando estiver pronto.");
-            } else {
-              toast.error("Falha na autenticação: " + (response.error_description || response.error));
-            }
-            return;
-          }
-          setGoogleAccessToken(response.access_token);
-          toast.success("Conectado ao Google Agenda! Clique em 'Importar todos os eventos' para continuar.");
-        },
-        error_callback: (err: any) => {
-          setLoadingGoogleAuth(false);
-          console.error("Google OAuth error callback:", err);
-          if (err.type === "popup_failed_to_open") {
-            toast.error("O popup foi bloqueado. Permita popups para este site e tente novamente.");
-          } else {
-            toast.error("Erro ao conectar com o Google: " + (err.message || err.type || "Erro desconhecido"));
-          }
-        },
-      });
-
-      tokenClient.requestAccessToken({ prompt: "consent" });
-    } catch (err: any) {
-      setLoadingGoogleAuth(false);
-      console.error("Google auth error:", err);
-      toast.error("Erro ao iniciar autenticação: " + (err.message || "Erro desconhecido"));
-    }
-  };
-
-  const handleImportGoogleCalendar = async () => {
-    if (!googleAccessToken && !importCalendarId.trim()) {
-      toast.error("Conecte ao Google ou informe o ID do calendário");
-      return;
-    }
-    setImporting(true);
-    try {
-      const now = new Date();
-      const timeMin = new Date(now.getFullYear(), 0, 1).toISOString();
-      const timeMax = new Date(now.getFullYear(), 11, 31, 23, 59, 59).toISOString();
-
-      const body: any = { timeMin, timeMax };
-      if (googleAccessToken) {
-        body.accessToken = googleAccessToken;
-        body.calendarId = "all"; // Import from all calendars
-      } else {
-        body.calendarId = importCalendarId.trim();
-      }
-
-      const { data, error } = await supabase.functions.invoke("import-google-calendar", { body });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      toast.success(`Importação concluída! ${data.imported} eventos importados, ${data.skipped} ignorados.`);
-      setIsImportOpen(false);
-      setImportCalendarId("");
-      setGoogleAccessToken(null);
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao importar eventos");
-    } finally {
-      setImporting(false);
-    }
-  };
 
   const clearFilters = () => {
     setSearchText("");
@@ -739,68 +634,6 @@ export default function Appointments() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="border-info text-info hover:bg-info/10">
-              <CalendarSync className="h-4 w-4 mr-2" /> Importar do Google Agenda
-            </Button>
-          </DialogTrigger>
-           <DialogContent>
-            <DialogHeader><DialogTitle>Importar do Google Agenda</DialogTitle></DialogHeader>
-            <div className="space-y-4">
-              {/* OAuth Flow */}
-              <div className="space-y-2">
-                <Label className="font-semibold">Opção 1: Conectar sua conta Google (recomendado)</Label>
-                <p className="text-xs text-muted-foreground">
-                  Importa todos os eventos de todos os seus calendários, incluindo privados.
-                </p>
-                {googleAccessToken ? (
-                  <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/30 rounded-md">
-                    <CheckCircle2 className="h-5 w-5 text-success" />
-                    <span className="text-sm text-success font-medium">Conectado ao Google Agenda!</span>
-                  </div>
-                ) : (
-                  <Button
-                    onClick={handleGoogleAuth}
-                    disabled={loadingGoogleAuth || !googleClientId}
-                    variant="outline"
-                    className="w-full border-info text-info hover:bg-info/10"
-                  >
-                    {loadingGoogleAuth ? "Conectando..." : "🔗 Conectar ao Google Agenda"}
-                  </Button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-xs text-muted-foreground">OU</span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-
-              {/* Public calendar flow */}
-              <div className="space-y-2">
-                <Label className="font-semibold">Opção 2: Calendário público (via ID)</Label>
-                <Input
-                  placeholder="exemplo@gmail.com ou ID do calendário"
-                  value={importCalendarId}
-                  onChange={(e) => setImportCalendarId(e.target.value)}
-                  disabled={!!googleAccessToken}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Apenas para calendários configurados como públicos no Google Agenda.
-                </p>
-              </div>
-
-              <Button
-                onClick={handleImportGoogleCalendar}
-                disabled={importing || (!googleAccessToken && !importCalendarId.trim())}
-                className="w-full bg-info text-info-foreground hover:bg-info/90"
-              >
-                {importing ? "Importando..." : googleAccessToken ? "Importar todos os eventos" : "Importar eventos"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
