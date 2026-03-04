@@ -32,7 +32,7 @@ const ROLE_LABELS: Record<string, string> = {
   admin_gabinete: "Admin do Gabinete",
   coordenador: "Coordenador",
   assessor: "Assessor",
-  operador: "Operador",
+  operador: "Liderança",
 };
 
 interface UserRow {
@@ -198,7 +198,7 @@ export default function UserManagement() {
                     <SelectItem value="admin_gabinete">Admin do Gabinete</SelectItem>
                     <SelectItem value="coordenador">Coordenador</SelectItem>
                     <SelectItem value="assessor">Assessor</SelectItem>
-                    <SelectItem value="operador">Operador</SelectItem>
+                    <SelectItem value="operador">Liderança</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
