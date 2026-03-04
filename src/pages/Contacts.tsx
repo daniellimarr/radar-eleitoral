@@ -73,30 +73,37 @@ export default function Contacts() {
 
   const fetchLeaders = async () => {
     if (!tenantId) return;
-    let query = supabase
-      .from("contacts")
-      .select("id, name, nickname")
-      .eq("tenant_id", tenantId)
-      .eq("is_leader", true)
-      .is("deleted_at", null)
-      .order("name");
-
-    const { data } = await query;
-    const allLeaders = data || [];
 
     if (isOperador && profile?.full_name) {
-      // For operators, show only the leader matching their profile name
+      // Operators: query leaders table (accessible via RLS) joined with contact info
+      const { data: leadersData } = await supabase
+        .from("leaders")
+        .select("id, contact_id, contacts:contact_id(id, name, nickname)")
+        .eq("tenant_id", tenantId);
+
+      const allLeaders = (leadersData || []).map((l: any) => ({
+        id: l.contact_id,
+        name: l.contacts?.name || "",
+        nickname: l.contacts?.nickname || "",
+      }));
+
       const matched = allLeaders.filter(
-        (l) => l.name.toLowerCase() === profile.full_name.toLowerCase() ||
+        (l: any) => l.name.toLowerCase() === profile.full_name.toLowerCase() ||
                (l.nickname && l.nickname.toLowerCase() === profile.full_name.toLowerCase())
       );
       setLeaders(matched);
-      // Auto-select if only one match
-      if (matched.length === 1) {
+      if (matched.length >= 1) {
         setForm((prev) => ({ ...prev, leader_id: matched[0].id }));
       }
     } else {
-      setLeaders(allLeaders);
+      const { data } = await supabase
+        .from("contacts")
+        .select("id, name, nickname")
+        .eq("tenant_id", tenantId)
+        .eq("is_leader", true)
+        .is("deleted_at", null)
+        .order("name");
+      setLeaders(data || []);
     }
   };
 
