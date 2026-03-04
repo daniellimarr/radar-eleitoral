@@ -1,0 +1,2 @@
+ALTER TABLE public.campaigns ALTER COLUMN estado SET DEFAULT 'RR';
+ALTER TABLE public.contacts ALTER COLUMN state SET DEFAULT 'RR';

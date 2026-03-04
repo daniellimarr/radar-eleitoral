@@ -33,7 +33,7 @@ const genderOptions = [
 const defaultContact = {
   name: "", nickname: "", cpf: "", gender: "", birth_date: "",
   phone: "", has_whatsapp: false, email: "", cep: "", address: "",
-  address_number: "", neighborhood: "", city: "", state: "SP",
+  address_number: "", neighborhood: "", city: "Boa Vista", state: "RR",
   voting_zone: "", voting_section: "", voting_location: "",
   engagement: "nao_trabalhado" as const, is_leader: false, observations: "",
   category: "", subcategory: "", leader_id: "",
@@ -191,7 +191,7 @@ export default function Contacts() {
       phone: contact.phone || "", has_whatsapp: contact.has_whatsapp || false,
       email: contact.email || "", cep: contact.cep || "", address: contact.address || "",
       address_number: contact.address_number || "", neighborhood: contact.neighborhood || "",
-      city: contact.city || "", state: contact.state || "SP",
+      city: contact.city || "Boa Vista", state: contact.state || "RR",
       voting_zone: contact.voting_zone || "", voting_section: contact.voting_section || "",
       voting_location: contact.voting_location || "",
       engagement: contact.engagement || "nao_trabalhado",

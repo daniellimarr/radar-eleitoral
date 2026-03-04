@@ -45,7 +45,7 @@ export default function PublicRegistration() {
     name: "", nickname: "", cpf: "", gender: "", birth_date: "",
     phone: "", has_whatsapp: false, email: "",
     cep: "", address: "", address_number: "", neighborhood: "",
-    city: "", state: "SP",
+    city: "Boa Vista", state: "RR",
     voting_zone: "", voting_section: "", voting_location: "",
     engagement: "nao_trabalhado",
     category: "", subcategory: "", observations: "",
