@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import { Progress } from "@/components/ui/progress";
 import OperatorDashboard from "@/components/OperatorDashboard";
-
+import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 const engagementLabels: Record<string, string> = {
   nao_trabalhado: "Não trabalhado",
   em_prospeccao: "Em prospecção",
@@ -51,6 +51,7 @@ const engagementWeight: Record<string, number> = {
 export default function Dashboard() {
   const { tenantId, hasRole } = useAuth();
   const isOperador = hasRole("operador");
+  const isSuperAdmin = hasRole("super_admin");
   const [stats, setStats] = useState({ contacts: 0, appointmentsToday: 0, birthdays: 0, citizenParticipates: 0 });
   const [engagementData, setEngagementData] = useState<Record<string, number>>({});
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
@@ -128,6 +129,10 @@ export default function Dashboard() {
 
     fetchStats();
   }, [tenantId, isOperador]);
+
+  if (isSuperAdmin) {
+    return <SuperAdminDashboard />;
+  }
 
   if (isOperador) {
     return <OperatorDashboard />;
