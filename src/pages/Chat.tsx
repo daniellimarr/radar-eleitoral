@@ -25,6 +25,7 @@ interface ChatUser {
   user_id: string;
   full_name: string;
   role: string;
+  location?: string;
 }
 
 interface Message {
@@ -88,18 +89,65 @@ export default function Chat() {
         }
       });
 
+      // Get leader locations for operadores
+      const operadorIds = userIds.filter(id => roleMap[id] === "operador" || !roleMap[id]);
+      const locationMap: Record<string, string> = {};
+      if (operadorIds.length > 0) {
+        // Leaders table links user via contact_id → contacts has neighborhood/city
+        // But leaders table doesn't have user_id directly. We need to match by full_name
+        // Actually, contacts.registered_by = user_id for operadores
+        const { data: leaderContacts } = await supabase
+          .from("contacts")
+          .select("registered_by, neighborhood, city")
+          .in("registered_by", operadorIds)
+          .not("neighborhood", "is", null)
+          .limit(100);
+
+        if (leaderContacts) {
+          // Get first contact's location per user as their area
+          leaderContacts.forEach((c: any) => {
+            if (c.registered_by && !locationMap[c.registered_by]) {
+              locationMap[c.registered_by] = c.neighborhood || c.city || "";
+            }
+          });
+        }
+
+        // Also check leaders table → contacts for more accurate location
+        const { data: leaders } = await supabase
+          .from("leaders")
+          .select("contact_id, tenant_id")
+          .eq("tenant_id", tenantId);
+
+        if (leaders && leaders.length > 0) {
+          const contactIds = leaders.map((l: any) => l.contact_id);
+          const { data: leaderContactData } = await supabase
+            .from("contacts")
+            .select("id, name, neighborhood, city, registered_by")
+            .in("id", contactIds);
+
+          if (leaderContactData) {
+            // Match leader contact name to profile name to find user
+            leaderContactData.forEach((c: any) => {
+              // If this contact's registered_by matches an operador
+              if (c.registered_by && operadorIds.includes(c.registered_by)) {
+                locationMap[c.registered_by] = c.neighborhood || c.city || "";
+              }
+            });
+          }
+        }
+      }
+
       const chatUsers: ChatUser[] = profiles
         .map(p => ({
           user_id: p.user_id,
           full_name: p.full_name || "Usuário",
           role: roleMap[p.user_id] || "operador",
+          location: locationMap[p.user_id] || "",
         }))
         .filter(u => {
           if (isLeader) {
-            // Leaders see admins and coordinators
             return ["super_admin", "admin_gabinete", "coordenador"].includes(u.role);
           }
-          // Admins/coordinators see everyone
           return true;
         });
 
@@ -385,6 +433,9 @@ export default function Chat() {
                         </Badge>
                       )}
                     </div>
+                    {conv.otherUser.location && conv.otherUser.role === "operador" && (
+                      <p className="text-[10px] text-muted-foreground truncate">📍 {conv.otherUser.location}</p>
+                    )}
                     <p className="text-xs text-muted-foreground truncate">{conv.lastMessage || "Nova conversa"}</p>
                   </div>
                 </div>
@@ -412,9 +463,14 @@ export default function Chat() {
                           {u.full_name.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-xs truncate flex-1">{u.full_name}</span>
-                      <Badge variant={getRoleBadgeVariant(u.role)} className="text-[9px] px-1.5 py-0">
-                        {getRoleLabel(u.role)}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs truncate block">{u.full_name}</span>
+                        {u.location && u.role === "operador" && (
+                          <span className="text-[10px] text-muted-foreground truncate block">📍 {u.location}</span>
+                        )}
+                      </div>
+                      <Badge variant={getRoleBadgeVariant(u.role)} className="text-[9px] px-1.5 py-0 shrink-0">
+                        {getRoleLabel(u.role)}{u.location && u.role === "operador" ? ` · ${u.location}` : ""}
                       </Badge>
                     </div>
                   ))}
@@ -438,9 +494,14 @@ export default function Chat() {
                 </Avatar>
                 <div>
                   <CardTitle className="text-sm">{activeUser.full_name}</CardTitle>
-                  <Badge variant={getRoleBadgeVariant(activeUser.role)} className="text-[9px] px-1.5 py-0 mt-0.5">
-                    {getRoleLabel(activeUser.role)}
-                  </Badge>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <Badge variant={getRoleBadgeVariant(activeUser.role)} className="text-[9px] px-1.5 py-0">
+                      {getRoleLabel(activeUser.role)}
+                    </Badge>
+                    {activeUser.location && activeUser.role === "operador" && (
+                      <span className="text-[10px] text-muted-foreground">📍 {activeUser.location}</span>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
 
