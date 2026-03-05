@@ -114,15 +114,23 @@ export default function NotificationBell() {
               <div
                 key={n.id}
                 className={`px-4 py-3 border-b last:border-b-0 cursor-pointer hover:bg-accent/50 transition-colors ${!n.is_read ? "bg-muted/50" : ""}`}
-                onClick={() => {
+                onClick={async () => {
+                  // Mark as read
+                  if (!n.is_read) {
+                    await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
+                    setNotifications((prev) =>
+                      prev.map((notif) => notif.id === n.id ? { ...notif, is_read: true } : notif)
+                    );
+                  }
                   const routes: Record<string, string> = {
                     pending_approval: "/user-management",
                     new_contact: "/contacts",
-                    new_visit_request: "/appointments",
-                    visit_request: "/appointments",
+                    new_visit_request: "/visit-requests",
+                    visit_request: "/visit-requests",
                     new_demand: "/demands",
                     new_leader: "/leaders",
                     financial: "/financial",
+                    info: "/dashboard",
                   };
                   const route = routes[n.type];
                   if (route) navigate(route);
