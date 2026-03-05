@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -24,6 +25,7 @@ interface Notification {
 
 export default function NotificationBell() {
   const { tenantId, hasRole } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
 
@@ -111,10 +113,21 @@ export default function NotificationBell() {
             notifications.map((n) => (
               <div
                 key={n.id}
-                className={`px-4 py-3 border-b last:border-b-0 ${!n.is_read ? "bg-muted/50" : ""}`}
+                className={`px-4 py-3 border-b last:border-b-0 cursor-pointer hover:bg-accent/50 transition-colors ${!n.is_read ? "bg-muted/50" : ""}`}
+                onClick={() => {
+                  if (n.type === "pending_approval") {
+                    navigate("/user-management");
+                  }
+                  setOpen(false);
+                }}
               >
                 <p className="text-sm font-medium">{n.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
+                {n.type === "pending_approval" && !n.is_read && (
+                  <span className="inline-block mt-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    Clique para aprovar
+                  </span>
+                )}
                 <p className="text-[10px] text-muted-foreground mt-1">
                   {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: ptBR })}
                 </p>
