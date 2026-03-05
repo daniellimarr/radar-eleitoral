@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, UserPlus, Shield, Loader2, CheckCircle, XCircle, Clock } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Plus, UserPlus, Shield, Loader2, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
 
 const AVAILABLE_MODULES = [
   { key: "dashboard", label: "Início / Dashboard" },
@@ -49,7 +50,8 @@ interface UserRow {
 }
 
 export default function UserManagement() {
-  const { tenantId } = useAuth();
+  const { tenantId, roles, user } = useAuth();
+  const canDelete = roles.includes("super_admin") || roles.includes("admin_gabinete") || roles.includes("coordenador");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -223,8 +225,24 @@ export default function UserManagement() {
     }
     setSaving(false);
   };
+  const handleDeleteUser = async (userId: string) => {
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        body: { user_id: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Usuário excluído com sucesso!");
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao excluir usuário");
+    }
+    setSaving(false);
+  };
 
   const pendingUsers = users.filter((u) => u.status === "pending");
+
   const activeUsers = users.filter((u) => u.status === "approved");
 
   return (
@@ -402,10 +420,33 @@ export default function UserManagement() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right space-x-2">
                       <Button size="sm" variant="outline" onClick={() => openEditPermissions(u)}>
                         <Shield className="h-4 w-4 mr-1" /> Permissões
                       </Button>
+                      {canDelete && u.user_id !== user?.id && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="destructive" disabled={saving}>
+                              <Trash2 className="h-4 w-4 mr-1" /> Excluir
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Excluir usuário?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta ação é irreversível. O usuário <strong>{u.full_name || "—"}</strong> será removido permanentemente do sistema.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteUser(u.user_id)}>
+                                Confirmar exclusão
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
