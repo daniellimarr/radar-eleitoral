@@ -49,7 +49,7 @@ const engagementWeight: Record<string, number> = {
 };
 
 export default function Dashboard() {
-  const { tenantId, hasRole } = useAuth();
+  const { tenantId, hasRole, loading, roles } = useAuth();
   const isOperador = hasRole("operador");
   const isSuperAdmin = hasRole("super_admin");
   const [stats, setStats] = useState({ contacts: 0, appointmentsToday: 0, birthdays: 0, citizenParticipates: 0 });
@@ -129,6 +129,15 @@ export default function Dashboard() {
 
     fetchStats();
   }, [tenantId, isOperador]);
+
+  // Wait for auth/roles to load before deciding which dashboard to show
+  if (loading || (roles.length === 0 && !tenantId)) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
+    );
+  }
 
   if (isSuperAdmin) {
     return <SuperAdminDashboard />;
