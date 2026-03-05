@@ -292,19 +292,25 @@ export default function Chat() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !activeConversation || !user) return;
     setSending(true);
+    try {
+      const { error } = await supabase.from("chat_messages").insert({
+        conversation_id: activeConversation,
+        sender_id: user.id,
+        content: newMessage.trim(),
+      });
 
-    const { error } = await supabase.from("chat_messages").insert({
-      conversation_id: activeConversation,
-      sender_id: user.id,
-      content: newMessage.trim(),
-    });
-
-    if (error) {
-      toast.error("Erro ao enviar mensagem");
-    } else {
-      setNewMessage("");
+      if (error) {
+        console.error("Error sending message:", error);
+        toast.error("Erro ao enviar mensagem: " + error.message);
+      } else {
+        setNewMessage("");
+      }
+    } catch (err) {
+      console.error("Unexpected error sending message:", err);
+      toast.error("Erro inesperado ao enviar mensagem");
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   };
 
   const getRoleLabel = (role: string) => {
