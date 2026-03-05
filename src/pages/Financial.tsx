@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, DollarSign, TrendingUp, TrendingDown, Wallet, Download } from "lucide-react";
+import { Plus, Edit, Trash2, DollarSign, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import ExportButtons from "@/components/ExportButtons";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const defaultDonation = { nome_doador: "", cpf_cnpj: "", valor: 0, tipo: "PF", data: new Date().toISOString().split("T")[0], forma_pagamento: "" };
@@ -33,6 +34,9 @@ export default function Financial() {
   const [supplierOpen, setSupplierOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const donationsTableRef = useRef<HTMLTableElement>(null);
+  const expensesTableRef = useRef<HTMLTableElement>(null);
+  const suppliersTableRef = useRef<HTMLTableElement>(null);
 
   const fetchAll = async () => {
     if (!tenantId) return;
@@ -106,7 +110,9 @@ export default function Financial() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Controle Financeiro</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Controle Financeiro</h1>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

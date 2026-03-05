@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Trash2, Edit } from "lucide-react";
+import ExportButtons from "@/components/ExportButtons";
 
 export default function Vehicles() {
   const { tenantId } = useAuth();
@@ -17,6 +18,7 @@ export default function Vehicles() {
   const [form, setForm] = useState({ plate: "", model: "", brand: "", year: "", color: "", driver_name: "", driver_phone: "", observations: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const tableRef = useRef<HTMLTableElement>(null);
 
   const fetch = async () => {
     if (!tenantId) return;
@@ -49,9 +51,11 @@ export default function Vehicles() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold">Veículos</h1>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <div className="flex gap-2">
+          <ExportButtons tableRef={tableRef} title="Veículos" filename="veiculos" />
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => { setEditingId(null); setForm({ plate: "", model: "", brand: "", year: "", color: "", driver_name: "", driver_phone: "", observations: "" }); }}>
               <Plus className="h-4 w-4 mr-2" /> Novo Veículo
@@ -72,12 +76,13 @@ export default function Vehicles() {
               <Button onClick={handleSave} disabled={loading} className="w-full">{loading ? "Salvando..." : "Salvar"}</Button>
             </div>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <Table ref={tableRef}>
             <TableHeader>
               <TableRow>
                 <TableHead>Placa</TableHead><TableHead>Modelo</TableHead><TableHead>Marca</TableHead><TableHead>Motorista</TableHead><TableHead>Status</TableHead><TableHead className="w-24">Ações</TableHead>

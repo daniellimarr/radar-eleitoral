@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Search } from "lucide-react";
+import ExportButtons from "@/components/ExportButtons";
 
 const statusOptions = [
   { value: "aberta", label: "Aberta", color: "bg-primary text-primary-foreground" },
@@ -27,6 +28,7 @@ export default function Demands() {
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", status: "aberta", priority: "normal" });
   const [loading, setLoading] = useState(false);
+  const tableRef = useRef<HTMLTableElement>(null);
 
   const fetchDemands = async () => {
     if (!tenantId) return;
@@ -57,9 +59,11 @@ export default function Demands() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold">Demandas</h1>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <div className="flex gap-2">
+          <ExportButtons tableRef={tableRef} title="Demandas" filename="demandas" />
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" /> Nova Demanda</Button>
           </DialogTrigger>
@@ -83,7 +87,8 @@ export default function Demands() {
               <Button onClick={handleSave} disabled={loading} className="w-full">{loading ? "Salvando..." : "Cadastrar"}</Button>
             </div>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <div className="relative max-w-md">
@@ -93,7 +98,7 @@ export default function Demands() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <Table ref={tableRef}>
             <TableHeader>
               <TableRow>
                 <TableHead>Título</TableHead>

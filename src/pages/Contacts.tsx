@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Search, Download, Trash2, Edit, Loader2 } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Loader2 } from "lucide-react";
+import ExportButtons from "@/components/ExportButtons";
 import { geocodeByCep } from "@/lib/geocoding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -51,6 +52,7 @@ export default function Contacts() {
   const [showAddress, setShowAddress] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [geoCoords, setGeoCoords] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
+  const tableRef = useRef<HTMLTableElement>(null);
 
   const handleCepBlur = async () => {
     if (!form.cep || form.cep.replace(/\D/g, "").length !== 8) return;
@@ -391,13 +393,13 @@ export default function Contacts() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input className="pl-10" placeholder="Pesquisar contato..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <Button variant="outline"><Download className="h-4 w-4 mr-2" /> Exportar</Button>
+        <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
       </div>
 
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <Table ref={tableRef}>
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
