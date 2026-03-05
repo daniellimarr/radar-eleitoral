@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Plus, Pencil, Shield, Users, Building2 } from "lucide-react";
+import { Plus, Pencil, Shield, Users, Building2, Mail, Loader2 } from "lucide-react";
 
 interface Tenant {
   id: string;
@@ -35,9 +36,13 @@ export default function TenantManagement() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
-  const [form, setForm] = useState({ name: "", document: "", status: "ativo", plan_id: "", contact_limit: "1000" });
+  const [form, setForm] = useState({
+    name: "", document: "", status: "ativo", plan_id: "", contact_limit: "1000",
+    admin_name: "", admin_email: "", admin_password: "",
+  });
 
   const isSuperAdmin = hasRole("super_admin");
 
@@ -56,7 +61,7 @@ export default function TenantManagement() {
 
   const openCreate = () => {
     setEditingTenant(null);
-    setForm({ name: "", document: "", status: "ativo", plan_id: "", contact_limit: "1000" });
+    setForm({ name: "", document: "", status: "ativo", plan_id: "", contact_limit: "1000", admin_name: "", admin_email: "", admin_password: "" });
     setDialogOpen(true);
   };
 
@@ -68,6 +73,7 @@ export default function TenantManagement() {
       status: t.status,
       plan_id: t.plan_id || "",
       contact_limit: String(t.contact_limit),
+      admin_name: "", admin_email: "", admin_password: "",
     });
     setDialogOpen(true);
   };
@@ -75,22 +81,57 @@ export default function TenantManagement() {
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
 
-    const payload = {
-      name: form.name.trim(),
-      document: form.document.trim() || null,
-      status: form.status as any,
-      plan_id: form.plan_id || null,
-      contact_limit: parseInt(form.contact_limit) || 1000,
-    };
+    setSaving(true);
 
     if (editingTenant) {
+      const payload = {
+        name: form.name.trim(),
+        document: form.document.trim() || null,
+        status: form.status as any,
+        plan_id: form.plan_id || null,
+        contact_limit: parseInt(form.contact_limit) || 1000,
+      };
       const { error } = await supabase.from("tenants").update(payload).eq("id", editingTenant.id);
+      setSaving(false);
       if (error) { toast.error("Erro ao atualizar tenant"); return; }
       toast.success("Tenant atualizado!");
     } else {
-      const { error } = await supabase.from("tenants").insert(payload);
-      if (error) { toast.error("Erro ao criar tenant: " + error.message); return; }
-      toast.success("Tenant criado!");
+      // Onboarding flow — create tenant + admin via edge function
+      if (!form.admin_email || !form.admin_password || !form.admin_name) {
+        toast.error("Preencha os dados do administrador (nome, email e senha)");
+        setSaving(false);
+        return;
+      }
+      if (form.admin_password.length < 6) {
+        toast.error("A senha deve ter no mínimo 6 caracteres");
+        setSaving(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("onboard-tenant", {
+        body: {
+          tenant_name: form.name.trim(),
+          tenant_document: form.document.trim(),
+          plan_id: form.plan_id || null,
+          contact_limit: form.contact_limit,
+          admin_email: form.admin_email.trim(),
+          admin_name: form.admin_name.trim(),
+          admin_password: form.admin_password,
+        },
+      });
+
+      setSaving(false);
+
+      if (error) {
+        toast.error("Erro ao criar tenant: " + error.message);
+        return;
+      }
+      if (data?.error) {
+        toast.error("Erro: " + data.error);
+        return;
+      }
+
+      toast.success(data?.message || "Tenant criado com sucesso!");
     }
 
     setDialogOpen(false);
@@ -180,10 +221,10 @@ export default function TenantManagement() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{editingTenant ? "Editar Tenant" : "Novo Tenant"}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{editingTenant ? "Editar Tenant" : "Novo Tenant + Administrador"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>Nome *</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
+            <div><Label>Nome do Tenant *</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
             <div><Label>Documento (CNPJ/CPF)</Label><Input value={form.document} onChange={e => setForm(f => ({ ...f, document: e.target.value }))} /></div>
             <div>
               <Label>Plano</Label>
@@ -198,18 +239,36 @@ export default function TenantManagement() {
               </Select>
             </div>
             <div><Label>Limite de Contatos</Label><Input type="number" value={form.contact_limit} onChange={e => setForm(f => ({ ...f, contact_limit: e.target.value }))} /></div>
-            <div>
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ativo">Ativo</SelectItem>
-                  <SelectItem value="suspenso">Suspenso</SelectItem>
-                  <SelectItem value="cancelado">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button className="w-full" onClick={handleSave}>{editingTenant ? "Salvar" : "Criar"}</Button>
+
+            {editingTenant ? (
+              <div>
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="suspenso">Suspenso</SelectItem>
+                    <SelectItem value="cancelado">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <>
+                <Separator />
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Mail className="h-4 w-4" />
+                  Administrador do Gabinete
+                </div>
+                <div><Label>Nome Completo *</Label><Input value={form.admin_name} onChange={e => setForm(f => ({ ...f, admin_name: e.target.value }))} placeholder="Nome do administrador" /></div>
+                <div><Label>Email *</Label><Input type="email" value={form.admin_email} onChange={e => setForm(f => ({ ...f, admin_email: e.target.value }))} placeholder="admin@exemplo.com" /></div>
+                <div><Label>Senha *</Label><Input type="password" value={form.admin_password} onChange={e => setForm(f => ({ ...f, admin_password: e.target.value }))} placeholder="Mínimo 6 caracteres" /></div>
+              </>
+            )}
+
+            <Button className="w-full" onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {editingTenant ? "Salvar" : "Criar Tenant e Administrador"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
