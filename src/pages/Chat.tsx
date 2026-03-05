@@ -1,0 +1,494 @@
+import { useEffect, useState, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { Send, MessageCircle, Users, ArrowLeft } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface ChatUser {
+  user_id: string;
+  full_name: string;
+  role: string;
+}
+
+interface Message {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+interface Conversation {
+  id: string;
+  otherUser: ChatUser;
+  lastMessage?: string;
+  lastMessageAt?: string;
+  unreadCount: number;
+}
+
+export default function Chat() {
+  const { user, tenantId, hasRole } = useAuth();
+  const [availableUsers, setAvailableUsers] = useState<ChatUser[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const [activeUser, setActiveUser] = useState<ChatUser | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isLeader = hasRole("operador");
+
+  // Fetch users available to chat with
+  useEffect(() => {
+    if (!tenantId || !user) return;
+
+    const fetchUsers = async () => {
+      // Leaders can chat with admins/coordinators
+      // Admins/coordinators can chat with leaders (operadores)
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .eq("tenant_id", tenantId)
+        .eq("status", "approved")
+        .neq("user_id", user.id);
+
+      if (!profiles) return;
+
+      // Get roles for each profile
+      const userIds = profiles.map(p => p.user_id);
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", userIds);
+
+      const roleMap: Record<string, string> = {};
+      (roles || []).forEach(r => {
+        // Keep highest role
+        const priority: Record<string, number> = { super_admin: 5, admin_gabinete: 4, coordenador: 3, assessor: 2, operador: 1 };
+        if (!roleMap[r.user_id] || (priority[r.role] || 0) > (priority[roleMap[r.user_id]] || 0)) {
+          roleMap[r.user_id] = r.role;
+        }
+      });
+
+      const chatUsers: ChatUser[] = profiles
+        .map(p => ({
+          user_id: p.user_id,
+          full_name: p.full_name || "Usuário",
+          role: roleMap[p.user_id] || "operador",
+        }))
+        .filter(u => {
+          if (isLeader) {
+            // Leaders see admins and coordinators
+            return ["super_admin", "admin_gabinete", "coordenador"].includes(u.role);
+          }
+          // Admins/coordinators see everyone
+          return true;
+        });
+
+      setAvailableUsers(chatUsers);
+    };
+
+    fetchUsers();
+  }, [tenantId, user, isLeader]);
+
+  // Fetch conversations
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchConversations = async () => {
+      // Get all conversations the user participates in
+      const { data: participations } = await supabase
+        .from("chat_participants")
+        .select("conversation_id")
+        .eq("user_id", user.id);
+
+      if (!participations || participations.length === 0) {
+        setConversations([]);
+        return;
+      }
+
+      const convIds = participations.map(p => p.conversation_id);
+
+      // Get other participants
+      const { data: allParticipants } = await supabase
+        .from("chat_participants")
+        .select("conversation_id, user_id")
+        .in("conversation_id", convIds)
+        .neq("user_id", user.id);
+
+      if (!allParticipants) return;
+
+      const otherUserIds = [...new Set(allParticipants.map(p => p.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", otherUserIds);
+
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", otherUserIds);
+
+      const profileMap: Record<string, string> = {};
+      (profiles || []).forEach(p => { profileMap[p.user_id] = p.full_name || "Usuário"; });
+
+      const roleMap: Record<string, string> = {};
+      (roles || []).forEach(r => { roleMap[r.user_id] = r.role; });
+
+      // Get last messages and unread counts
+      const convList: Conversation[] = [];
+      for (const convId of convIds) {
+        const otherParticipant = allParticipants.find(p => p.conversation_id === convId);
+        if (!otherParticipant) continue;
+
+        const { data: lastMsg } = await supabase
+          .from("chat_messages")
+          .select("content, created_at")
+          .eq("conversation_id", convId)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        const { count: unread } = await supabase
+          .from("chat_messages")
+          .select("id", { count: "exact", head: true })
+          .eq("conversation_id", convId)
+          .eq("is_read", false)
+          .neq("sender_id", user.id);
+
+        convList.push({
+          id: convId,
+          otherUser: {
+            user_id: otherParticipant.user_id,
+            full_name: profileMap[otherParticipant.user_id] || "Usuário",
+            role: roleMap[otherParticipant.user_id] || "operador",
+          },
+          lastMessage: lastMsg?.[0]?.content,
+          lastMessageAt: lastMsg?.[0]?.created_at,
+          unreadCount: unread || 0,
+        });
+      }
+
+      convList.sort((a, b) => {
+        if (!a.lastMessageAt) return 1;
+        if (!b.lastMessageAt) return -1;
+        return new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime();
+      });
+
+      setConversations(convList);
+    };
+
+    fetchConversations();
+  }, [user]);
+
+  // Load messages for active conversation
+  useEffect(() => {
+    if (!activeConversation) return;
+
+    const fetchMessages = async () => {
+      const { data } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .eq("conversation_id", activeConversation)
+        .order("created_at", { ascending: true });
+      setMessages((data as Message[]) || []);
+
+      // Mark as read
+      await supabase
+        .from("chat_messages")
+        .update({ is_read: true })
+        .eq("conversation_id", activeConversation)
+        .eq("is_read", false)
+        .neq("sender_id", user!.id);
+    };
+
+    fetchMessages();
+
+    // Realtime subscription
+    const channel = supabase
+      .channel(`chat-${activeConversation}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_messages",
+          filter: `conversation_id=eq.${activeConversation}`,
+        },
+        (payload) => {
+          const newMsg = payload.new as Message;
+          setMessages(prev => [...prev, newMsg]);
+          // Mark as read if not from us
+          if (newMsg.sender_id !== user!.id) {
+            supabase
+              .from("chat_messages")
+              .update({ is_read: true })
+              .eq("id", newMsg.id);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeConversation, user]);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Start or open conversation with a user
+  const openConversation = async (chatUser: ChatUser) => {
+    if (!user || !tenantId) return;
+
+    // Check if conversation already exists
+    const existing = conversations.find(c => c.otherUser.user_id === chatUser.user_id);
+    if (existing) {
+      setActiveConversation(existing.id);
+      setActiveUser(chatUser);
+      return;
+    }
+
+    // Create new conversation
+    const { data: conv, error: convError } = await supabase
+      .from("chat_conversations")
+      .insert({ tenant_id: tenantId, created_by: user.id })
+      .select()
+      .single();
+
+    if (convError || !conv) {
+      toast.error("Erro ao criar conversa");
+      return;
+    }
+
+    // Add participants
+    await supabase.from("chat_participants").insert([
+      { conversation_id: conv.id, user_id: user.id },
+      { conversation_id: conv.id, user_id: chatUser.user_id },
+    ]);
+
+    setActiveConversation(conv.id);
+    setActiveUser(chatUser);
+
+    // Add to conversation list
+    setConversations(prev => [{
+      id: conv.id,
+      otherUser: chatUser,
+      unreadCount: 0,
+    }, ...prev]);
+  };
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !activeConversation || !user) return;
+    setSending(true);
+
+    const { error } = await supabase.from("chat_messages").insert({
+      conversation_id: activeConversation,
+      sender_id: user.id,
+      content: newMessage.trim(),
+    });
+
+    if (error) {
+      toast.error("Erro ao enviar mensagem");
+    } else {
+      setNewMessage("");
+    }
+    setSending(false);
+  };
+
+  const getRoleLabel = (role: string) => {
+    const labels: Record<string, string> = {
+      super_admin: "Super Admin",
+      admin_gabinete: "Administrador",
+      coordenador: "Coordenador",
+      assessor: "Assessor",
+      operador: "Liderança",
+    };
+    return labels[role] || role;
+  };
+
+  const getRoleBadgeVariant = (role: string) => {
+    if (["super_admin", "admin_gabinete"].includes(role)) return "default" as const;
+    if (role === "coordenador") return "secondary" as const;
+    return "outline" as const;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <MessageCircle className="h-6 w-6 text-primary" />
+        <h1 className="text-2xl font-bold">Chat Interno</h1>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-12rem)]">
+        {/* Sidebar: Conversations + New chat */}
+        <Card className="md:col-span-1 flex flex-col">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Conversas</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 p-0 flex flex-col overflow-hidden">
+            {/* Existing conversations */}
+            <ScrollArea className="flex-1">
+              {conversations.length === 0 && (
+                <p className="text-sm text-muted-foreground px-4 py-3">Nenhuma conversa ainda</p>
+              )}
+              {conversations.map(conv => (
+                <div
+                  key={conv.id}
+                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors border-b ${activeConversation === conv.id ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}
+                  onClick={() => { setActiveConversation(conv.id); setActiveUser(conv.otherUser); }}
+                >
+                  <Avatar className="h-9 w-9 shrink-0">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {conv.otherUser.full_name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium truncate">{conv.otherUser.full_name}</span>
+                      {conv.unreadCount > 0 && (
+                        <Badge className="h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
+                          {conv.unreadCount}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{conv.lastMessage || "Nova conversa"}</p>
+                  </div>
+                </div>
+              ))}
+            </ScrollArea>
+
+            <Separator />
+
+            {/* Available users to start new chat */}
+            <div className="p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                <Users className="h-3 w-3" /> Iniciar nova conversa
+              </p>
+              <ScrollArea className="max-h-40">
+                {availableUsers
+                  .filter(u => !conversations.find(c => c.otherUser.user_id === u.user_id))
+                  .map(u => (
+                    <div
+                      key={u.user_id}
+                      className="flex items-center gap-2 py-1.5 px-2 rounded cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => openConversation(u)}
+                    >
+                      <Avatar className="h-7 w-7">
+                        <AvatarFallback className="text-[10px] bg-secondary text-secondary-foreground">
+                          {u.full_name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs truncate flex-1">{u.full_name}</span>
+                      <Badge variant={getRoleBadgeVariant(u.role)} className="text-[9px] px-1.5 py-0">
+                        {getRoleLabel(u.role)}
+                      </Badge>
+                    </div>
+                  ))}
+              </ScrollArea>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Chat area */}
+        <Card className="md:col-span-2 flex flex-col">
+          {activeConversation && activeUser ? (
+            <>
+              <CardHeader className="pb-3 border-b flex flex-row items-center gap-3">
+                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setActiveConversation(null)}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                    {activeUser.full_name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <CardTitle className="text-sm">{activeUser.full_name}</CardTitle>
+                  <Badge variant={getRoleBadgeVariant(activeUser.role)} className="text-[9px] px-1.5 py-0 mt-0.5">
+                    {getRoleLabel(activeUser.role)}
+                  </Badge>
+                </div>
+              </CardHeader>
+
+              <CardContent className="flex-1 p-0 flex flex-col overflow-hidden">
+                <ScrollArea className="flex-1 p-4">
+                  {messages.length === 0 && (
+                    <p className="text-center text-sm text-muted-foreground py-8">
+                      Nenhuma mensagem ainda. Diga olá! 👋
+                    </p>
+                  )}
+                  {messages.map((msg, i) => {
+                    const isMine = msg.sender_id === user?.id;
+                    const showDate = i === 0 || format(new Date(messages[i - 1].created_at), "yyyy-MM-dd") !== format(new Date(msg.created_at), "yyyy-MM-dd");
+
+                    return (
+                      <div key={msg.id}>
+                        {showDate && (
+                          <div className="flex justify-center my-3">
+                            <span className="text-[10px] bg-muted px-3 py-1 rounded-full text-muted-foreground">
+                              {format(new Date(msg.created_at), "dd 'de' MMMM", { locale: ptBR })}
+                            </span>
+                          </div>
+                        )}
+                        <div className={`flex mb-2 ${isMine ? "justify-end" : "justify-start"}`}>
+                          <div
+                            className={`max-w-[75%] rounded-2xl px-4 py-2 ${
+                              isMine
+                                ? "bg-primary text-primary-foreground rounded-br-sm"
+                                : "bg-muted text-foreground rounded-bl-sm"
+                            }`}
+                          >
+                            <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                            <p className={`text-[10px] mt-1 ${isMine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                              {format(new Date(msg.created_at), "HH:mm")}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </ScrollArea>
+
+                <div className="p-3 border-t flex gap-2">
+                  <Input
+                    placeholder="Digite sua mensagem..."
+                    value={newMessage}
+                    onChange={e => setNewMessage(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                    disabled={sending}
+                  />
+                  <Button onClick={sendMessage} disabled={sending || !newMessage.trim()} size="icon">
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </>
+          ) : (
+            <CardContent className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+              <MessageCircle className="h-12 w-12 mb-3 opacity-30" />
+              <p className="text-sm">Selecione uma conversa ou inicie uma nova</p>
+              <p className="text-xs mt-1">
+                {isLeader
+                  ? "Converse diretamente com coordenadores e administradores"
+                  : "Converse com as lideranças e equipe"}
+              </p>
+            </CardContent>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+}
