@@ -9,9 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Plus, Download, Trash2, Upload, Image, Music, Video, FileText, Search } from "lucide-react";
-
+import { Download, Trash2, Upload, Image, Music, Video, FileText, Search, Folder, FolderOpen, ChevronRight } from "lucide-react";
 const categories = [
   { value: "card", label: "Cards", icon: Image },
   { value: "jingle", label: "Jingles", icon: Music },
@@ -144,6 +144,20 @@ export default function CampaignFiles() {
     return found ? found.icon : FileText;
   };
 
+  // Group files by category
+  const groupedFiles = categories.map(cat => ({
+    ...cat,
+    files: files.filter(f => f.category === cat.value),
+  })).filter(g => filterCategory === "all" ? true : g.value === filterCategory);
+
+  const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
+    card: true, jingle: true, video: true, documento: true, outro: true,
+  });
+
+  const toggleFolder = (cat: string) => {
+    setOpenFolders(prev => ({ ...prev, [cat]: !prev[cat] }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -208,54 +222,73 @@ export default function CampaignFiles() {
         </Select>
       </div>
 
-      {/* File Grid */}
-      {files.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            {loading ? "Carregando..." : "Nenhum arquivo encontrado"}
-          </CardContent>
-        </Card>
+      {/* Folder-based layout */}
+      {loading ? (
+        <Card><CardContent className="py-12 text-center text-muted-foreground">Carregando...</CardContent></Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {files.map((file) => {
-            const Icon = getCategoryIcon(file.category);
+        <div className="space-y-4">
+          {groupedFiles.map(group => {
+            const Icon = group.icon;
+            const isOpen = openFolders[group.value] ?? true;
             return (
-              <Card key={file.id} className="group hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className={`p-2 rounded-lg ${categoryColors[file.category] || categoryColors.outro}`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <CardTitle className="text-sm truncate">{file.name}</CardTitle>
-                        <p className="text-xs text-muted-foreground truncate">{file.file_name}</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="shrink-0 text-xs">
-                      {categories.find(c => c.value === file.category)?.label || file.category}
-                    </Badge>
+              <Card key={group.value} className="overflow-hidden">
+                <button
+                  onClick={() => toggleFolder(group.value)}
+                  className="w-full flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors text-left"
+                >
+                  <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                  <div className={`p-2 rounded-lg ${categoryColors[group.value] || categoryColors.outro}`}>
+                    {isOpen ? <FolderOpen className="h-5 w-5" /> : <Folder className="h-5 w-5" />}
                   </div>
-                </CardHeader>
-                <CardContent className="pt-0 space-y-3">
-                  {file.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">{file.description}</p>
-                  )}
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{formatFileSize(file.file_size)}</span>
-                    <span>{new Date(file.created_at).toLocaleDateString("pt-BR")}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{group.label}</span>
+                    <Badge variant="secondary" className="text-xs">{group.files.length}</Badge>
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" className="flex-1" onClick={() => handleDownload(file)}>
-                      <Download className="h-3.5 w-3.5 mr-1" /> Baixar
-                    </Button>
-                    {isAdmin && (
-                      <Button size="sm" variant="destructive" onClick={() => handleDelete(file)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                </button>
+
+                {isOpen && (
+                  <div className="border-t">
+                    {group.files.length === 0 ? (
+                      <div className="p-6 text-center text-sm text-muted-foreground">
+                        Nenhum arquivo nesta pasta
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {group.files.map((file) => {
+                          const FileIcon = getCategoryIcon(file.category);
+                          return (
+                            <div key={file.id} className="border rounded-lg p-3 hover:shadow-sm transition-shadow space-y-2">
+                              <div className="flex items-start gap-2">
+                                <FileIcon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-medium truncate">{file.name}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{file.file_name}</p>
+                                </div>
+                              </div>
+                              {file.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2">{file.description}</p>
+                              )}
+                              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>{formatFileSize(file.file_size)}</span>
+                                <span>{new Date(file.created_at).toLocaleDateString("pt-BR")}</span>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => handleDownload(file)}>
+                                  <Download className="h-3 w-3 mr-1" /> Baixar
+                                </Button>
+                                {isAdmin && (
+                                  <Button size="sm" variant="destructive" className="h-8" onClick={() => handleDelete(file)}>
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
-                </CardContent>
+                )}
               </Card>
             );
           })}
