@@ -115,17 +115,25 @@ export default function NotificationBell() {
                 key={n.id}
                 className={`px-4 py-3 border-b last:border-b-0 cursor-pointer hover:bg-accent/50 transition-colors ${!n.is_read ? "bg-muted/50" : ""}`}
                 onClick={() => {
-                  if (n.type === "pending_approval") {
-                    navigate("/user-management");
-                  }
+                  const routes: Record<string, string> = {
+                    pending_approval: "/user-management",
+                    new_contact: "/contacts",
+                    new_visit_request: "/appointments",
+                    visit_request: "/appointments",
+                    new_demand: "/demands",
+                    new_leader: "/leaders",
+                    financial: "/financial",
+                  };
+                  const route = routes[n.type];
+                  if (route) navigate(route);
                   setOpen(false);
                 }}
               >
                 <p className="text-sm font-medium">{n.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
-                {n.type === "pending_approval" && !n.is_read && (
+                {!n.is_read && (n.type === "pending_approval" || n.type === "new_visit_request" || n.type === "visit_request" || n.type === "new_contact") && (
                   <span className="inline-block mt-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                    Clique para aprovar
+                    {n.type === "pending_approval" ? "Clique para aprovar" : "Clique para visualizar"}
                   </span>
                 )}
                 <p className="text-[10px] text-muted-foreground mt-1">
