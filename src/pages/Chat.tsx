@@ -57,7 +57,16 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isLeader = hasRole("operador");
 
-  // Fetch users available to chat with
+  // Reset active conversation when leaving chat page
+  useEffect(() => {
+    return () => {
+      setActiveConversation(null);
+      setActiveUser(null);
+      setMessages([]);
+      setNewMessage("");
+    };
+  }, []);
+
   useEffect(() => {
     if (!tenantId || !user) return;
 
