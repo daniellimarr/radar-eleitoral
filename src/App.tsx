@@ -25,6 +25,8 @@ import Backup from "@/pages/Backup";
 import CampaignFiles from "@/pages/CampaignFiles";
 import Reports from "@/pages/Reports";
 import Chat from "@/pages/Chat";
+import TenantManagement from "@/pages/TenantManagement";
+import PlanManagement from "@/pages/PlanManagement";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +63,8 @@ function App() {
             <Route path="/registration-links" element={<ProtectedRoute><RegistrationLinks /></ProtectedRoute>} />
             <Route path="/map" element={<ProtectedRoute><Georeferencing /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+            <Route path="/admin/tenants" element={<ProtectedRoute><TenantManagement /></ProtectedRoute>} />
+            <Route path="/admin/plans" element={<ProtectedRoute><PlanManagement /></ProtectedRoute>} />
             <Route path="/backup" element={<ProtectedRoute><Backup /></ProtectedRoute>} />
             <Route path="/campaign-files" element={<ProtectedRoute><CampaignFiles /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
