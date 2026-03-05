@@ -40,7 +40,7 @@ const adminItems = [
   { title: "Gestão de Tenants", url: "/admin/tenants", icon: Shield },
   { title: "Gestão de Planos", url: "/admin/plans", icon: Package },
   { title: "Gestão de Usuários", url: "/admin/users", icon: Users },
-  { title: "Auditoria", url: "/admin/audit", icon: FileText },
+  { title: "Relatórios e Auditoria", url: "/reports", icon: FileText },
 ];
 
 const configItems = [
