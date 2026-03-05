@@ -1,10 +1,27 @@
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import logoRadar from "@/assets/logo-radar-eleitoral.png";
 
 interface ExportPdfOptions {
   title: string;
   filename: string;
   tenantName?: string;
+}
+
+// Convert imported logo URL to base64 for jsPDF
+async function loadLogoAsImage(): Promise<HTMLImageElement | null> {
+  try {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject();
+      img.src = logoRadar;
+    });
+    return img;
+  } catch {
+    return null;
+  }
 }
 
 export async function exportTableToPdf(
@@ -17,22 +34,25 @@ export async function exportTableToPdf(
   const margin = 15;
   const contentWidth = pageWidth - margin * 2;
 
-  // Header
-  const logoUrl = new URL("/src/assets/logo-radar-eleitoral.png", window.location.origin).href;
-  try {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject();
-      img.src = logoUrl;
-    });
-    const logoHeight = 12;
-    const logoWidth = (img.width / img.height) * logoHeight;
-    pdf.addImage(img, "PNG", margin, margin, logoWidth, logoHeight);
-  } catch {
-    // Logo failed, skip
+  // Header with logo
+  const logoImg = await loadLogoAsImage();
+  if (logoImg) {
+    const logoHeight = 14;
+    const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
+    pdf.addImage(logoImg, "PNG", margin, margin - 2, logoWidth, logoHeight);
   }
+
+  // System name next to logo
+  pdf.setFontSize(11);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(30, 58, 95); // Dark blue
+  const logoTextX = margin + (logoImg ? ((logoImg.width / logoImg.height) * 14) + 4 : 0);
+  pdf.text("RADAR ELEITORAL", logoTextX, margin + 5);
+  pdf.setFontSize(7);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(120);
+  pdf.text("Tecnologia a serviço da política", logoTextX, margin + 9);
+  pdf.setTextColor(0);
 
   // Title & date
   pdf.setFontSize(16);
@@ -125,9 +145,13 @@ export function printTable(tableElement: HTMLElement, title: string) {
       <title>${title}</title>
       <style>
         body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-        .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #1e3a5f; padding-bottom: 10px; margin-bottom: 20px; }
-        .header h1 { font-size: 18px; color: #1e3a5f; margin: 0; }
-        .header .date { font-size: 11px; color: #666; }
+        .header { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #1e3a5f; padding-bottom: 10px; margin-bottom: 20px; }
+        .header img { height: 40px; }
+        .header-text h1 { font-size: 18px; color: #1e3a5f; margin: 0; }
+        .header-text p { font-size: 10px; color: #888; margin: 2px 0 0; }
+        .header .right { margin-left: auto; text-align: right; }
+        .header .right .title { font-size: 14px; font-weight: bold; color: #1e3a5f; }
+        .header .right .date { font-size: 11px; color: #666; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         th { background: #1e3a5f; color: white; padding: 8px 6px; text-align: left; }
         td { padding: 6px; border-bottom: 1px solid #ddd; }
@@ -137,8 +161,15 @@ export function printTable(tableElement: HTMLElement, title: string) {
     </head>
     <body>
       <div class="header">
-        <h1>${title}</h1>
-        <span class="date">Emitido em: ${new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+        <img src="${logoRadar}" alt="Radar Eleitoral" />
+        <div class="header-text">
+          <h1>RADAR ELEITORAL</h1>
+          <p>Tecnologia a serviço da política</p>
+        </div>
+        <div class="right">
+          <div class="title">${title}</div>
+          <div class="date">Emitido em: ${new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
+        </div>
       </div>
       ${tableElement.outerHTML}
       <script>window.onload = () => { window.print(); window.close(); }<\/script>
