@@ -136,8 +136,8 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
-        {/* Admin Menu */}
-        {isAdmin && (
+        {/* Admin Menu - Super Admin only */}
+        {isSuperAdmin && (
           <SidebarGroup>
             <Collapsible defaultOpen>
               <CollapsibleTrigger className="w-full">
