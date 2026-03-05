@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { Send, MessageCircle, Users, ArrowLeft, Smile } from "lucide-react";
+import { Send, MessageCircle, Users, ArrowLeft, Smile, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -411,6 +411,23 @@ export default function Chat() {
     }
   };
 
+  const deleteConversation = async (convId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!confirm("Deseja apagar esta conversa? Todas as mensagens serão excluídas.")) return;
+    try {
+      await supabase.from("chat_messages").delete().eq("conversation_id", convId);
+      await supabase.from("chat_participants").delete().eq("conversation_id", convId);
+      const { error } = await supabase.from("chat_conversations").delete().eq("id", convId);
+      if (error) { toast.error("Erro ao apagar conversa"); return; }
+      toast.success("Conversa apagada!");
+      if (activeConversation === convId) { setActiveConversation(null); setActiveUser(null); setMessages([]); }
+      setConversations(prev => prev.filter(c => c.id !== convId));
+    } catch (err) {
+      console.error("Error deleting conversation:", err);
+      toast.error("Erro ao apagar conversa");
+    }
+  };
+
   const getRoleLabel = (role: string) => {
     const labels: Record<string, string> = {
       super_admin: "Super Admin",
@@ -483,6 +500,13 @@ export default function Chat() {
                     )}
                     <p className="text-xs text-muted-foreground truncate">{conv.lastMessage || "Nova conversa"}</p>
                   </div>
+                  <button
+                    onClick={(e) => deleteConversation(conv.id, e)}
+                    className="shrink-0 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                    title="Apagar conversa"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               ))}
             </ScrollArea>
