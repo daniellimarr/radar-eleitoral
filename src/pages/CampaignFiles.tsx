@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,101 @@ function formatFileSize(bytes: number | null) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Media preview component
+function MediaPreview({ file }: { file: any }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const isAudio = file.category === "jingle" || file.mime_type?.startsWith("audio/");
+  const isVideo = file.category === "video" || file.mime_type?.startsWith("video/");
+  const isImage = file.category === "card" || file.mime_type?.startsWith("image/");
+
+  const loadUrl = async () => {
+    if (url) return;
+    const { data } = await supabase.storage
+      .from("campaign-files")
+      .createSignedUrl(file.storage_path, 3600);
+    if (data?.signedUrl) setUrl(data.signedUrl);
+  };
+
+  useEffect(() => {
+    if (isImage) loadUrl();
+  }, []);
+
+  const toggleAudio = async () => {
+    await loadUrl();
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (!audio.src && url) audio.src = url;
+    if (playing) {
+      audio.pause();
+      setPlaying(false);
+    } else {
+      audio.play().catch(() => {});
+      setPlaying(true);
+    }
+  };
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && url && !audio.src) audio.src = url;
+  }, [url]);
+
+  if (isImage && url) {
+    return (
+      <div className="rounded-md overflow-hidden bg-muted aspect-video mb-2">
+        <img src={url} alt={file.name} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
+
+  if (isAudio) {
+    return (
+      <div className="mb-2">
+        <audio
+          ref={audioRef}
+          onEnded={() => setPlaying(false)}
+          preload="none"
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full h-8 text-xs gap-1"
+          onClick={toggleAudio}
+        >
+          {playing ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+          {playing ? "Pausar" : "Ouvir"}
+        </Button>
+      </div>
+    );
+  }
+
+  if (isVideo) {
+    return (
+      <div className="rounded-md overflow-hidden bg-muted aspect-video mb-2">
+        {url ? (
+          <video
+            src={url}
+            controls
+            playsInline
+            preload="metadata"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <button
+            onClick={loadUrl}
+            className="w-full h-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Play className="h-8 w-8" />
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return null;
 }
 
 export default function CampaignFiles() {
@@ -258,6 +354,7 @@ export default function CampaignFiles() {
                           const FileIcon = getCategoryIcon(file.category);
                           return (
                             <div key={file.id} className="border rounded-lg p-3 hover:shadow-sm transition-shadow space-y-2">
+                              <MediaPreview file={file} />
                               <div className="flex items-start gap-2">
                                 <FileIcon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
                                 <div className="min-w-0 flex-1">
