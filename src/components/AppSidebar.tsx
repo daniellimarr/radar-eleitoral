@@ -26,6 +26,7 @@ const mainItems = [
   { title: "Marketing", url: "/marketing", icon: Megaphone, module: "marketing" },
   { title: "Arquivos da Campanha", url: "/campaign-files", icon: FolderDown, module: "campaign_files" },
   { title: "Mapa", url: "/map", icon: MapPin, module: "map" },
+  { title: "Chat Interno", url: "/chat", icon: MessageSquare, module: "chat" },
 ];
 
 const coordinatorItems = [
