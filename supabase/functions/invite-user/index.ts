@@ -63,16 +63,28 @@ Deno.serve(async (req) => {
     const { email, full_name, password, role, modules } = await req.json();
     if (!email || !password || !full_name) throw new Error("Dados incompletos");
 
-    // Create user via admin API
+    // Create user via admin API — handle "email already exists"
+    let userId: string;
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
       user_metadata: { full_name },
     });
-    if (createError) throw createError;
 
-    const userId = newUser.user.id;
+    if (createError) {
+      // If user already exists, look up by email and reuse
+      if (createError.message?.includes("already been registered")) {
+        const { data: listData } = await adminClient.auth.admin.listUsers();
+        const existing = listData?.users?.find((u: any) => u.email === email);
+        if (!existing) throw new Error("Usuário existe mas não foi encontrado");
+        userId = existing.id;
+      } else {
+        throw createError;
+      }
+    } else {
+      userId = newUser.user.id;
+    }
 
     // Set profile tenant
     await adminClient
