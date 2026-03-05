@@ -8,10 +8,18 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { Send, MessageCircle, Users, ArrowLeft } from "lucide-react";
+import { Send, MessageCircle, Users, ArrowLeft, Smile, Circle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+const EMOJI_LIST = [
+  "😀", "😂", "😍", "🥰", "😎", "🤔", "😅", "😊",
+  "👍", "👏", "🙌", "🤝", "💪", "🎉", "🔥", "❤️",
+  "✅", "⭐", "🚀", "💬", "📌", "📊", "🗳️", "📢",
+  "👋", "🙏", "😁", "😉", "🤩", "😄", "🫡", "💯",
+];
 
 interface ChatUser {
   user_id: string;
@@ -330,11 +338,19 @@ export default function Chat() {
     return "outline" as const;
   };
 
+  const userName = user?.user_metadata?.full_name || user?.email || "Você";
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <MessageCircle className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold">Chat Interno</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <MessageCircle className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold">Chat Interno</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Circle className="h-2.5 w-2.5 fill-green-500 text-green-500" />
+          <span className="text-sm font-medium">{userName}</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-12rem)]">
@@ -468,7 +484,27 @@ export default function Chat() {
                   <div ref={messagesEndRef} />
                 </ScrollArea>
 
-                <div className="p-3 border-t flex gap-2">
+                <div className="p-3 border-t flex gap-2 items-center">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="shrink-0">
+                        <Smile className="h-5 w-5 text-muted-foreground" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-2" align="start" side="top">
+                      <div className="grid grid-cols-8 gap-1">
+                        {EMOJI_LIST.map((emoji) => (
+                          <button
+                            key={emoji}
+                            className="h-8 w-8 flex items-center justify-center rounded hover:bg-muted text-lg transition-colors"
+                            onClick={() => setNewMessage(prev => prev + emoji)}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <Input
                     placeholder="Digite sua mensagem..."
                     value={newMessage}
@@ -476,7 +512,7 @@ export default function Chat() {
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                     disabled={sending}
                   />
-                  <Button onClick={sendMessage} disabled={sending || !newMessage.trim()} size="icon">
+                  <Button onClick={sendMessage} disabled={sending || !newMessage.trim()} size="icon" className="shrink-0">
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
