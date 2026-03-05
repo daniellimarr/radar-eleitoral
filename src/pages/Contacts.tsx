@@ -137,22 +137,7 @@ export default function Contacts() {
     }
     setLoading(true);
 
-    // Verificar limite de 15 eleitores por liderança
-    if (form.leader_id) {
-      const { count, error: countError } = await supabase
-        .from("contacts")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", tenantId)
-        .eq("leader_id", form.leader_id)
-        .is("deleted_at", null)
-        .neq("id", editingId || "00000000-0000-0000-0000-000000000000");
 
-      if (!countError && (count ?? 0) >= 15) {
-        toast.error("Esta liderança já atingiu o limite máximo de 15 eleitores cadastrados.");
-        setLoading(false);
-        return;
-      }
-    }
 
     const payload = {
       name: trimmedName,

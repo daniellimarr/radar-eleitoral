@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Users } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -30,7 +30,6 @@ export default function Leaders() {
   const [voters, setVoters] = useState<Record<string, any[]>>({});
   const [loadingVoters, setLoadingVoters] = useState<string | null>(null);
   const [voterCounts, setVoterCounts] = useState<Record<string, number>>({});
-  const MAX_VOTERS = 15;
 
   const fetchLeaders = async () => {
     if (!tenantId) return;
@@ -167,15 +166,8 @@ export default function Leaders() {
                     <TableCell>
                       <div className="space-y-1 min-w-[120px]">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="font-medium">{voterCounts[l.id] || 0}/{MAX_VOTERS}</span>
-                          <span className="text-muted-foreground">
-                            {(voterCounts[l.id] || 0) >= MAX_VOTERS ? "Lotada" : `${MAX_VOTERS - (voterCounts[l.id] || 0)} vagas`}
-                          </span>
+                          <span className="font-medium">{voterCounts[l.id] || 0} eleitores</span>
                         </div>
-                        <Progress 
-                          value={((voterCounts[l.id] || 0) / MAX_VOTERS) * 100} 
-                          className={`h-2 ${(voterCounts[l.id] || 0) >= MAX_VOTERS ? "[&>div]:bg-destructive" : (voterCounts[l.id] || 0) >= 12 ? "[&>div]:bg-warning" : ""}`}
-                        />
                       </div>
                     </TableCell>
                     <TableCell>
