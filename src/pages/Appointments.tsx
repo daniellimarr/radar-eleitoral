@@ -441,11 +441,19 @@ export default function Appointments() {
                           {event.created_by ? "USUÁRIO" : "-"}
                         </TableCell>
                         <TableCell className="text-xs">
-                          {event.start_time
-                            ? format(new Date(event.start_time || event.date), "HH:mm")
+                          {event.date
+                            ? (() => {
+                                try {
+                                  return format(new Date(event.start_time || event.date), "HH:mm");
+                                } catch { return "-"; }
+                              })()
                             : "-"}
                           {event.end_time && (
-                            <><br />{format(new Date(event.end_time), "HH:mm")}</>
+                            (() => {
+                              try {
+                                return <><br />{format(new Date(event.end_time), "HH:mm")}</>;
+                              } catch { return null; }
+                            })()
                           )}
                         </TableCell>
                         <TableCell className="text-xs uppercase font-medium">
@@ -571,11 +579,19 @@ href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e
                           {event.created_by ? "RESPONSÁVEL" : "-"}
                         </TableCell>
                         <TableCell className="text-xs">
-                          {event.start_time
-                            ? format(new Date(event.start_time || event.date), "HH:mm")
+                          {event.date
+                            ? (() => {
+                                try {
+                                  return format(new Date(event.start_time || event.date), "HH:mm");
+                                } catch { return "-"; }
+                              })()
                             : "-"}
                           {event.end_time && (
-                            <><br />{format(new Date(event.end_time), "HH:mm")}</>
+                            (() => {
+                              try {
+                                return <><br />{format(new Date(event.end_time), "HH:mm")}</>;
+                              } catch { return null; }
+                            })()
                           )}
                         </TableCell>
                         <TableCell className="text-xs uppercase font-medium">
