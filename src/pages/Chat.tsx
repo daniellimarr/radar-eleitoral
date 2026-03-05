@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { Send, MessageCircle, Users, ArrowLeft, Smile, Circle } from "lucide-react";
+import { Send, MessageCircle, Users, ArrowLeft, Smile } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -56,6 +56,32 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isLeader = hasRole("operador");
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+
+  // Presence tracking
+  useEffect(() => {
+    if (!user || !tenantId) return;
+
+    const presenceChannel = supabase.channel(`presence-chat-${tenantId}`, {
+      config: { presence: { key: user.id } },
+    });
+
+    presenceChannel
+      .on("presence", { event: "sync" }, () => {
+        const state = presenceChannel.presenceState();
+        const ids = new Set<string>(Object.keys(state));
+        setOnlineUsers(ids);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await presenceChannel.track({ user_id: user.id });
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(presenceChannel);
+    };
+  }, [user, tenantId]);
 
   // Reset active conversation when leaving chat page
   useEffect(() => {
@@ -405,7 +431,7 @@ export default function Chat() {
           <h1 className="text-2xl font-bold">Chat Interno</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Circle className="h-2.5 w-2.5 fill-green-500 text-green-500" />
+          <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
           <span className="text-sm font-medium">{userName}</span>
         </div>
       </div>
@@ -428,11 +454,14 @@ export default function Chat() {
                   className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors border-b ${activeConversation === conv.id ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}
                   onClick={() => { setActiveConversation(conv.id); setActiveUser(conv.otherUser); }}
                 >
-                  <Avatar className="h-9 w-9 shrink-0">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                      {conv.otherUser.full_name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative shrink-0">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                        {conv.otherUser.full_name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background ${onlineUsers.has(conv.otherUser.user_id) ? "bg-green-500" : "bg-muted-foreground/40"}`} />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium truncate">{conv.otherUser.full_name}</span>
@@ -467,11 +496,14 @@ export default function Chat() {
                       className="flex items-center gap-2 py-1.5 px-2 rounded cursor-pointer hover:bg-muted/50 transition-colors"
                       onClick={() => openConversation(u)}
                     >
-                      <Avatar className="h-7 w-7">
-                        <AvatarFallback className="text-[10px] bg-secondary text-secondary-foreground">
-                          {u.full_name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="h-7 w-7">
+                          <AvatarFallback className="text-[10px] bg-secondary text-secondary-foreground">
+                            {u.full_name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className={`absolute bottom-0 right-0 h-2 w-2 rounded-full border border-background ${onlineUsers.has(u.user_id) ? "bg-green-500" : "bg-muted-foreground/40"}`} />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <span className="text-xs truncate block">{u.full_name}</span>
                         {u.location && u.role === "operador" && (
@@ -496,13 +528,21 @@ export default function Chat() {
                 <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setActiveConversation(null)}>
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <Avatar className="h-9 w-9">
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                    {activeUser.full_name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                      {activeUser.full_name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background ${onlineUsers.has(activeUser.user_id) ? "bg-green-500" : "bg-muted-foreground/40"}`} />
+                </div>
                 <div>
-                  <CardTitle className="text-sm">{activeUser.full_name}</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm">{activeUser.full_name}</CardTitle>
+                    <span className={`text-[10px] ${onlineUsers.has(activeUser.user_id) ? "text-green-600" : "text-muted-foreground"}`}>
+                      {onlineUsers.has(activeUser.user_id) ? "Online" : "Offline"}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <Badge variant={getRoleBadgeVariant(activeUser.role)} className="text-[9px] px-1.5 py-0">
                       {getRoleLabel(activeUser.role)}
