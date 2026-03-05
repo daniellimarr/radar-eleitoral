@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Users } from "lucide-react";
+import ExportButtons from "@/components/ExportButtons";
 
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -30,6 +31,7 @@ export default function Leaders() {
   const [voters, setVoters] = useState<Record<string, any[]>>({});
   const [loadingVoters, setLoadingVoters] = useState<string | null>(null);
   const [voterCounts, setVoterCounts] = useState<Record<string, number>>({});
+  const tableRef = useRef<HTMLTableElement>(null);
 
   const fetchLeaders = async () => {
     if (!tenantId) return;
@@ -127,9 +129,12 @@ export default function Leaders() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Lideranças</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Lideranças</CardTitle>
+          <ExportButtons tableRef={tableRef} title="Lideranças" filename="liderancas" />
+        </CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <Table ref={tableRef}>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10"></TableHead>

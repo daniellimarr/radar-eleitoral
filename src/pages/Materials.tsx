@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
+import ExportButtons from "@/components/ExportButtons";
 
 const materialTypes = ["Banner", "Panfleto", "Adesivo", "Santinho", "Camiseta", "Boné", "Bandeira", "Outro"];
 
@@ -19,6 +20,7 @@ export default function Materials() {
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState({ name: "", type: "", quantity: "0", storage_location: "", observations: "" });
   const [loading, setLoading] = useState(false);
+  const tableRef = useRef<HTMLTableElement>(null);
 
   const fetch = async () => {
     if (!tenantId) return;
@@ -40,9 +42,11 @@ export default function Materials() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold">Material de Campanha</h1>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <div className="flex gap-2">
+          <ExportButtons tableRef={tableRef} title="Material de Campanha" filename="materiais" />
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Novo Material</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Novo Material</DialogTitle></DialogHeader>
@@ -60,12 +64,13 @@ export default function Materials() {
               <Button onClick={handleSave} disabled={loading} className="w-full">{loading ? "Salvando..." : "Cadastrar"}</Button>
             </div>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <Table ref={tableRef}>
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead><TableHead>Tipo</TableHead><TableHead>Qtd Total</TableHead><TableHead>Distribuído</TableHead><TableHead>Local</TableHead><TableHead className="w-16">Ação</TableHead>
