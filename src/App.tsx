@@ -23,6 +23,7 @@ import Campaigns from "@/pages/Campaigns";
 import Marketing from "@/pages/Marketing";
 import Backup from "@/pages/Backup";
 import CampaignFiles from "@/pages/CampaignFiles";
+import Reports from "@/pages/Reports";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ function App() {
             <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             <Route path="/backup" element={<ProtectedRoute><Backup /></ProtectedRoute>} />
             <Route path="/campaign-files" element={<ProtectedRoute><CampaignFiles /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
