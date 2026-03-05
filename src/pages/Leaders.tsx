@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Users } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -28,6 +29,8 @@ export default function Leaders() {
   const [expandedLeader, setExpandedLeader] = useState<string | null>(null);
   const [voters, setVoters] = useState<Record<string, any[]>>({});
   const [loadingVoters, setLoadingVoters] = useState<string | null>(null);
+  const [voterCounts, setVoterCounts] = useState<Record<string, number>>({});
+  const MAX_VOTERS = 15;
 
   const fetchLeaders = async () => {
     if (!tenantId) return;
@@ -39,6 +42,22 @@ export default function Leaders() {
       .is("deleted_at", null)
       .order("name");
     setLeaders(data || []);
+
+    // Fetch voter counts per leader
+    if (data && data.length > 0) {
+      const leaderIds = data.map((l: any) => l.id);
+      const { data: allVoters } = await supabase
+        .from("contacts")
+        .select("leader_id")
+        .in("leader_id", leaderIds)
+        .is("deleted_at", null);
+      
+      const counts: Record<string, number> = {};
+      (allVoters || []).forEach((v: any) => {
+        counts[v.leader_id] = (counts[v.leader_id] || 0) + 1;
+      });
+      setVoterCounts(counts);
+    }
   };
 
   useEffect(() => {
@@ -119,6 +138,7 @@ export default function Leaders() {
                 <TableHead>Nome</TableHead>
                 <TableHead>Cidade</TableHead>
                 <TableHead>Celular</TableHead>
+                <TableHead>Eleitores</TableHead>
                 <TableHead>Envolvimento</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -126,7 +146,7 @@ export default function Leaders() {
             <TableBody>
               {leaders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     Nenhuma liderança cadastrada
                   </TableCell>
                 </TableRow>
@@ -144,6 +164,20 @@ export default function Leaders() {
                     <TableCell className="font-medium">{l.name}</TableCell>
                     <TableCell>{l.city}</TableCell>
                     <TableCell>{l.phone}</TableCell>
+                    <TableCell>
+                      <div className="space-y-1 min-w-[120px]">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-medium">{voterCounts[l.id] || 0}/{MAX_VOTERS}</span>
+                          <span className="text-muted-foreground">
+                            {(voterCounts[l.id] || 0) >= MAX_VOTERS ? "Lotada" : `${MAX_VOTERS - (voterCounts[l.id] || 0)} vagas`}
+                          </span>
+                        </div>
+                        <Progress 
+                          value={((voterCounts[l.id] || 0) / MAX_VOTERS) * 100} 
+                          className={`h-2 ${(voterCounts[l.id] || 0) >= MAX_VOTERS ? "[&>div]:bg-destructive" : (voterCounts[l.id] || 0) >= 12 ? "[&>div]:bg-warning" : ""}`}
+                        />
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{l.engagement}</Badge>
                     </TableCell>
@@ -163,7 +197,7 @@ export default function Leaders() {
                   </TableRow>
                   {expandedLeader === l.id && (
                     <TableRow>
-                      <TableCell colSpan={7} className="bg-muted/30 p-0">
+                      <TableCell colSpan={8} className="bg-muted/30 p-0">
                         <div className="px-6 py-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
