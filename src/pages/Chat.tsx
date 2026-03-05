@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,15 +84,21 @@ export default function Chat() {
     };
   }, [user, tenantId]);
 
-  // Reset active conversation when leaving chat page
+  // Reset all chat state when leaving chat page (unmount)
+  const resetChat = useCallback(() => {
+    setActiveConversation(null);
+    setActiveUser(null);
+    setMessages([]);
+    setNewMessage("");
+    setConversations([]);
+    setAvailableUsers([]);
+  }, []);
+
   useEffect(() => {
     return () => {
-      setActiveConversation(null);
-      setActiveUser(null);
-      setMessages([]);
-      setNewMessage("");
+      resetChat();
     };
-  }, []);
+  }, [resetChat]);
 
   useEffect(() => {
     if (!tenantId || !user) return;
