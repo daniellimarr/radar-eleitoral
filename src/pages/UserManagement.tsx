@@ -25,6 +25,10 @@ const AVAILABLE_MODULES = [
   { key: "registration_links", label: "Links de Cadastro" },
   { key: "map", label: "Mapa / Georreferenciamento" },
   { key: "reports", label: "Relatórios" },
+  { key: "chat", label: "Chat Interno" },
+  { key: "campaigns", label: "Campanhas" },
+  { key: "marketing", label: "Marketing" },
+  { key: "campaign_files", label: "Arquivos da Campanha" },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
