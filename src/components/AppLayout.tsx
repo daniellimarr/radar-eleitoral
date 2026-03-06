@@ -2,11 +2,13 @@ import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { Navigate } from "react-router-dom";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Navigate, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import NotificationBell from "@/components/NotificationBell";
 import PendingApproval from "@/pages/PendingApproval";
+import { Loader2 } from "lucide-react";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading, profile, profileStatus, roles } = useAuth();
