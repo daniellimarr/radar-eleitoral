@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Search, Trash2, Edit, Loader2 } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { geocodeByCep } from "@/lib/geocoding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,7 +52,37 @@ export default function Contacts() {
   const [showAddress, setShowAddress] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [geoCoords, setGeoCoords] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
+  const [cpfStatus, setCpfStatus] = useState<{ valid: boolean | null; message: string; loading: boolean }>({ valid: null, message: "", loading: false });
   const tableRef = useRef<HTMLTableElement>(null);
+
+  const formatCpf = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    return digits
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  };
+
+  const validateCpf = async (cpf: string) => {
+    const cleaned = cpf.replace(/\D/g, "");
+    if (cleaned.length !== 11) {
+      setCpfStatus({ valid: null, message: "", loading: false });
+      return;
+    }
+    setCpfStatus({ valid: null, message: "Validando CPF...", loading: true });
+    try {
+      const { data, error } = await supabase.functions.invoke("validate-cpf", {
+        body: { cpf: cleaned },
+      });
+      if (error) {
+        setCpfStatus({ valid: false, message: "Erro ao validar CPF", loading: false });
+        return;
+      }
+      setCpfStatus({ valid: data.valid, message: data.message, loading: false });
+    } catch {
+      setCpfStatus({ valid: false, message: "Erro ao validar CPF", loading: false });
+    }
+  };
 
   const handleCepBlur = async () => {
     if (!form.cep || form.cep.replace(/\D/g, "").length !== 8) return;
@@ -137,6 +167,19 @@ export default function Contacts() {
       toast.error("Nome é obrigatório");
       return;
     }
+    const cleanedCpf = form.cpf.replace(/\D/g, "");
+    if (!cleanedCpf || cleanedCpf.length !== 11) {
+      toast.error("CPF é obrigatório e deve ter 11 dígitos");
+      return;
+    }
+    if (cpfStatus.valid === false) {
+      toast.error("CPF inválido. Corrija antes de salvar.");
+      return;
+    }
+    if (cpfStatus.loading) {
+      toast.error("Aguarde a validação do CPF.");
+      return;
+    }
     setLoading(true);
 
 
@@ -204,6 +247,7 @@ export default function Contacts() {
       leader_id: contact.leader_id || "",
     });
     setEditingId(contact.id);
+    setCpfStatus({ valid: null, message: "", loading: false });
     setIsOpen(true);
   };
 
@@ -221,7 +265,7 @@ export default function Contacts() {
         <h1 className="text-2xl font-bold">Cadastro &gt; Contato</h1>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setForm(defaultContact); setEditingId(null); }}>
+            <Button onClick={() => { setForm(defaultContact); setEditingId(null); setCpfStatus({ valid: null, message: "", loading: false }); }}>
               <Plus className="h-4 w-4 mr-2" /> NOVO CADASTRO
             </Button>
           </DialogTrigger>
@@ -263,8 +307,33 @@ export default function Contacts() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>CPF</Label>
-                    <Input value={form.cpf} onChange={(e) => updateField("cpf", e.target.value)} />
+                    <Label>CPF *</Label>
+                    <Input
+                      value={form.cpf}
+                      onChange={(e) => {
+                        const formatted = formatCpf(e.target.value);
+                        updateField("cpf", formatted);
+                        setCpfStatus({ valid: null, message: "", loading: false });
+                      }}
+                      onBlur={() => validateCpf(form.cpf)}
+                      placeholder="000.000.000-00"
+                      maxLength={14}
+                    />
+                    {cpfStatus.loading && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Validando CPF...
+                      </p>
+                    )}
+                    {cpfStatus.valid === true && (
+                      <p className="text-xs text-green-600 flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> {cpfStatus.message}
+                      </p>
+                    )}
+                    {cpfStatus.valid === false && (
+                      <p className="text-xs text-destructive flex items-center gap-1">
+                        <XCircle className="h-3 w-3" /> {cpfStatus.message}
+                      </p>
+                    )}
                   </div>
                 </div>
 
