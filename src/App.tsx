@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { SubscriptionProvider } from "@/hooks/useSubscription";
 import AppLayout from "@/components/AppLayout";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
@@ -27,6 +28,8 @@ import Reports from "@/pages/Reports";
 import Chat from "@/pages/Chat";
 import TenantManagement from "@/pages/TenantManagement";
 import PlanManagement from "@/pages/PlanManagement";
+import Planos from "@/pages/Planos";
+import Assinatura from "@/pages/Assinatura";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
