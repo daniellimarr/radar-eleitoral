@@ -12,6 +12,8 @@ import { Loader2 } from "lucide-react";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading, profile, profileStatus, roles } = useAuth();
+  const { subscribed, loading: subLoading } = useSubscription();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -29,6 +31,20 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const isAdminRole = roles.includes("super_admin") || roles.includes("admin_gabinete");
   if (profileStatus && profileStatus !== "approved" && !isAdminRole) {
     return <PendingApproval />;
+  }
+
+  // Check subscription - redirect to /planos if not subscribed
+  // Allow access to /assinatura page even without subscription
+  if (!subLoading && !subscribed && !isAdminRole && location.pathname !== "/assinatura") {
+    return <Navigate to="/planos" replace />;
+  }
+
+  if (subLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
