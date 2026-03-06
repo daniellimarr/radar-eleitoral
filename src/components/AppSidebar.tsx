@@ -49,7 +49,9 @@ const configItems = [
   { title: "Configurações", url: "/settings", icon: Settings },
 ];
 
-export function AppSidebar() {
+import React from "react";
+
+export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_props, ref) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
@@ -64,7 +66,7 @@ export function AppSidebar() {
   const visibleCoordinatorItems = coordinatorItems.filter((item) => hasPermission(item.module));
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar ref={ref} collapsible="icon">
       <SidebarContent>
         {/* Logo */}
         <div className="p-4 flex items-center gap-2">
@@ -193,4 +195,4 @@ export function AppSidebar() {
       </SidebarFooter>
     </Sidebar>
   );
-}
+});
