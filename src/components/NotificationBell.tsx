@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +23,7 @@ interface Notification {
   created_at: string;
 }
 
-export default function NotificationBell() {
+const NotificationBell = React.forwardRef<HTMLDivElement>(function NotificationBell(_props, ref) {
   const { tenantId, hasRole } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -159,4 +159,6 @@ export default function NotificationBell() {
       </PopoverContent>
     </Popover>
   );
-}
+});
+
+export default NotificationBell;
