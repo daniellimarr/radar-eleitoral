@@ -51,6 +51,7 @@ function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/cadastro/:slug" element={<PublicRegistration />} />
+            <Route path="/planos" element={<Planos />} />
             
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
