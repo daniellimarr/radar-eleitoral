@@ -26,10 +26,17 @@ serve(async (req) => {
 
     const { priceId } = await req.json();
     if (!priceId) throw new Error("priceId is required");
+    console.log("[CREATE-CHECKOUT] priceId:", priceId, "user:", user.email);
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
+    console.log("[CREATE-CHECKOUT] Key prefix:", stripeKey.substring(0, 8));
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2025-08-27.basil",
     });
+
+    // Verify price exists and get its currency
+    const price = await stripe.prices.retrieve(priceId);
+    console.log("[CREATE-CHECKOUT] Price currency:", price.currency, "active:", price.active);
 
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
@@ -52,11 +59,13 @@ serve(async (req) => {
       },
     });
 
+    console.log("[CREATE-CHECKOUT] Session created:", session.id);
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
+    console.error("[CREATE-CHECKOUT] ERROR:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
