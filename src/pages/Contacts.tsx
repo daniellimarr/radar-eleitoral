@@ -63,25 +63,33 @@ export default function Contacts() {
       .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
   };
 
-  const validateCpf = async (cpf: string) => {
+  const validateCpf = (cpf: string) => {
     const cleaned = cpf.replace(/\D/g, "");
     if (cleaned.length !== 11) {
       setCpfStatus({ valid: null, message: "", loading: false });
       return;
     }
-    setCpfStatus({ valid: null, message: "Validando CPF...", loading: true });
-    try {
-      const { data, error } = await supabase.functions.invoke("validate-cpf", {
-        body: { cpf: cleaned },
-      });
-      if (error) {
-        setCpfStatus({ valid: false, message: "Erro ao validar CPF", loading: false });
-        return;
-      }
-      setCpfStatus({ valid: data.valid, message: data.message, loading: false });
-    } catch {
-      setCpfStatus({ valid: false, message: "Erro ao validar CPF", loading: false });
+    if (/^(\d)\1{10}$/.test(cleaned)) {
+      setCpfStatus({ valid: false, message: "CPF inválido", loading: false });
+      return;
     }
+    let sum = 0;
+    for (let i = 0; i < 9; i++) sum += parseInt(cleaned[i]) * (10 - i);
+    let rem = (sum * 10) % 11;
+    if (rem === 10) rem = 0;
+    if (rem !== parseInt(cleaned[9])) {
+      setCpfStatus({ valid: false, message: "CPF inválido", loading: false });
+      return;
+    }
+    sum = 0;
+    for (let i = 0; i < 10; i++) sum += parseInt(cleaned[i]) * (11 - i);
+    rem = (sum * 10) % 11;
+    if (rem === 10) rem = 0;
+    if (rem !== parseInt(cleaned[10])) {
+      setCpfStatus({ valid: false, message: "CPF inválido", loading: false });
+      return;
+    }
+    setCpfStatus({ valid: true, message: "CPF válido", loading: false });
   };
 
   const handleCepBlur = async () => {
