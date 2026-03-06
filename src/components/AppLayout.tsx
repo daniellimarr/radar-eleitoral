@@ -2,14 +2,18 @@ import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { Navigate } from "react-router-dom";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Navigate, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import NotificationBell from "@/components/NotificationBell";
 import PendingApproval from "@/pages/PendingApproval";
+import { Loader2 } from "lucide-react";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading, profile, profileStatus, roles } = useAuth();
+  const { subscribed, loading: subLoading } = useSubscription();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -27,6 +31,20 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const isAdminRole = roles.includes("super_admin") || roles.includes("admin_gabinete");
   if (profileStatus && profileStatus !== "approved" && !isAdminRole) {
     return <PendingApproval />;
+  }
+
+  // Check subscription - redirect to /planos if not subscribed
+  // Allow access to /assinatura page even without subscription
+  if (!subLoading && !subscribed && !isAdminRole && location.pathname !== "/assinatura") {
+    return <Navigate to="/planos" replace />;
+  }
+
+  if (subLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
