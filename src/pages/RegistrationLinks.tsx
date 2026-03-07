@@ -89,7 +89,7 @@ export default function RegistrationLinks() {
   };
 
   const getBaseUrl = () => {
-    return "https://radareleitoral.net";
+    return window.location.origin;
   };
 
   const copyLink = (slug: string) => {
