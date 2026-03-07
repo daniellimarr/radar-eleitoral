@@ -194,7 +194,7 @@ export default function SuperAdminDashboard() {
 
       {/* Recent Tenants */}
       <Card>
-        <CardHeader><CardTitle>Tenants Recentes</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Gabinetes Recentes</CardTitle></CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
