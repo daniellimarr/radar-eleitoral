@@ -112,23 +112,23 @@ export default function RegistrationLinks() {
             <DialogHeader><DialogTitle>Criar Link de Cadastro</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Slug (identificador único)</Label>
-                <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder="meu-link" />
-                <p className="text-xs text-muted-foreground">{getBaseUrl()}/cadastro/{slug || "..."}</p>
-              </div>
-              <div className="space-y-2">
-                <Label>Liderança (opcional)</Label>
-                <Select value={selectedLeader} onValueChange={setSelectedLeader}>
+                <Label>Liderança *</Label>
+                <Select value={selectedLeader} onValueChange={handleLeaderChange}>
                   <SelectTrigger><SelectValue placeholder="Selecione uma liderança" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Nenhuma (link geral)</SelectItem>
                     {leaders.map((l) => (
                       <SelectItem key={l.id} value={l.id}>{l.nickname || l.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">Eleitores cadastrados por este link serão vinculados automaticamente à liderança selecionada.</p>
+                <p className="text-xs text-muted-foreground">O link será gerado com o nome da liderança.</p>
               </div>
+              {slug && (
+                <div className="space-y-2">
+                  <Label>Link gerado</Label>
+                  <p className="text-sm font-mono bg-muted p-2 rounded">{getBaseUrl()}/cadastro/{slug}</p>
+                </div>
+              )}
               <Button onClick={handleCreate} disabled={loading} className="w-full">{loading ? "Criando..." : "Criar Link"}</Button>
             </div>
           </DialogContent>
