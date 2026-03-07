@@ -63,9 +63,7 @@ const NotificationBell = React.forwardRef<HTMLDivElement>(function NotificationB
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [tenantId, isAdmin]);
-
-  if (!isAdmin) return null;
+  }, [tenantId]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
