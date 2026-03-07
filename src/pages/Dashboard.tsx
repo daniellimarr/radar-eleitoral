@@ -53,8 +53,11 @@ const engagementWeight: Record<string, number> = {
 
 export default function Dashboard() {
   const { tenantId, hasRole, loading, roles } = useAuth();
+  const { planName, contactLimit, userLimit } = useSubscription();
+  const navigate = useNavigate();
   const isOperador = hasRole("operador");
   const isSuperAdmin = hasRole("super_admin");
+  const isAdminRole = isSuperAdmin || hasRole("admin_gabinete");
   const [stats, setStats] = useState({ contacts: 0, appointmentsToday: 0, birthdays: 0, citizenParticipates: 0 });
   const [engagementData, setEngagementData] = useState<Record<string, number>>({});
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
