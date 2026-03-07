@@ -39,10 +39,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Super admins and admin_gabinete bypass subscription check
-    if (roles.includes("super_admin") || roles.includes("admin_gabinete")) {
+    // Only super_admin bypasses subscription check
+    if (roles.includes("super_admin")) {
       setSubscribed(true);
-      setPlanName(roles.includes("super_admin") ? "Super Admin" : "Admin Gabinete");
+      setPlanName("Super Admin");
       setContactLimit(Infinity);
       setUserLimit(Infinity);
       setLoading(false);
