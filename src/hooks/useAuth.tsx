@@ -75,9 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          // Don't await - fire and forget to avoid deadlocks
-          // But don't set loading=false here; fetchProfile will handle it
           if (initialSessionHandled) {
+            setLoading(true);
+            setPermissionsLoading(true);
             fetchProfile(session.user.id).then(() => setLoading(false));
           }
         } else {
