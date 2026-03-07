@@ -28,7 +28,7 @@ interface Voter {
 export default function LeaderRegistration() {
   const { id } = useParams<{ id: string }>();
   const isEditing = !!id;
-  const { tenantId } = useAuth();
+  const { tenantId, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
