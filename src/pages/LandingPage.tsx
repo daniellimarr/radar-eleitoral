@@ -120,7 +120,7 @@ export default function LandingPage() {
               className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button onClick={() => navigate("/auth")} size="lg"
                 className="bg-[#e86c2a] hover:bg-[#d45d1f] text-white text-lg font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#e86c2a]/30 hover:shadow-[#e86c2a]/50 transition-all">
-                Criar Conta Grátis <ArrowRight className="ml-2 h-5 w-5" />
+                Criar Conta <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button variant="outline" size="lg" onClick={() => {
                 document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
