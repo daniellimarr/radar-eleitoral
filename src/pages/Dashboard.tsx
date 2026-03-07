@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, MessageSquare, Gift, Megaphone, Calendar as CalendarIcon, Target, TrendingUp, DollarSign, MapPin } from "lucide-react";
+import { Users, MessageSquare, Gift, Megaphone, Calendar as CalendarIcon, Target, TrendingUp, DollarSign, MapPin, Crown, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import OperatorDashboard from "@/components/OperatorDashboard";
 import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 const engagementLabels: Record<string, string> = {
@@ -50,8 +53,11 @@ const engagementWeight: Record<string, number> = {
 
 export default function Dashboard() {
   const { tenantId, hasRole, loading, roles } = useAuth();
+  const { planName, contactLimit, userLimit } = useSubscription();
+  const navigate = useNavigate();
   const isOperador = hasRole("operador");
   const isSuperAdmin = hasRole("super_admin");
+  const isAdminRole = isSuperAdmin || hasRole("admin_gabinete");
   const [stats, setStats] = useState({ contacts: 0, appointmentsToday: 0, birthdays: 0, citizenParticipates: 0 });
   const [engagementData, setEngagementData] = useState<Record<string, number>>({});
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
@@ -168,6 +174,57 @@ export default function Dashboard() {
           {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
         </div>
       </div>
+
+      {/* Plan Banner */}
+      {!isAdminRole && planName && (
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Crown className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">
+                    Plano <span className="text-primary">{planName}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {contactLimit === Infinity
+                      ? "Contatos ilimitados"
+                      : `${stats.contacts.toLocaleString()} / ${contactLimit.toLocaleString()} contatos`}
+                    {" · "}
+                    {userLimit === Infinity
+                      ? "Usuários ilimitados"
+                      : `${userLimit} usuários`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                {contactLimit !== Infinity && (
+                  <div className="flex-1 sm:w-40">
+                    <Progress
+                      value={Math.min((stats.contacts / contactLimit) * 100, 100)}
+                      className="h-2"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1 text-right">
+                      {Math.min((stats.contacts / contactLimit) * 100, 100).toFixed(0)}% usado
+                    </p>
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground shrink-0"
+                  onClick={() => navigate("/assinatura")}
+                >
+                  <ArrowUpRight className="h-4 w-4 mr-1" />
+                  Upgrade
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stat Cards */}
       <Card>
