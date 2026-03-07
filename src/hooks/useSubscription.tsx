@@ -45,13 +45,18 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Super admins bypass subscription check
-    if (roles.includes("super_admin")) {
+    // Super admins and admin_gabinete bypass subscription check
+    if (roles.includes("super_admin") || roles.includes("admin_gabinete")) {
       setSubscribed(true);
-      setPlanName("Super Admin");
+      setPlanName(roles.includes("super_admin") ? "Super Admin" : "Admin Gabinete");
       setContactLimit(Infinity);
       setUserLimit(Infinity);
       setLoading(false);
+      return;
+    }
+
+    // If roles haven't loaded yet, wait
+    if (roles.length === 0) {
       return;
     }
 
