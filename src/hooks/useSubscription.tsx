@@ -55,8 +55,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // If roles haven't loaded yet, wait
+    // If roles haven't loaded yet, keep loading=true and wait
     if (roles.length === 0) {
+      setLoading(true);
       return;
     }
 
