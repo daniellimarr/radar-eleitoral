@@ -1,11 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Award, Star, Crown } from "lucide-react";
+import { Check, Award, Star, Crown, ArrowLeft } from "lucide-react";
 import { PLANS, PlanKey } from "@/lib/stripe";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import logoImg from "@/assets/logo-radar-eleitoral.png";
 
 const icons: Record<PlanKey, React.ReactNode> = {
