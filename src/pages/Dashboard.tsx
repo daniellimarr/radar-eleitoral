@@ -175,6 +175,57 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Plan Banner */}
+      {!isAdminRole && planName && (
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Crown className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">
+                    Plano <span className="text-primary">{planName}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {contactLimit === Infinity
+                      ? "Contatos ilimitados"
+                      : `${stats.contacts.toLocaleString()} / ${contactLimit.toLocaleString()} contatos`}
+                    {" · "}
+                    {userLimit === Infinity
+                      ? "Usuários ilimitados"
+                      : `${userLimit} usuários`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                {contactLimit !== Infinity && (
+                  <div className="flex-1 sm:w-40">
+                    <Progress
+                      value={Math.min((stats.contacts / contactLimit) * 100, 100)}
+                      className="h-2"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1 text-right">
+                      {Math.min((stats.contacts / contactLimit) * 100, 100).toFixed(0)}% usado
+                    </p>
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground shrink-0"
+                  onClick={() => navigate("/assinatura")}
+                >
+                  <ArrowUpRight className="h-4 w-4 mr-1" />
+                  Upgrade
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stat Cards */}
       <Card>
         <CardContent className="p-6">
