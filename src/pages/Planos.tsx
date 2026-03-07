@@ -1,11 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Award, Star, Crown } from "lucide-react";
+import { Check, Award, Star, Crown, ArrowLeft } from "lucide-react";
 import { PLANS, PlanKey } from "@/lib/stripe";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import logoImg from "@/assets/logo-radar-eleitoral.png";
 
 const icons: Record<PlanKey, React.ReactNode> = {
@@ -17,6 +18,7 @@ const icons: Record<PlanKey, React.ReactNode> = {
 export default function Planos() {
   const { user } = useAuth();
   const { subscribed, planName } = useSubscription();
+  const navigate = useNavigate();
 
   const handleSubscribe = (checkoutUrl: string) => {
     if (!user) {
@@ -32,6 +34,11 @@ export default function Planos() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex flex-col items-center py-12 px-4">
+      <div className="w-full max-w-5xl mb-4">
+        <Button variant="ghost" onClick={() => navigate("/auth")} className="gap-2">
+          <ArrowLeft className="h-4 w-4" /> Voltar
+        </Button>
+      </div>
       <div className="text-center mb-12">
         <img src={logoImg} alt="Radar Eleitoral" className="h-16 mx-auto mb-4" />
         <h1 className="text-3xl md:text-4xl font-bold mb-1">O melhor custo benefício</h1>
