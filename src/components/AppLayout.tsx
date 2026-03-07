@@ -33,18 +33,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return <PendingApproval />;
   }
 
-  // Check subscription - redirect to /planos if not subscribed
-  // Allow access to /assinatura page even without subscription
-  if (!subLoading && !subscribed && !isAdminRole && location.pathname !== "/assinatura") {
-    return <Navigate to="/planos" replace />;
-  }
-
+  // Show loading while subscription is being checked
   if (subLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  // Check subscription - redirect to /planos if not subscribed
+  // Allow access to /assinatura page even without subscription
+  if (!subscribed && !isAdminRole && location.pathname !== "/assinatura") {
+    return <Navigate to="/planos" replace />;
   }
 
   return (
