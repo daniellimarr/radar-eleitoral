@@ -342,7 +342,7 @@ export default function LandingPage() {
             <motion.div variants={fadeUp} custom={2} className="mt-10">
               <Button onClick={() => navigate("/auth")} size="lg"
                 className="bg-[#e86c2a] hover:bg-[#d45d1f] text-white text-lg font-bold px-10 py-7 rounded-xl shadow-xl shadow-[#e86c2a]/30 hover:shadow-[#e86c2a]/50 transition-all">
-                Começar Agora — É Grátis <ArrowRight className="ml-2 h-5 w-5" />
+                Começar Agora <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </motion.div>
           </motion.div>
