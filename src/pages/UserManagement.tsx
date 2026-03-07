@@ -130,7 +130,13 @@ export default function UserManagement() {
 
   useEffect(() => { fetchUsers(); }, [tenantId]);
 
+  const hasReachedUserLimit = userLimit !== Infinity && activeUsers.length >= userLimit;
+
   const handleCreate = async () => {
+    if (hasReachedUserLimit) {
+      toast.error(`Limite de ${userLimit} usuários atingido. Faça upgrade do seu plano.`);
+      return;
+    }
     if (!newEmail || !newName || !newPassword) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
