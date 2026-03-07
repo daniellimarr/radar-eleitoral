@@ -106,7 +106,7 @@ export default function LandingPage() {
               className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg">
               Gestão inteligente para{" "}
               <span className="text-yellow-400">
-                Gabinetes e Pré Campanha
+                Pré Campanha, Campanhas e Gabinete
               </span>
             </motion.h1>
             <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2}
