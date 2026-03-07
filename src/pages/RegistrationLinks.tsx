@@ -35,12 +35,12 @@ export default function RegistrationLinks() {
   const handleCreate = async () => {
     if (!tenantId || !slug) { toast.error("Slug é obrigatório"); return; }
     setLoading(true);
-    const { error } = await supabase.from("registration_links").insert({
+    const { error } = await supabase.from("registration_links").upsert({
       tenant_id: tenantId,
       slug,
       coordinator_id: user?.id,
       leader_contact_id: selectedLeader || null,
-    });
+    }, { onConflict: "slug" });
     if (error) toast.error(error.message);
     else { toast.success("Link criado!"); setIsOpen(false); setSlug(""); setSelectedLeader(""); fetchData(); }
     setLoading(false);
