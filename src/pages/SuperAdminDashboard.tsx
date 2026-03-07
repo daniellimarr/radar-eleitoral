@@ -111,8 +111,8 @@ export default function SuperAdminDashboard() {
   const monthlyData = months.map((m, i) => ({ name: m, tenants: monthCounts[i] }));
 
   const statCards = [
-    { label: "Total de Tenants", value: totalTenants, icon: Building2, bgColor: "bg-blue-100", iconColor: "text-blue-600" },
-    { label: "Tenants Ativos", value: activeTenants, icon: Users, bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
+    { label: "Total de Gabinetes", value: totalTenants, icon: Building2, bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+    { label: "Gabinetes Ativos", value: activeTenants, icon: Users, bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
     { label: "Planos Ativos", value: totalPlans, icon: Package, bgColor: "bg-purple-100", iconColor: "text-purple-600" },
     { label: "MRR Estimado", value: `R$ ${mrr.toFixed(2)}`, icon: DollarSign, bgColor: "bg-amber-100", iconColor: "text-amber-600" },
   ];
