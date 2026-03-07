@@ -14,6 +14,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading, profile, profileStatus, roles } = useAuth();
   const { subscribed, loading: subLoading } = useSubscription();
   const location = useLocation();
+  console.log("[AppLayout] user:", !!user, "loading:", loading, "subLoading:", subLoading, "subscribed:", subscribed, "roles:", roles, "profileStatus:", profileStatus, "path:", location.pathname);
 
   if (loading) {
     return (
