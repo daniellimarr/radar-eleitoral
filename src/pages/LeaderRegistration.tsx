@@ -216,16 +216,45 @@ export default function LeaderRegistration() {
         });
         if (leaderError) throw leaderError;
 
-        // Auto-generate short registration link for this leader
-        const code = Math.random().toString(36).substring(2, 6);
-        const slug = code;
+        // Auto-generate registration link based on leader name/nickname
+        const generateSlug = (name: string) =>
+          name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
         
-        await supabase.from("registration_links").insert({
-          tenant_id: tenantId,
-          slug,
-          leader_contact_id: contact.id,
-          coordinator_id: user?.id,
-        });
+        let slug = generateSlug(form.nickname || form.name);
+        
+        // Check if slug already exists
+        const { data: existingLink } = await supabase
+          .from("registration_links")
+          .select("id, tenant_id")
+          .eq("slug", slug)
+          .maybeSingle();
+        
+        if (existingLink) {
+          if (existingLink.tenant_id === tenantId) {
+            // Update existing link for this tenant
+            await supabase.from("registration_links").update({
+              leader_contact_id: contact.id,
+              coordinator_id: user?.id,
+            }).eq("id", existingLink.id);
+          } else {
+            // Slug belongs to another tenant, append random suffix
+            slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+            await supabase.from("registration_links").insert({
+              tenant_id: tenantId,
+              slug,
+              leader_contact_id: contact.id,
+              coordinator_id: user?.id,
+            });
+          }
+        } else {
+          await supabase.from("registration_links").insert({
+            tenant_id: tenantId,
+            slug,
+            leader_contact_id: contact.id,
+            coordinator_id: user?.id,
+          });
+        }
 
         toast({ title: "Liderança cadastrada com sucesso! Link de cadastro gerado automaticamente." });
       }
