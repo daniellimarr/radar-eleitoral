@@ -18,6 +18,7 @@ const icons: Record<PlanKey, React.ReactNode> = {
 export default function Planos() {
   const { user } = useAuth();
   const { subscribed, planName } = useSubscription();
+  const navigate = useNavigate();
 
   const handleSubscribe = (checkoutUrl: string) => {
     if (!user) {
