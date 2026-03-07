@@ -216,11 +216,9 @@ export default function LeaderRegistration() {
         });
         if (leaderError) throw leaderError;
 
-        // Auto-generate registration link for this leader
-        const baseName = (form.nickname || form.name).toLowerCase()
-          .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-          .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-        const slug = `${baseName}-${Date.now().toString(36)}`;
+        // Auto-generate short registration link for this leader
+        const code = Math.random().toString(36).substring(2, 6);
+        const slug = code;
         
         await supabase.from("registration_links").insert({
           tenant_id: tenantId,
