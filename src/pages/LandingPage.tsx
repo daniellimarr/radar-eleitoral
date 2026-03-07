@@ -226,7 +226,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4">
-                    <Star className="h-8 w-8 text-[#e86c2a]" />
+                    <Star className="h-8 w-8 text-white" />
                     <div>
                       <p className="font-bold">Suporte Especializado</p>
                       <p className="text-sm text-white/60">Time dedicado com experiência política</p>
