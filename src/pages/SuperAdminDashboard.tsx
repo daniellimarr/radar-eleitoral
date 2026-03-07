@@ -222,6 +222,43 @@ export default function SuperAdminDashboard() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Subscriptions / Gabinetes Assinantes */}
+      <Card>
+        <CardHeader><CardTitle>Gabinetes com Assinatura</CardTitle></CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Gabinete</TableHead>
+                <TableHead>Plano</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Início</TableHead>
+                <TableHead>Expira em</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+              ) : subscriptions.length === 0 ? (
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma assinatura encontrada</TableCell></TableRow>
+              ) : subscriptions.map(s => (
+                <TableRow key={s.id}>
+                  <TableCell className="font-medium">{s.tenant_name}</TableCell>
+                  <TableCell><Badge variant="outline">{s.plan_name}</Badge></TableCell>
+                  <TableCell>
+                    <Badge className={s.status === "active" ? "bg-emerald-100 text-emerald-700" : s.status === "cancelled" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}>
+                      {s.status === "active" ? "Ativa" : s.status === "cancelled" ? "Cancelada" : s.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{format(new Date(s.started_at), "dd/MM/yyyy")}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{s.expires_at ? format(new Date(s.expires_at), "dd/MM/yyyy") : "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
