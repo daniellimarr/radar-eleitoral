@@ -129,6 +129,12 @@ export default function Auth() {
             </TabsContent>
           </Tabs>
 
+          <div className="text-center">
+            <Button variant="link" className="text-primary" onClick={() => navigate("/planos")}>
+              📋 Conheça nossos planos
+            </Button>
+          </div>
+
           <p className="text-center text-sm text-muted-foreground">© 2009 – 2026</p>
         </div>
       </div>
