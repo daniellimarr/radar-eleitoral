@@ -77,7 +77,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [session, roles]);
+  }, [session, roles, authLoading]);
 
   useEffect(() => {
     if (session) {
