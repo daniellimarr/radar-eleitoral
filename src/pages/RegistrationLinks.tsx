@@ -89,12 +89,7 @@ export default function RegistrationLinks() {
   };
 
   const getBaseUrl = () => {
-    const host = window.location.hostname;
-    if (host.includes("lovable.app") && !host.includes("preview")) {
-      return window.location.origin;
-    }
-    // Use published domain
-    return "https://radar-eleitoral.lovable.app";
+    return "https://radareleitoral.net";
   };
 
   const copyLink = (slug: string) => {
