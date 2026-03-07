@@ -52,6 +52,7 @@ interface UserRow {
 
 export default function UserManagement() {
   const { tenantId, roles, user } = useAuth();
+  const { userLimit } = useSubscription();
   const canDelete = roles.includes("super_admin") || roles.includes("admin_gabinete") || roles.includes("coordenador");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
