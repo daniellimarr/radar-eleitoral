@@ -209,7 +209,7 @@ export default function LandingPage() {
             </motion.div>
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2}
               className="relative">
-              <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-3xl p-8 lg:p-12 text-white">
+              <div className="bg-gradient-to-br from-[#e86c2a] to-[#c4501a] rounded-3xl p-8 lg:p-12 text-white">
                 <div className="space-y-6">
                   <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4">
                     <Shield className="h-8 w-8 text-[#e86c2a]" />
