@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Plus, Pencil, Shield, Users, Building2, Mail, Loader2, Trash2, Ban, CheckCircle } from "lucide-react";
+import { Plus, Pencil, Users, Building2, Mail, Loader2, Trash2, Ban, CheckCircle, KeyRound } from "lucide-react";
 
 interface Tenant {
   id: string;
@@ -32,16 +32,28 @@ interface Plan {
   user_limit: number;
 }
 
+interface TenantAdmin {
+  tenant_id: string;
+  user_id: string;
+  email: string;
+  full_name: string | null;
+}
+
 export default function TenantManagement() {
   const { hasRole } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [tenantAdmins, setTenantAdmins] = useState<TenantAdmin[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Tenant | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordTarget, setPasswordTarget] = useState<{ userId: string; tenantName: string; email: string } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
   const [form, setForm] = useState({
     name: "", document: "", status: "ativo", plan_id: "", contact_limit: "1000",
     admin_name: "", admin_email: "", admin_password: "",
@@ -57,6 +69,66 @@ export default function TenantManagement() {
     ]);
     if (tenantsRes.data) setTenants(tenantsRes.data);
     if (plansRes.data) setPlans(plansRes.data);
+
+    // Fetch admin profiles with emails for each tenant
+    if (tenantsRes.data && tenantsRes.data.length > 0) {
+      const tenantIds = tenantsRes.data.map(t => t.id);
+      
+      // Get profiles linked to these tenants
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("tenant_id, user_id, full_name")
+        .in("tenant_id", tenantIds);
+
+      if (profiles && profiles.length > 0) {
+        // Get roles to find admin_gabinete users
+        const userIds = profiles.map(p => p.user_id);
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("user_id, role")
+          .in("user_id", userIds)
+          .eq("role", "admin_gabinete");
+
+        const adminUserIds = new Set(roles?.map(r => r.user_id) || []);
+
+        // Get emails via auth - we'll use listUsers from the admin profiles
+        // Since we can't access auth.users directly, we'll get emails from the user metadata
+        // For now, store what we have and fetch emails via a different approach
+        const admins: TenantAdmin[] = [];
+        
+        for (const profile of profiles) {
+          if (adminUserIds.has(profile.user_id)) {
+            // We need email - let's query it from auth
+            admins.push({
+              tenant_id: profile.tenant_id!,
+              user_id: profile.user_id,
+              email: "", // Will be populated below
+              full_name: profile.full_name,
+            });
+          }
+        }
+
+        // Fetch emails using the list-users approach via edge function
+        // Since we're super_admin, we can use the profiles + user_roles to identify admins
+        // and show their name. For email, we'll need to call auth admin API.
+        // Let's use a simpler approach: fetch via the invite-user edge function pattern
+        // Actually, we can get emails from supabase auth using listUsers
+        
+        // For now, let's show admin name and use edge function for email lookup
+        const { data: emailData } = await supabase.functions.invoke("get-tenant-emails", {
+          body: { user_ids: admins.map(a => a.user_id) },
+        }).catch(() => ({ data: null }));
+
+        if (emailData?.emails) {
+          for (const admin of admins) {
+            admin.email = emailData.emails[admin.user_id] || "";
+          }
+        }
+
+        setTenantAdmins(admins);
+      }
+    }
+
     setLoading(false);
   };
 
@@ -70,13 +142,16 @@ export default function TenantManagement() {
 
   const openEdit = (t: Tenant) => {
     setEditingTenant(t);
+    const admin = tenantAdmins.find(a => a.tenant_id === t.id);
     setForm({
       name: t.name,
       document: t.document || "",
       status: t.status,
       plan_id: t.plan_id || "",
       contact_limit: String(t.contact_limit),
-      admin_name: "", admin_email: "", admin_password: "",
+      admin_name: admin?.full_name || "",
+      admin_email: admin?.email || "",
+      admin_password: "",
     });
     setDialogOpen(true);
   };
@@ -147,7 +222,6 @@ export default function TenantManagement() {
     setDeleting(true);
 
     try {
-      // 1. Get all users from this tenant
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id")
@@ -155,27 +229,24 @@ export default function TenantManagement() {
 
       const userIds = profiles?.map(p => p.user_id) || [];
 
-      // 2. Delete each user via edge function (removes auth + cascades)
       for (const userId of userIds) {
         await supabase.functions.invoke("delete-user", {
           body: { user_id: userId },
         });
       }
 
-      // 3. Cancel active subscriptions
       await supabase
         .from("subscriptions")
         .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
         .eq("tenant_id", deleteTarget.id)
         .eq("status", "active");
 
-      // 4. Soft-delete the tenant
       await supabase
         .from("tenants")
         .update({ deleted_at: new Date().toISOString(), status: "cancelado" as any })
         .eq("id", deleteTarget.id);
 
-      toast.success("Gabinete excluído com sucesso! Todos os usuários foram removidos.");
+      toast.success("Gabinete excluído com sucesso!");
       setDeleteTarget(null);
       fetchData();
     } catch (err) {
@@ -183,6 +254,30 @@ export default function TenantManagement() {
       toast.error("Erro ao excluir gabinete");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordTarget || !newPassword) return;
+    if (newPassword.length < 6) {
+      toast.error("A senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("change-password", {
+        body: { user_id: passwordTarget.userId, new_password: newPassword },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Senha alterada com sucesso!");
+      setPasswordDialogOpen(false);
+      setNewPassword("");
+      setPasswordTarget(null);
+    } catch (err: any) {
+      toast.error("Erro ao alterar senha: " + (err.message || err));
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -196,6 +291,8 @@ export default function TenantManagement() {
   };
 
   const getPlanName = (planId: string | null) => plans.find(p => p.id === planId)?.name || "—";
+  const getAdminEmail = (tenantId: string) => tenantAdmins.find(a => a.tenant_id === tenantId)?.email || "—";
+  const getAdmin = (tenantId: string) => tenantAdmins.find(a => a.tenant_id === tenantId);
 
   return (
     <div className="space-y-6">
@@ -228,38 +325,48 @@ export default function TenantManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>Documento</TableHead>
+                <TableHead>Email Admin</TableHead>
                 <TableHead>Plano</TableHead>
-                <TableHead>Limite Contatos</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
               ) : tenants.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum gabinete cadastrado.</TableCell></TableRow>
-              ) : tenants.map(t => (
-                <TableRow key={t.id}>
-                  <TableCell className="font-medium">{t.name}</TableCell>
-                  <TableCell>{t.document || "—"}</TableCell>
-                  <TableCell>{getPlanName(t.plan_id)}</TableCell>
-                  <TableCell>{t.contact_limit.toLocaleString()}</TableCell>
-                  <TableCell>{statusBadge(t.status)}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button size="sm" variant="outline" onClick={() => openEdit(t)} title="Editar">
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    <Button size="sm" variant={t.status === "ativo" ? "destructive" : "default"} onClick={() => toggleStatus(t)} title={t.status === "ativo" ? "Suspender" : "Ativar"}>
-                      {t.status === "ativo" ? <Ban className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(t)} title="Excluir gabinete">
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum gabinete cadastrado.</TableCell></TableRow>
+              ) : tenants.map(t => {
+                const admin = getAdmin(t.id);
+                return (
+                  <TableRow key={t.id}>
+                    <TableCell className="font-medium">{t.name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{getAdminEmail(t.id)}</TableCell>
+                    <TableCell>{getPlanName(t.plan_id)}</TableCell>
+                    <TableCell>{statusBadge(t.status)}</TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button size="sm" variant="outline" onClick={() => openEdit(t)} title="Editar">
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      {admin && (
+                        <Button size="sm" variant="outline" onClick={() => {
+                          setPasswordTarget({ userId: admin.user_id, tenantName: t.name, email: admin.email });
+                          setNewPassword("");
+                          setPasswordDialogOpen(true);
+                        }} title="Alterar senha">
+                          <KeyRound className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <Button size="sm" variant={t.status === "ativo" ? "destructive" : "default"} onClick={() => toggleStatus(t)} title={t.status === "ativo" ? "Suspender" : "Ativar"}>
+                        {t.status === "ativo" ? <Ban className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(t)} title="Excluir gabinete">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
@@ -287,17 +394,37 @@ export default function TenantManagement() {
             <div><Label>Limite de Contatos</Label><Input type="number" value={form.contact_limit} onChange={e => setForm(f => ({ ...f, contact_limit: e.target.value }))} /></div>
 
             {editingTenant ? (
-              <div>
-                <Label>Status</Label>
-                <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="suspenso">Suspenso</SelectItem>
-                    <SelectItem value="cancelado">Cancelado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                <div>
+                  <Label>Status</Label>
+                  <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ativo">Ativo</SelectItem>
+                      <SelectItem value="suspenso">Suspenso</SelectItem>
+                      <SelectItem value="cancelado">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {form.admin_email && (
+                  <>
+                    <Separator />
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Mail className="h-4 w-4" />
+                      Administrador do Gabinete
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input value={form.admin_email} disabled className="bg-muted" />
+                    </div>
+                    <div>
+                      <Label>Senha</Label>
+                      <Input value="••••••••" disabled className="bg-muted" />
+                      <p className="text-xs text-muted-foreground mt-1">Use o botão <KeyRound className="inline h-3 w-3" /> na tabela para alterar a senha.</p>
+                    </div>
+                  </>
+                )}
+              </>
             ) : (
               <>
                 <Separator />
@@ -314,6 +441,31 @@ export default function TenantManagement() {
             <Button className="w-full" onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {editingTenant ? "Salvar" : "Criar Gabinete e Administrador"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Alterar Senha</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Gabinete</Label>
+              <Input value={passwordTarget?.tenantName || ""} disabled className="bg-muted" />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input value={passwordTarget?.email || ""} disabled className="bg-muted" />
+            </div>
+            <div>
+              <Label>Nova Senha *</Label>
+              <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+            </div>
+            <Button className="w-full" onClick={handleChangePassword} disabled={changingPassword}>
+              {changingPassword && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Alterar Senha
             </Button>
           </div>
         </DialogContent>
