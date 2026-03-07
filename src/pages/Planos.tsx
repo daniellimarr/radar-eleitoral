@@ -31,9 +31,13 @@ export default function Planos() {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { priceId: planPriceId },
       });
+      console.log("[CHECKOUT] Response:", JSON.stringify(data), "Error:", error);
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       if (data?.url) {
-        window.location.href = data.url;
+        window.open(data.url, "_blank");
+      } else {
+        throw new Error("URL de checkout não retornada");
       }
     } catch (err: any) {
       toast.error("Erro ao iniciar checkout: " + (err.message || "tente novamente"));
