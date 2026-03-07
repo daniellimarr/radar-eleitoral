@@ -19,6 +19,18 @@ interface TenantStats {
   created_at: string;
 }
 
+interface SubscriptionInfo {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  plan_name: string;
+  status: string;
+  started_at: string;
+  expires_at: string | null;
+  tenant_name?: string;
+  user_email?: string;
+}
+
 const STATUS_COLORS: Record<string, string> = {
   ativo: "bg-emerald-100 text-emerald-700",
   suspenso: "bg-amber-100 text-amber-700",
