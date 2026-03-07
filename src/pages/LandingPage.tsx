@@ -339,10 +339,16 @@ export default function LandingPage() {
             <motion.p variants={fadeUp} custom={1} className="mt-6 text-gray-500 text-lg max-w-2xl mx-auto">
               Junte-se a centenas de gabinetes que já profissionalizaram sua atuação com o Radar Eleitoral.
             </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="mt-10">
+            <motion.div variants={fadeUp} custom={2} className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button onClick={() => navigate("/auth")} size="lg"
                 className="bg-[#e86c2a] hover:bg-[#d45d1f] text-white text-lg font-bold px-10 py-7 rounded-xl shadow-xl shadow-[#e86c2a]/30 hover:shadow-[#e86c2a]/50 transition-all">
                 Começar Agora <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button asChild size="lg" variant="outline"
+                className="border-green-500 text-green-600 hover:bg-green-50 text-lg font-bold px-10 py-7 rounded-xl">
+                <a href="https://wa.me/5595991131237?text=Ol%C3%A1%21%20Gostaria%20de%20saber%20mais%20sobre%20o%20Radar%20Eleitoral." target="_blank" rel="noopener noreferrer">
+                  <MessageSquare className="mr-2 h-5 w-5" /> Falar no WhatsApp
+                </a>
               </Button>
             </motion.div>
           </motion.div>
