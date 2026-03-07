@@ -1,72 +1,72 @@
-// Stripe product/price mapping for Radar Eleitoral plans
+// Kirvano plan configuration for Radar Eleitoral
 export const PLANS = {
-  starter: {
-    name: "Starter",
-    price: 97,
-    price_id: "price_1T7xuAPOKYKwOvrYXmwdtJCK",
-    product_id: "prod_U6AETeW1R4YTFX",
-    contact_limit: 1000,
-    user_limit: 5,
+  bronze: {
+    name: "Bronze",
+    price: 259,
+    checkout_url: "https://pay.kirvano.com/2006a996-3eb3-4d48-990b-a910c4f88c74",
+    contact_limit: 5000,
+    user_limit: 2,
     features: [
-      "Até 1.000 contatos",
-      "5 usuários",
-      "Módulos básicos",
-      "Suporte por email",
+      "1 a 2 usuários",
+      "Até 5.000 contatos",
+      "Acesso APP e plataforma WEB",
+      "Treinamento por vídeo-aulas e online com equipe de suporte",
+      "Suporte whatsapp, ligação e e-mail",
     ],
   },
-  profissional: {
-    name: "Profissional",
-    price: 197,
-    price_id: "price_1T7xuTPOKYKwOvrYcNnOFn9J",
-    product_id: "prod_U6AEBOQn4YVFqY",
-    contact_limit: 5000,
-    user_limit: 15,
+  prata: {
+    name: "Prata",
+    price: 329,
+    checkout_url: "", // TODO: adicionar URL da Kirvano
+    contact_limit: 10000,
+    user_limit: 5,
     features: [
-      "Até 5.000 contatos",
-      "15 usuários",
-      "Todos os módulos",
-      "Georeferenciamento",
-      "Suporte prioritário",
+      "3 a 5 usuários",
+      "Até 10.000 contatos",
+      "Acesso APP e plataforma WEB",
+      "Treinamento por vídeo-aulas e online com equipe de suporte",
+      "Suporte whatsapp, ligação e e-mail",
     ],
     popular: true,
   },
-  agencia: {
-    name: "Agência",
-    price: 397,
-    price_id: "price_1T7xurPOKYKwOvrYyaj2QKOr",
-    product_id: "prod_U6AFsHEZxAaTPb",
-    contact_limit: Infinity,
-    user_limit: Infinity,
+  ouro: {
+    name: "Ouro",
+    price: 499,
+    checkout_url: "", // TODO: adicionar URL da Kirvano
+    contact_limit: 20000,
+    user_limit: 10,
     features: [
-      "Contatos ilimitados",
-      "Usuários ilimitados",
-      "Todos os módulos premium",
-      "Multi-campanha",
-      "API de integração",
-      "Gerente de conta dedicado",
+      "6 a 10 usuários",
+      "Até 20.000 contatos",
+      "Acesso APP e plataforma WEB",
+      "Treinamento por vídeo-aulas e online com equipe de suporte",
+      "Suporte whatsapp, ligação e e-mail",
+      "Geo-referenciamento (mapas)",
     ],
   },
 } as const;
 
 export type PlanKey = keyof typeof PLANS;
 
-export function getPlanByProductId(productId: string): (typeof PLANS)[PlanKey] | null {
+export function getPlanByName(name: string): (typeof PLANS)[PlanKey] | null {
   for (const key of Object.keys(PLANS) as PlanKey[]) {
-    if (PLANS[key].product_id === productId) return PLANS[key];
+    if (PLANS[key].name.toLowerCase() === name.toLowerCase()) return PLANS[key];
   }
   return null;
+}
+
+export function getPlanLimits(planName: string | null) {
+  if (!planName) return { contact_limit: 5000, user_limit: 2 };
+  const plan = getPlanByName(planName);
+  if (!plan) return { contact_limit: 5000, user_limit: 2 };
+  return { contact_limit: plan.contact_limit, user_limit: plan.user_limit };
+}
+
+// Legacy compatibility - kept for useSubscription
+export function getPlanByProductId(productId: string): (typeof PLANS)[PlanKey] | null {
+  return getPlanByName(productId);
 }
 
 export function getPlanByPriceId(priceId: string): (typeof PLANS)[PlanKey] | null {
-  for (const key of Object.keys(PLANS) as PlanKey[]) {
-    if (PLANS[key].price_id === priceId) return PLANS[key];
-  }
   return null;
-}
-
-export function getPlanLimits(productId: string | null) {
-  if (!productId) return { contact_limit: 1000, user_limit: 5 };
-  const plan = getPlanByProductId(productId);
-  if (!plan) return { contact_limit: 1000, user_limit: 5 };
-  return { contact_limit: plan.contact_limit, user_limit: plan.user_limit };
 }

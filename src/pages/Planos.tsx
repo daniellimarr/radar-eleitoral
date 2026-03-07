@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Loader2, Zap, Star, Building2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Check, Award, Star, Crown } from "lucide-react";
 import { PLANS, PlanKey } from "@/lib/stripe";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,55 +9,42 @@ import { toast } from "sonner";
 import logoImg from "@/assets/logo-radar-eleitoral.png";
 
 const icons: Record<PlanKey, React.ReactNode> = {
-  starter: <Zap className="h-8 w-8" />,
-  profissional: <Star className="h-8 w-8" />,
-  agencia: <Building2 className="h-8 w-8" />,
+  bronze: <Award className="h-8 w-8" />,
+  prata: <Star className="h-8 w-8" />,
+  ouro: <Crown className="h-8 w-8" />,
 };
 
 export default function Planos() {
   const { user } = useAuth();
-  const { subscribed, priceId } = useSubscription();
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { subscribed, planName } = useSubscription();
 
-  const handleSubscribe = async (planPriceId: string) => {
+  const handleSubscribe = (checkoutUrl: string) => {
     if (!user) {
       toast.error("Faça login para assinar um plano");
       return;
     }
-    setLoadingPlan(planPriceId);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId: planPriceId },
-      });
-      console.log("[CHECKOUT] Response:", JSON.stringify(data), "Error:", error);
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      } else {
-        throw new Error("URL de checkout não retornada");
-      }
-    } catch (err: any) {
-      toast.error("Erro ao iniciar checkout: " + (err.message || "tente novamente"));
-    } finally {
-      setLoadingPlan(null);
+    if (!checkoutUrl) {
+      toast.error("URL de checkout ainda não configurada para este plano");
+      return;
     }
+    window.open(checkoutUrl, "_blank");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex flex-col items-center py-12 px-4">
       <div className="text-center mb-12">
         <img src={logoImg} alt="Radar Eleitoral" className="h-16 mx-auto mb-4" />
-        <h1 className="text-3xl md:text-4xl font-bold mb-3">Escolha seu Plano</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-1">O melhor custo benefício</h1>
+        <p className="text-primary text-2xl md:text-3xl font-bold mb-3">Nº 1 do Brasil</p>
         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-          Comece a gerenciar sua campanha eleitoral com as melhores ferramentas do mercado.
+          Formas de pagamento: PIX ou Cartão de Crédito — Liberação imediata
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full">
         {(Object.keys(PLANS) as PlanKey[]).map((key) => {
           const plan = PLANS[key];
-          const isCurrentPlan = subscribed && priceId === plan.price_id;
+          const isCurrentPlan = subscribed && planName?.toLowerCase() === plan.name.toLowerCase();
           const isPopular = "popular" in plan && plan.popular;
 
           return (
@@ -81,14 +66,25 @@ export default function Planos() {
               )}
               <CardHeader className="text-center pt-8">
                 <div className="mx-auto mb-3 text-primary">{icons[key]}</div>
-                <CardTitle className="text-xl">{plan.name}</CardTitle>
+                <CardTitle className="text-2xl">{plan.name}</CardTitle>
                 <div className="mt-4">
-                  <span className="text-4xl font-extrabold">R${plan.price}</span>
+                  <span className="text-primary text-3xl font-extrabold">R$ {plan.price},00</span>
                   <span className="text-muted-foreground">/mês</span>
                 </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  PIX ou Cartão de Crédito<br />Liberação imediata
+                </p>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
-                <ul className="space-y-3 mb-8 flex-1">
+                <Button
+                  className="w-full mb-6 bg-emerald-500 hover:bg-emerald-600 text-white"
+                  size="lg"
+                  disabled={isCurrentPlan}
+                  onClick={() => handleSubscribe(plan.checkout_url)}
+                >
+                  {isCurrentPlan ? "Plano Atual" : "CONTRATAR AGORA"}
+                </Button>
+                <ul className="space-y-3 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2">
                       <Check className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
@@ -96,18 +92,6 @@ export default function Planos() {
                     </li>
                   ))}
                 </ul>
-                <Button
-                  className="w-full"
-                  size="lg"
-                  variant={isPopular ? "default" : "outline"}
-                  disabled={isCurrentPlan || !!loadingPlan}
-                  onClick={() => handleSubscribe(plan.price_id)}
-                >
-                  {loadingPlan === plan.price_id ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : null}
-                  {isCurrentPlan ? "Plano Atual" : "Assinar"}
-                </Button>
               </CardContent>
             </Card>
           );
