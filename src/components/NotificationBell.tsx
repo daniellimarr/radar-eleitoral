@@ -29,10 +29,8 @@ const NotificationBell = React.forwardRef<HTMLDivElement>(function NotificationB
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
 
-  const isAdmin = hasRole("super_admin") || hasRole("admin_gabinete") || hasRole("coordenador");
-
   useEffect(() => {
-    if (!tenantId || !isAdmin) return;
+    if (!tenantId) return;
 
     const fetchNotifications = async () => {
       const { data } = await supabase
@@ -65,9 +63,7 @@ const NotificationBell = React.forwardRef<HTMLDivElement>(function NotificationB
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [tenantId, isAdmin]);
-
-  if (!isAdmin) return null;
+  }, [tenantId]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
