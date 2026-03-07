@@ -369,7 +369,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div>
-              <h4 className="font-bold mb-4 text-[#e86c2a]">Links</h4>
+              <h4 className="font-bold mb-4 text-white">Links</h4>
               <ul className="space-y-2 text-sm text-white/50">
                 <li><a href="#features" className="hover:text-white transition-colors">Funcionalidades</a></li>
                 <li><a href="#plans" className="hover:text-white transition-colors">Planos</a></li>
