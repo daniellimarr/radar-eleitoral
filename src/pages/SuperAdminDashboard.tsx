@@ -154,7 +154,7 @@ export default function SuperAdminDashboard() {
                 <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="tenants" fill="hsl(220, 70%, 55%)" radius={[4, 4, 0, 0]} name="Tenants" />
+                <Bar dataKey="tenants" fill="hsl(220, 70%, 55%)" radius={[4, 4, 0, 0]} name="Gabinetes" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
