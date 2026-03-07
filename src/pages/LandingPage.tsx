@@ -374,7 +374,7 @@ export default function LandingPage() {
             <div>
               <h4 className="font-bold mb-4 text-[#c9a84c]">Contato</h4>
               <ul className="space-y-2 text-sm text-white/50">
-                <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> (95) 99999-0000</li>
+                <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> (95) 99113-1237</li>
                 <li>contato@radareleitoral.net</li>
               </ul>
             </div>
