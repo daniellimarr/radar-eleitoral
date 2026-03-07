@@ -130,10 +130,9 @@ export default function UserManagement() {
 
   useEffect(() => { fetchUsers(); }, [tenantId]);
 
-  const hasReachedUserLimit = userLimit !== Infinity && activeUsers.length >= userLimit;
-
   const handleCreate = async () => {
-    if (hasReachedUserLimit) {
+    const currentActiveCount = users.filter((u) => u.status === "approved").length;
+    if (userLimit !== Infinity && currentActiveCount >= userLimit) {
       toast.error(`Limite de ${userLimit} usuários atingido. Faça upgrade do seu plano.`);
       return;
     }
