@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Users } from "lucide-react";
 import logoRadar from "@/assets/logo-radar-eleitoral.png";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Auth() {
   const [loginEmail, setLoginEmail] = useState("");
