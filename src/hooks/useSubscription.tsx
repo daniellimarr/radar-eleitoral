@@ -24,7 +24,7 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
 });
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { user, session, roles } = useAuth();
+  const { user, session, roles, loading: authLoading } = useAuth();
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [planName, setPlanName] = useState<string | null>(null);
@@ -39,6 +39,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Wait for auth to finish loading roles
+    if (authLoading) {
+      return;
+    }
+
     // Only super_admin bypasses subscription check
     if (roles.includes("super_admin")) {
       setSubscribed(true);
@@ -46,12 +51,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setContactLimit(Infinity);
       setUserLimit(Infinity);
       setLoading(false);
-      return;
-    }
-
-    // If roles haven't loaded yet, keep loading=true and wait
-    if (roles.length === 0) {
-      setLoading(true);
       return;
     }
 
@@ -78,7 +77,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [session, roles]);
+  }, [session, roles, authLoading]);
 
   useEffect(() => {
     if (session) {
