@@ -5,6 +5,8 @@ export const PLANS = {
     price: 97,
     price_id: "price_1T7xuAPOKYKwOvrYXmwdtJCK",
     product_id: "prod_U6AETeW1R4YTFX",
+    contact_limit: 1000,
+    user_limit: 5,
     features: [
       "Até 1.000 contatos",
       "5 usuários",
@@ -17,6 +19,8 @@ export const PLANS = {
     price: 197,
     price_id: "price_1T7xuTPOKYKwOvrYcNnOFn9J",
     product_id: "prod_U6AEBOQn4YVFqY",
+    contact_limit: 5000,
+    user_limit: 15,
     features: [
       "Até 5.000 contatos",
       "15 usuários",
@@ -31,6 +35,8 @@ export const PLANS = {
     price: 397,
     price_id: "price_1T7xurPOKYKwOvrYyaj2QKOr",
     product_id: "prod_U6AFsHEZxAaTPb",
+    contact_limit: Infinity,
+    user_limit: Infinity,
     features: [
       "Contatos ilimitados",
       "Usuários ilimitados",
@@ -56,4 +62,11 @@ export function getPlanByPriceId(priceId: string): (typeof PLANS)[PlanKey] | nul
     if (PLANS[key].price_id === priceId) return PLANS[key];
   }
   return null;
+}
+
+export function getPlanLimits(productId: string | null) {
+  if (!productId) return { contact_limit: 1000, user_limit: 5 };
+  const plan = getPlanByProductId(productId);
+  if (!plan) return { contact_limit: 1000, user_limit: 5 };
+  return { contact_limit: plan.contact_limit, user_limit: plan.user_limit };
 }
