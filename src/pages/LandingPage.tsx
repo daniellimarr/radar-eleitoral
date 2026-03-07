@@ -92,29 +92,28 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#e86c2a] via-[#d45d1f] to-[#c4501a]" />
-        <div className="absolute inset-0 opacity-15">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-[#e86c2a] rounded-full blur-[120px]" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#e86c2a] rounded-full blur-[150px]" />
+      <section className="relative pt-32 pb-20 lg:pt-44 lg:pb-36 overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={heroImg} alt="Dashboard Radar Eleitoral" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/60" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-              <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white/90 text-sm font-medium px-4 py-2 rounded-full border border-white/20 mb-6">
-                <Zap className="h-4 w-4 text-[#e86c2a]" />
+              <span className="inline-flex items-center gap-2 bg-[#e86c2a] text-white text-sm font-bold px-5 py-2.5 rounded-full mb-6 shadow-lg">
+                <Zap className="h-4 w-4" />
                 Plataforma Nº 1 em Gestão de Gabinete
               </span>
             </motion.div>
             <motion.h1 initial="hidden" animate="visible" variants={fadeUp} custom={1}
-              className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight">
+              className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg">
               Gestão inteligente para{" "}
-              <span className="text-[#e86c2a]">
+              <span className="text-yellow-400">
                 gabinetes políticos
               </span>
             </motion.h1>
             <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2}
-              className="mt-6 text-lg sm:text-xl text-white/70 max-w-2xl mx-auto leading-relaxed">
+              className="mt-6 text-lg sm:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
               Organize contatos, acompanhe demandas, gerencie lideranças e fortaleça sua base eleitoral com tecnologia de ponta.
             </motion.p>
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}
