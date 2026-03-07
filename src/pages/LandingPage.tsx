@@ -106,10 +106,10 @@ export default function LandingPage() {
               </span>
             </motion.div>
             <motion.h1 initial="hidden" animate="visible" variants={fadeUp} custom={1}
-              className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg">
+              className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg uppercase">
               Gestão inteligente para{" "}
               <span className="text-yellow-400">
-                gabinetes políticos
+                gabinetes e pré campanha
               </span>
             </motion.h1>
             <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2}
