@@ -92,7 +92,7 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#111111] via-[#1a1a1a] to-[#111111]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#e86c2a] via-[#d45d1f] to-[#c4501a]" />
         <div className="absolute inset-0 opacity-15">
           <div className="absolute top-20 left-10 w-72 h-72 bg-[#e86c2a] rounded-full blur-[120px]" />
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#e86c2a] rounded-full blur-[150px]" />
