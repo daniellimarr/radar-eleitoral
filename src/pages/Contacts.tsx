@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ const defaultContact = {
 
 export default function Contacts() {
   const { tenantId, user, hasRole, profile } = useAuth();
+  const { contactLimit } = useSubscription();
   const [contacts, setContacts] = useState<any[]>([]);
   const [leaders, setLeaders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -227,6 +229,12 @@ export default function Contacts() {
       if (error) toast.error(error.message);
       else toast.success("Contato atualizado!");
     } else {
+      // Check contact limit before inserting
+      if (contactLimit !== Infinity && contacts.length >= contactLimit) {
+        toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido. Faça upgrade do seu plano.`);
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.from("contacts").insert(payload);
       if (error) toast.error(error.message);
       else toast.success("Contato cadastrado!");

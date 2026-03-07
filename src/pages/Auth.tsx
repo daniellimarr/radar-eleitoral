@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Users } from "lucide-react";
 import logoRadar from "@/assets/logo-radar-eleitoral.png";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Auth() {
   const [loginEmail, setLoginEmail] = useState("");
@@ -23,11 +24,21 @@ export default function Auth() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const { error } = await signIn(loginEmail, loginPassword);
+    const { error, data } = await signIn(loginEmail, loginPassword);
     if (error) {
       toast.error(error.message);
     } else {
-      navigate("/dashboard");
+      // Check if user is super_admin to redirect accordingly
+      if (data?.user) {
+        const { data: rolesData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id);
+        const isSuperAdmin = rolesData?.some((r: any) => r.role === "super_admin");
+        navigate(isSuperAdmin ? "/dashboard" : "/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     }
     setIsLoading(false);
   };
