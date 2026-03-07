@@ -30,6 +30,7 @@ import TenantManagement from "@/pages/TenantManagement";
 import PlanManagement from "@/pages/PlanManagement";
 import Planos from "@/pages/Planos";
 import Assinatura from "@/pages/Assinatura";
+import PaymentSuccess from "@/pages/PaymentSuccess";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/cadastro/:slug" element={<PublicRegistration />} />
             <Route path="/planos" element={<Planos />} />
+            <Route path="/pagamento-sucesso" element={<PaymentSuccess />} />
             
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />

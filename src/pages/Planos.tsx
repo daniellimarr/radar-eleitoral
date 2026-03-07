@@ -29,7 +29,11 @@ export default function Planos() {
       toast.error("URL de checkout ainda não configurada para este plano");
       return;
     }
-    window.open(checkoutUrl, "_blank");
+    // Append user email to checkout URL so Kirvano webhook can match the user
+    const separator = checkoutUrl.includes("?") ? "&" : "?";
+    const urlWithEmail = `${checkoutUrl}${separator}email=${encodeURIComponent(user.email || "")}`;
+    // Redirect in the same tab so user returns to success page after payment
+    window.location.href = urlWithEmail;
   };
 
   return (

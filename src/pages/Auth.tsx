@@ -49,9 +49,18 @@ export default function Auth() {
     const { error } = await signUp(registerEmail, registerPassword, registerName);
     if (error) {
       toast.error(error.message);
-    } else {
-      toast.success("Cadastro realizado! Verifique seu e-mail e depois escolha um plano para acessar o sistema.");
+      setIsLoading(false);
+      return;
     }
+    // Auto-login after signup (auto-confirm is enabled)
+    const { error: loginError } = await signIn(registerEmail, registerPassword);
+    if (loginError) {
+      toast.success("Cadastro realizado! Faça login para continuar.");
+      setIsLoading(false);
+      return;
+    }
+    toast.success("Cadastro realizado! Escolha seu plano para acessar o sistema.");
+    navigate("/planos");
     setIsLoading(false);
   };
 
