@@ -187,7 +187,7 @@ export default function SuperAdminDashboard() {
         <Card className="border-amber-200 bg-amber-50">
           <CardContent className="p-4 flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <span className="text-sm text-amber-800 font-medium">{suspendedTenants} tenant(s) suspenso(s) requerem atenção.</span>
+            <span className="text-sm text-amber-800 font-medium">{suspendedTenants} gabinete(s) suspenso(s) requerem atenção.</span>
           </CardContent>
         </Card>
       )}
