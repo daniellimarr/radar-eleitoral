@@ -43,6 +43,7 @@ const defaultContact = {
 
 export default function Contacts() {
   const { tenantId, user, hasRole, profile } = useAuth();
+  const { contactLimit } = useSubscription();
   const [contacts, setContacts] = useState<any[]>([]);
   const [leaders, setLeaders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
