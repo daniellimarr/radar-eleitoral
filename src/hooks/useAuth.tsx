@@ -68,12 +68,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let initialSessionHandled = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchProfile(session.user.id), 0);
+          // Don't await - fire and forget to avoid deadlocks
+          // But don't set loading=false here; fetchProfile will handle it
+          if (initialSessionHandled) {
+            fetchProfile(session.user.id).then(() => setLoading(false));
+          }
         } else {
           setProfile(null);
           setRoles([]);
@@ -81,18 +87,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUserPermissions([]);
           setProfileStatus(null);
           setPermissionsLoading(false);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      initialSessionHandled = true;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        fetchProfile(session.user.id).then(() => setLoading(false));
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
