@@ -229,6 +229,12 @@ export default function Contacts() {
       if (error) toast.error(error.message);
       else toast.success("Contato atualizado!");
     } else {
+      // Check contact limit before inserting
+      if (contactLimit !== Infinity && contacts.length >= contactLimit) {
+        toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido. Faça upgrade do seu plano.`);
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.from("contacts").insert(payload);
       if (error) toast.error(error.message);
       else toast.success("Contato cadastrado!");
