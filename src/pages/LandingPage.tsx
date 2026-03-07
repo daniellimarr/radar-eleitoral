@@ -7,6 +7,7 @@ import {
   ArrowRight, Phone
 } from "lucide-react";
 import logo from "@/assets/logo-radar-eleitoral.png";
+import heroImg from "@/assets/hero-landing.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
