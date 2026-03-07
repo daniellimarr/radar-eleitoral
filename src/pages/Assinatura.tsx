@@ -2,32 +2,17 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CreditCard, Calendar, ExternalLink } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Loader2, CreditCard, Calendar } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 export default function Assinatura() {
   const { subscribed, planName, subscriptionEnd, loading, checkSubscription } = useSubscription();
-  const [portalLoading, setPortalLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  const handleManageSubscription = async () => {
-    setPortalLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      }
-    } catch (err: any) {
-      toast.error("Erro ao abrir portal: " + (err.message || "tente novamente"));
-    } finally {
-      setPortalLoading(false);
-    }
-  };
+  const navigate = useNavigate();
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -85,19 +70,18 @@ export default function Assinatura() {
           </div>
 
           <div className="flex gap-3 pt-4">
-            {subscribed && (
-              <Button onClick={handleManageSubscription} disabled={portalLoading} variant="outline">
-                {portalLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ExternalLink className="h-4 w-4 mr-2" />}
-                Gerenciar Assinatura
-              </Button>
-            )}
             <Button onClick={handleRefresh} disabled={refreshing} variant="secondary">
               {refreshing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Atualizar Status
             </Button>
             {!subscribed && (
-              <Button onClick={() => window.location.href = "/planos"}>
+              <Button onClick={() => navigate("/planos")}>
                 Escolher Plano
+              </Button>
+            )}
+            {subscribed && (
+              <Button variant="outline" onClick={() => navigate("/planos")}>
+                Trocar Plano
               </Button>
             )}
           </div>
