@@ -71,7 +71,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Radar Eleitoral" className="h-10 w-auto" />
-            <span className="text-lg font-bold text-[#1a2b4a] hidden sm:block">Radar Eleitoral</span>
+            <span className="text-lg font-bold text-black hidden sm:block">Radar Eleitoral</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
             <a href="#features" className="hover:text-[#e86c2a] transition-colors">Funcionalidades</a>
@@ -92,23 +92,23 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a2b4a] via-[#243b63] to-[#1a2b4a]" />
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#111111] via-[#1a1a1a] to-[#111111]" />
+        <div className="absolute inset-0 opacity-15">
           <div className="absolute top-20 left-10 w-72 h-72 bg-[#e86c2a] rounded-full blur-[120px]" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#c9a84c] rounded-full blur-[150px]" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#e86c2a] rounded-full blur-[150px]" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
               <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white/90 text-sm font-medium px-4 py-2 rounded-full border border-white/20 mb-6">
-                <Zap className="h-4 w-4 text-[#c9a84c]" />
+                <Zap className="h-4 w-4 text-[#e86c2a]" />
                 Plataforma Nº 1 em Gestão de Gabinete
               </span>
             </motion.div>
             <motion.h1 initial="hidden" animate="visible" variants={fadeUp} custom={1}
               className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight">
               Gestão inteligente para{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#c9a84c] to-[#e86c2a]">
+              <span className="text-[#e86c2a]">
                 gabinetes políticos
               </span>
             </motion.h1>
@@ -140,7 +140,7 @@ export default function LandingPage() {
           {stats.map((s, i) => (
             <motion.div key={s.label} variants={fadeUp} custom={i}
               className="text-center py-8 px-4">
-              <p className="text-3xl sm:text-4xl font-extrabold text-[#1a2b4a]">{s.value}</p>
+              <p className="text-3xl sm:text-4xl font-extrabold text-black">{s.value}</p>
               <p className="text-sm text-gray-500 mt-1 font-medium">{s.label}</p>
             </motion.div>
           ))}
@@ -153,7 +153,7 @@ export default function LandingPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             className="text-center max-w-3xl mx-auto mb-16">
             <span className="text-[#e86c2a] font-semibold text-sm uppercase tracking-wider">Funcionalidades</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#1a2b4a]">
+            <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-black">
               Tudo que seu gabinete precisa
             </h2>
             <p className="mt-4 text-gray-500 text-lg">
@@ -168,7 +168,7 @@ export default function LandingPage() {
                 <div className="w-12 h-12 bg-[#e86c2a]/10 group-hover:bg-[#e86c2a]/20 rounded-xl flex items-center justify-center mb-4 transition-colors">
                   <f.icon className="h-6 w-6 text-[#e86c2a]" />
                 </div>
-                <h3 className="text-lg font-bold text-[#1a2b4a] mb-2">{f.title}</h3>
+                <h3 className="text-lg font-bold text-black mb-2">{f.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
               </motion.div>
             ))}
@@ -184,7 +184,7 @@ export default function LandingPage() {
               <motion.span variants={fadeUp} custom={0} className="text-[#e86c2a] font-semibold text-sm uppercase tracking-wider">
                 Por que escolher o Radar?
               </motion.span>
-              <motion.h2 variants={fadeUp} custom={1} className="mt-3 text-3xl sm:text-4xl font-extrabold text-[#1a2b4a]">
+              <motion.h2 variants={fadeUp} custom={1} className="mt-3 text-3xl sm:text-4xl font-extrabold text-black">
                 Tecnologia a serviço da política
               </motion.h2>
               <motion.p variants={fadeUp} custom={2} className="mt-4 text-gray-500 text-lg leading-relaxed">
@@ -199,8 +199,8 @@ export default function LandingPage() {
                   "Relatórios exportáveis em PDF e Excel",
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-3">
-                    <div className="mt-0.5 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Check className="h-4 w-4 text-green-600" />
+                    <div className="mt-0.5 w-6 h-6 bg-[#e86c2a]/10 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Check className="h-4 w-4 text-[#e86c2a]" />
                     </div>
                     <span className="text-gray-700 font-medium">{item}</span>
                   </div>
@@ -209,24 +209,24 @@ export default function LandingPage() {
             </motion.div>
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2}
               className="relative">
-              <div className="bg-gradient-to-br from-[#1a2b4a] to-[#243b63] rounded-3xl p-8 lg:p-12 text-white">
+              <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-3xl p-8 lg:p-12 text-white">
                 <div className="space-y-6">
                   <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4">
-                    <Shield className="h-8 w-8 text-[#c9a84c]" />
+                    <Shield className="h-8 w-8 text-[#e86c2a]" />
                     <div>
                       <p className="font-bold">Segurança Total</p>
                       <p className="text-sm text-white/60">RLS, criptografia e isolamento de dados</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4">
-                    <TrendingUp className="h-8 w-8 text-[#c9a84c]" />
+                    <TrendingUp className="h-8 w-8 text-[#e86c2a]" />
                     <div>
                       <p className="font-bold">Crescimento Mensurável</p>
                       <p className="text-sm text-white/60">Métricas de engajamento em tempo real</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4">
-                    <Star className="h-8 w-8 text-[#c9a84c]" />
+                    <Star className="h-8 w-8 text-[#e86c2a]" />
                     <div>
                       <p className="font-bold">Suporte Especializado</p>
                       <p className="text-sm text-white/60">Time dedicado com experiência política</p>
@@ -245,7 +245,7 @@ export default function LandingPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             className="text-center max-w-3xl mx-auto mb-16">
             <span className="text-[#e86c2a] font-semibold text-sm uppercase tracking-wider">Planos</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#1a2b4a]">
+            <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-black">
               Escolha o plano ideal
             </h2>
             <p className="mt-4 text-gray-500 text-lg">
@@ -266,7 +266,7 @@ export default function LandingPage() {
                     Mais Popular
                   </span>
                 )}
-                <h3 className="text-xl font-bold text-[#1a2b4a]">{plan.name}</h3>
+                <h3 className="text-xl font-bold text-black">{plan.name}</h3>
                 <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-sm text-gray-500">R$</span>
                   <span className="text-5xl font-extrabold text-[#e86c2a]">{plan.price}</span>
@@ -275,7 +275,7 @@ export default function LandingPage() {
                 <ul className="mt-8 space-y-3">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-3 text-sm text-gray-600">
-                      <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                      <Check className="h-4 w-4 text-[#e86c2a] flex-shrink-0" />
                       {f}
                     </li>
                   ))}
@@ -284,7 +284,7 @@ export default function LandingPage() {
                   className={`w-full mt-8 py-6 text-base font-bold rounded-xl ${
                     plan.popular
                       ? "bg-[#e86c2a] hover:bg-[#d45d1f] text-white shadow-lg shadow-[#e86c2a]/20"
-                      : "bg-[#1a2b4a] hover:bg-[#243b63] text-white"
+                      : "bg-black hover:bg-gray-800 text-white"
                   }`}>
                   Contratar Agora <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
@@ -300,7 +300,7 @@ export default function LandingPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             className="text-center max-w-3xl mx-auto mb-16">
             <span className="text-[#e86c2a] font-semibold text-sm uppercase tracking-wider">Depoimentos</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold text-[#1a2b4a]">
+            <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold text-black">
               Quem usa, recomenda
             </h2>
           </motion.div>
@@ -311,12 +311,12 @@ export default function LandingPage() {
                 className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="h-4 w-4 fill-[#c9a84c] text-[#c9a84c]" />
+                    <Star key={j} className="h-4 w-4 fill-[#e86c2a] text-[#e86c2a]" />
                   ))}
                 </div>
                 <p className="text-gray-600 leading-relaxed italic">"{t.text}"</p>
                 <div className="mt-6 pt-4 border-t border-gray-100">
-                  <p className="font-bold text-[#1a2b4a]">{t.name}</p>
+                  <p className="font-bold text-black">{t.name}</p>
                   <p className="text-sm text-gray-400">{t.city}</p>
                 </div>
               </motion.div>
@@ -330,9 +330,9 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto px-4 text-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <motion.h2 variants={fadeUp} custom={0}
-              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#1a2b4a] leading-tight">
+              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-black leading-tight">
               Pronto para transformar sua{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#e86c2a] to-[#c9a84c]">
+              <span className="text-[#e86c2a]">
                 gestão política?
               </span>
             </motion.h2>
@@ -356,7 +356,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="bg-[#1a2b4a] text-white py-16">
+      <footer id="contact" className="bg-black text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-2">
@@ -369,7 +369,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div>
-              <h4 className="font-bold mb-4 text-[#c9a84c]">Links</h4>
+              <h4 className="font-bold mb-4 text-[#e86c2a]">Links</h4>
               <ul className="space-y-2 text-sm text-white/50">
                 <li><a href="#features" className="hover:text-white transition-colors">Funcionalidades</a></li>
                 <li><a href="#plans" className="hover:text-white transition-colors">Planos</a></li>
@@ -378,7 +378,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-bold mb-4 text-[#c9a84c]">Contato</h4>
+              <h4 className="font-bold mb-4 text-[#e86c2a]">Contato</h4>
               <ul className="space-y-2 text-sm text-white/50">
                 <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> (95) 99113-1237</li>
                 <li>contato@radareleitoral.net</li>
