@@ -89,7 +89,12 @@ export default function RegistrationLinks() {
   };
 
   const getBaseUrl = () => {
-    return window.location.origin;
+    const origin = window.location.origin;
+    // If running in Lovable preview, use the published URL instead
+    if (origin.includes("lovableproject.com") || origin.includes("lovable.app/builder") || origin.includes("id-preview--")) {
+      return "https://radar-eleitoral.lovable.app";
+    }
+    return origin;
   };
 
   const copyLink = (slug: string) => {
