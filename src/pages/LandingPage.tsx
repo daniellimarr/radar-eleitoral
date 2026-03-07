@@ -212,7 +212,7 @@ export default function LandingPage() {
               <div className="bg-gradient-to-br from-[#e86c2a] to-[#c4501a] rounded-3xl p-8 lg:p-12 text-white">
                 <div className="space-y-6">
                   <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4">
-                    <Shield className="h-8 w-8 text-[#e86c2a]" />
+                    <Shield className="h-8 w-8 text-white" />
                     <div>
                       <p className="font-bold">Segurança Total</p>
                       <p className="text-sm text-white/60">RLS, criptografia e isolamento de dados</p>
