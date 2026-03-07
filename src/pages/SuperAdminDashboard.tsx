@@ -111,8 +111,8 @@ export default function SuperAdminDashboard() {
   const monthlyData = months.map((m, i) => ({ name: m, tenants: monthCounts[i] }));
 
   const statCards = [
-    { label: "Total de Tenants", value: totalTenants, icon: Building2, bgColor: "bg-blue-100", iconColor: "text-blue-600" },
-    { label: "Tenants Ativos", value: activeTenants, icon: Users, bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
+    { label: "Total de Gabinetes", value: totalTenants, icon: Building2, bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+    { label: "Gabinetes Ativos", value: activeTenants, icon: Users, bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
     { label: "Planos Ativos", value: totalPlans, icon: Package, bgColor: "bg-purple-100", iconColor: "text-purple-600" },
     { label: "MRR Estimado", value: `R$ ${mrr.toFixed(2)}`, icon: DollarSign, bgColor: "bg-amber-100", iconColor: "text-amber-600" },
   ];
@@ -146,7 +146,7 @@ export default function SuperAdminDashboard() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader><CardTitle>Novos Tenants por Mês</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Novos Gabinetes por Mês</CardTitle></CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyData}>
@@ -154,7 +154,7 @@ export default function SuperAdminDashboard() {
                 <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="tenants" fill="hsl(220, 70%, 55%)" radius={[4, 4, 0, 0]} name="Tenants" />
+                <Bar dataKey="tenants" fill="hsl(220, 70%, 55%)" radius={[4, 4, 0, 0]} name="Gabinetes" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -187,14 +187,14 @@ export default function SuperAdminDashboard() {
         <Card className="border-amber-200 bg-amber-50">
           <CardContent className="p-4 flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <span className="text-sm text-amber-800 font-medium">{suspendedTenants} tenant(s) suspenso(s) requerem atenção.</span>
+            <span className="text-sm text-amber-800 font-medium">{suspendedTenants} gabinete(s) suspenso(s) requerem atenção.</span>
           </CardContent>
         </Card>
       )}
 
       {/* Recent Tenants */}
       <Card>
-        <CardHeader><CardTitle>Tenants Recentes</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Gabinetes Recentes</CardTitle></CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
