@@ -72,7 +72,7 @@ export default function RegistrationLinks() {
               <div className="space-y-2">
                 <Label>Slug (identificador único)</Label>
                 <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder="meu-link" />
-                <p className="text-xs text-muted-foreground">{window.location.origin}/cadastro/{slug || "..."}</p>
+                <p className="text-xs text-muted-foreground">{getBaseUrl()}/cadastro/{slug || "..."}</p>
               </div>
               <div className="space-y-2">
                 <Label>Liderança (opcional)</Label>
