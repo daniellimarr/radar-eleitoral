@@ -50,7 +50,7 @@ export default function Auth() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Cadastro realizado! Aguarde a aprovação de um administrador.");
+      toast.success("Cadastro realizado! Verifique seu e-mail e depois escolha um plano para acessar o sistema.");
     }
     setIsLoading(false);
   };
