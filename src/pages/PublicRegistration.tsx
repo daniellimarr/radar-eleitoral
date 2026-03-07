@@ -357,14 +357,6 @@ export default function PublicRegistration() {
                 <Checkbox checked={form.has_whatsapp} onCheckedChange={(c) => update("has_whatsapp", !!c)} id="whats" />
                 <Label htmlFor="whats" className="text-sm">Este número tem WhatsApp</Label>
               </div>
-              <div className="space-y-2">
-                <Label>E-mail</Label>
-                <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="seu@email.com" className="h-11" inputMode="email" />
-              </div>
-              <div className="space-y-2">
-                <Label>Observação</Label>
-                <Textarea value={form.observations} onChange={(e) => update("observations", e.target.value)} rows={3} placeholder="Alguma observação..." />
-              </div>
             </div>
           )}
 
