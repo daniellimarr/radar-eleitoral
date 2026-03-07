@@ -101,12 +101,11 @@ export default function PublicRegistration() {
 
   const [form, setForm] = useState({
     name: "", nickname: "", cpf: "", gender: "", birth_date: "",
-    phone: "", has_whatsapp: false, email: "",
+    phone: "", has_whatsapp: false,
     cep: "", address: "", address_number: "", neighborhood: "",
     city: "Boa Vista", state: "RR",
     voting_zone: "", voting_section: "", voting_location: "",
     engagement: "nao_trabalhado",
-    category: "", subcategory: "", observations: "",
   });
 
   const update = (field: string, value: any) => setForm((p) => ({ ...p, [field]: value }));
