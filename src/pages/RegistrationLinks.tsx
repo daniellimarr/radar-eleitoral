@@ -32,8 +32,30 @@ export default function RegistrationLinks() {
 
   useEffect(() => { fetchData(); }, [tenantId]);
 
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  };
+
+  const handleLeaderChange = (value: string) => {
+    setSelectedLeader(value);
+    if (value && value !== "none") {
+      const leader = leaders.find((l) => l.id === value);
+      if (leader) {
+        const leaderSlug = generateSlug(leader.nickname || leader.name);
+        setSlug(leaderSlug);
+      }
+    } else {
+      setSlug("");
+    }
+  };
+
   const handleCreate = async () => {
     if (!tenantId || !slug) { toast.error("Slug é obrigatório"); return; }
+    if (!selectedLeader || selectedLeader === "none") { toast.error("Selecione uma liderança"); return; }
     setLoading(true);
     // Check if slug already exists
     const { data: existing } = await supabase
@@ -43,7 +65,6 @@ export default function RegistrationLinks() {
       .maybeSingle();
     if (existing) {
       if (existing.tenant_id === tenantId) {
-        // Update existing link for same tenant
         const { error } = await supabase.from("registration_links").update({
           coordinator_id: user?.id,
           leader_contact_id: selectedLeader || null,
@@ -51,7 +72,7 @@ export default function RegistrationLinks() {
         if (error) toast.error(error.message);
         else { toast.success("Link atualizado!"); setIsOpen(false); setSlug(""); setSelectedLeader(""); fetchData(); }
       } else {
-        toast.error("Este slug já está em uso. Escolha outro.");
+        toast.error("Este slug já está em uso. Escolha outro nome.");
       }
       setLoading(false);
       return;
