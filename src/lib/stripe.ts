@@ -62,11 +62,3 @@ export function getPlanLimits(planName: string | null) {
   return { contact_limit: plan.contact_limit, user_limit: plan.user_limit };
 }
 
-// Legacy compatibility - kept for useSubscription
-export function getPlanByProductId(productId: string): (typeof PLANS)[PlanKey] | null {
-  return getPlanByName(productId);
-}
-
-export function getPlanByPriceId(priceId: string): (typeof PLANS)[PlanKey] | null {
-  return null;
-}
