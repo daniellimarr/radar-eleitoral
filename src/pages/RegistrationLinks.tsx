@@ -35,12 +35,33 @@ export default function RegistrationLinks() {
   const handleCreate = async () => {
     if (!tenantId || !slug) { toast.error("Slug é obrigatório"); return; }
     setLoading(true);
-    const { error } = await supabase.from("registration_links").upsert({
+    // Check if slug already exists
+    const { data: existing } = await supabase
+      .from("registration_links")
+      .select("id, tenant_id")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (existing) {
+      if (existing.tenant_id === tenantId) {
+        // Update existing link for same tenant
+        const { error } = await supabase.from("registration_links").update({
+          coordinator_id: user?.id,
+          leader_contact_id: selectedLeader || null,
+        }).eq("id", existing.id);
+        if (error) toast.error(error.message);
+        else { toast.success("Link atualizado!"); setIsOpen(false); setSlug(""); setSelectedLeader(""); fetchData(); }
+      } else {
+        toast.error("Este slug já está em uso. Escolha outro.");
+      }
+      setLoading(false);
+      return;
+    }
+    const { error } = await supabase.from("registration_links").insert({
       tenant_id: tenantId,
       slug,
       coordinator_id: user?.id,
       leader_contact_id: selectedLeader || null,
-    }, { onConflict: "slug" });
+    });
     if (error) toast.error(error.message);
     else { toast.success("Link criado!"); setIsOpen(false); setSlug(""); setSelectedLeader(""); fetchData(); }
     setLoading(false);
