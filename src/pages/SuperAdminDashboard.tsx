@@ -42,14 +42,16 @@ const PIE_COLORS = ["hsl(145, 65%, 42%)", "hsl(40, 90%, 55%)", "hsl(0, 70%, 55%)
 export default function SuperAdminDashboard() {
   const [tenants, setTenants] = useState<TenantStats[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const [tenantsRes, plansRes] = await Promise.all([
+      const [tenantsRes, plansRes, subsRes] = await Promise.all([
         supabase.from("tenants").select("id, name, status, plan_id, contact_limit, created_at").is("deleted_at", null).order("created_at", { ascending: false }),
         supabase.from("plans").select("*").order("monthly_price"),
+        supabase.from("subscriptions").select("*").order("started_at", { ascending: false }),
       ]);
 
       const plansData = plansRes.data || [];
@@ -60,6 +62,17 @@ export default function SuperAdminDashboard() {
         plan_name: plansData.find((p: any) => p.id === t.plan_id)?.name || null,
       }));
       setTenants(tenantsData);
+
+      // Enrich subscriptions with tenant name
+      const subsData = (subsRes.data || []).map((s: any) => {
+        const tenant = tenantsData.find((t: any) => t.id === s.tenant_id);
+        return {
+          ...s,
+          tenant_name: tenant?.name || "—",
+        };
+      });
+      setSubscriptions(subsData);
+
       setLoading(false);
     };
     fetchData();
