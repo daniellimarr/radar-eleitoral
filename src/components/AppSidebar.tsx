@@ -38,6 +38,7 @@ const coordinatorItems = [
 ];
 
 const adminItems = [
+  { title: "Gestão de Gabinetes", url: "/admin/tenants", icon: Building2 },
   { title: "Gestão de Planos", url: "/admin/plans", icon: Package },
   { title: "Gestão de Usuários", url: "/admin/users", icon: Users },
   { title: "Relatórios e Auditoria", url: "/reports", icon: FileText },
