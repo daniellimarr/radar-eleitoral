@@ -427,16 +427,6 @@ export default function PublicRegistration() {
                 <Label>Local de Votação</Label>
                 <Input value={form.voting_location} onChange={(e) => update("voting_location", e.target.value)} placeholder="Ex: Escola Municipal..." className="h-11" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Categoria</Label>
-                  <Input value={form.category} onChange={(e) => update("category", e.target.value)} className="h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Subcategoria</Label>
-                  <Input value={form.subcategory} onChange={(e) => update("subcategory", e.target.value)} className="h-11" />
-                </div>
-              </div>
             </div>
           )}
         </form>
