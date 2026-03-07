@@ -1,7 +1,7 @@
 import {
   Home, Users, FileText, Calendar, Car, Package, MapPin, Settings,
   BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield,
-  Flag, Megaphone, Database, FolderDown
+  Flag, Megaphone, Database, FolderDown, Building2
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -38,6 +38,7 @@ const coordinatorItems = [
 ];
 
 const adminItems = [
+  { title: "Gestão de Gabinetes", url: "/admin/tenants", icon: Building2 },
   { title: "Gestão de Planos", url: "/admin/plans", icon: Package },
   { title: "Gestão de Usuários", url: "/admin/users", icon: Users },
   { title: "Relatórios e Auditoria", url: "/reports", icon: FileText },
