@@ -17,7 +17,7 @@ export const PLANS = {
   prata: {
     name: "Prata",
     price: 329,
-    checkout_url: "", // TODO: adicionar URL da Kirvano
+    checkout_url: "https://pay.kirvano.com/88312c50-0128-4250-86f4-107acd69d84f",
     contact_limit: 10000,
     user_limit: 5,
     features: [
