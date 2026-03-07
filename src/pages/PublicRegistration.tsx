@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+
 import { toast } from "sonner";
 import { CheckCircle, Loader2, CheckCircle2, XCircle, User, MapPin, Vote } from "lucide-react";
 import logoRadar from "@/assets/logo-radar-eleitoral.png";
