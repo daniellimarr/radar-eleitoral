@@ -93,23 +93,20 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-44 lg:pb-36 overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={heroImg} alt="Dashboard Radar Eleitoral" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/60" />
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#e86c2a] via-[#d45d1f] to-[#c4501a]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-              <span className="inline-flex items-center gap-2 bg-[#e86c2a] text-white text-sm font-bold px-5 py-2.5 rounded-full mb-6 shadow-lg">
+              <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white text-sm font-bold px-5 py-2.5 rounded-full mb-6 border border-white/20">
                 <Zap className="h-4 w-4" />
                 Plataforma Nº 1 em Gestão de Gabinete
               </span>
             </motion.div>
             <motion.h1 initial="hidden" animate="visible" variants={fadeUp} custom={1}
-              className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg uppercase">
+              className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg">
               Gestão inteligente para{" "}
               <span className="text-yellow-400">
-                gabinetes e pré campanha
+                Gabinetes e Pré Campanha
               </span>
             </motion.h1>
             <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2}
