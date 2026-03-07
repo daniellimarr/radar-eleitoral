@@ -28,7 +28,7 @@ interface Voter {
 export default function LeaderRegistration() {
   const { id } = useParams<{ id: string }>();
   const isEditing = !!id;
-  const { tenantId } = useAuth();
+  const { tenantId, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -215,7 +215,21 @@ export default function LeaderRegistration() {
           tenant_id: tenantId,
         });
         if (leaderError) throw leaderError;
-        toast({ title: "Liderança cadastrada com sucesso!" });
+
+        // Auto-generate registration link for this leader
+        const baseName = (form.nickname || form.name).toLowerCase()
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        const slug = `${baseName}-${Date.now().toString(36)}`;
+        
+        await supabase.from("registration_links").insert({
+          tenant_id: tenantId,
+          slug,
+          leader_contact_id: contact.id,
+          coordinator_id: user?.id,
+        });
+
+        toast({ title: "Liderança cadastrada com sucesso! Link de cadastro gerado automaticamente." });
       }
 
       navigate("/leaders");
