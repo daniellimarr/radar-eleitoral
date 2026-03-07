@@ -49,7 +49,7 @@ function App() {
         <AuthProvider>
           <SubscriptionProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/cadastro/:slug" element={<PublicRegistration />} />
             <Route path="/planos" element={<Planos />} />
