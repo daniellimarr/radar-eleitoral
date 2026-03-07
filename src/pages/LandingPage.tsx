@@ -219,7 +219,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4">
-                    <TrendingUp className="h-8 w-8 text-[#e86c2a]" />
+                    <TrendingUp className="h-8 w-8 text-white" />
                     <div>
                       <p className="font-bold">Crescimento Mensurável</p>
                       <p className="text-sm text-white/60">Métricas de engajamento em tempo real</p>
