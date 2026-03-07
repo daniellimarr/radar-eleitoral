@@ -84,7 +84,7 @@ export default function LandingPage() {
               Entrar
             </Button>
             <Button onClick={() => navigate("/auth")} className="bg-[#e86c2a] hover:bg-[#d45d1f] text-white text-sm font-semibold px-5">
-              Começar Grátis
+              Começar Agora
             </Button>
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function LandingPage() {
               className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button onClick={() => navigate("/auth")} size="lg"
                 className="bg-[#e86c2a] hover:bg-[#d45d1f] text-white text-lg font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#e86c2a]/30 hover:shadow-[#e86c2a]/50 transition-all">
-                Criar Conta Grátis <ArrowRight className="ml-2 h-5 w-5" />
+                Criar Conta <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button variant="outline" size="lg" onClick={() => {
                 document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
@@ -342,7 +342,7 @@ export default function LandingPage() {
             <motion.div variants={fadeUp} custom={2} className="mt-10">
               <Button onClick={() => navigate("/auth")} size="lg"
                 className="bg-[#e86c2a] hover:bg-[#d45d1f] text-white text-lg font-bold px-10 py-7 rounded-xl shadow-xl shadow-[#e86c2a]/30 hover:shadow-[#e86c2a]/50 transition-all">
-                Começar Agora — É Grátis <ArrowRight className="ml-2 h-5 w-5" />
+                Começar Agora <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </motion.div>
           </motion.div>
@@ -374,7 +374,7 @@ export default function LandingPage() {
             <div>
               <h4 className="font-bold mb-4 text-[#c9a84c]">Contato</h4>
               <ul className="space-y-2 text-sm text-white/50">
-                <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> (95) 99999-0000</li>
+                <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> (95) 99113-1237</li>
                 <li>contato@radareleitoral.net</li>
               </ul>
             </div>
