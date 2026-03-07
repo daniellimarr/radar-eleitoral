@@ -186,7 +186,7 @@ export default function PublicRegistration() {
       birth_date: form.birth_date || null,
       phone: form.phone || null,
       has_whatsapp: form.has_whatsapp,
-      email: form.email || null,
+      
       cep: form.cep || null,
       address: form.address || null,
       address_number: form.address_number || null,
