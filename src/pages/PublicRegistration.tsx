@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+
 import { toast } from "sonner";
 import { CheckCircle, Loader2, CheckCircle2, XCircle, User, MapPin, Vote } from "lucide-react";
 import logoRadar from "@/assets/logo-radar-eleitoral.png";
@@ -101,12 +101,11 @@ export default function PublicRegistration() {
 
   const [form, setForm] = useState({
     name: "", nickname: "", cpf: "", gender: "", birth_date: "",
-    phone: "", has_whatsapp: false, email: "",
+    phone: "", has_whatsapp: false,
     cep: "", address: "", address_number: "", neighborhood: "",
     city: "Boa Vista", state: "RR",
     voting_zone: "", voting_section: "", voting_location: "",
     engagement: "nao_trabalhado",
-    category: "", subcategory: "", observations: "",
   });
 
   const update = (field: string, value: any) => setForm((p) => ({ ...p, [field]: value }));
@@ -187,7 +186,7 @@ export default function PublicRegistration() {
       birth_date: form.birth_date || null,
       phone: form.phone || null,
       has_whatsapp: form.has_whatsapp,
-      email: form.email || null,
+      
       cep: form.cep || null,
       address: form.address || null,
       address_number: form.address_number || null,
@@ -198,9 +197,6 @@ export default function PublicRegistration() {
       voting_section: form.voting_section || null,
       voting_location: form.voting_location || null,
       engagement: form.engagement as any,
-      category: form.category || null,
-      subcategory: form.subcategory || null,
-      observations: form.observations || null,
       tenant_id: tenantId,
       leader_id: leaderContactId,
       is_leader: false,
@@ -358,14 +354,6 @@ export default function PublicRegistration() {
                 <Checkbox checked={form.has_whatsapp} onCheckedChange={(c) => update("has_whatsapp", !!c)} id="whats" />
                 <Label htmlFor="whats" className="text-sm">Este número tem WhatsApp</Label>
               </div>
-              <div className="space-y-2">
-                <Label>E-mail</Label>
-                <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="seu@email.com" className="h-11" inputMode="email" />
-              </div>
-              <div className="space-y-2">
-                <Label>Observação</Label>
-                <Textarea value={form.observations} onChange={(e) => update("observations", e.target.value)} rows={3} placeholder="Alguma observação..." />
-              </div>
             </div>
           )}
 
@@ -435,16 +423,6 @@ export default function PublicRegistration() {
               <div className="space-y-2">
                 <Label>Local de Votação</Label>
                 <Input value={form.voting_location} onChange={(e) => update("voting_location", e.target.value)} placeholder="Ex: Escola Municipal..." className="h-11" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Categoria</Label>
-                  <Input value={form.category} onChange={(e) => update("category", e.target.value)} className="h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Subcategoria</Label>
-                  <Input value={form.subcategory} onChange={(e) => update("subcategory", e.target.value)} className="h-11" />
-                </div>
               </div>
             </div>
           )}
