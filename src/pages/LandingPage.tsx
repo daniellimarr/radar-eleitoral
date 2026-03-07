@@ -92,7 +92,7 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#111111] via-[#1a1a1a] to-[#111111]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#e86c2a] via-[#d45d1f] to-[#c4501a]" />
         <div className="absolute inset-0 opacity-15">
           <div className="absolute top-20 left-10 w-72 h-72 bg-[#e86c2a] rounded-full blur-[120px]" />
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#e86c2a] rounded-full blur-[150px]" />
@@ -209,24 +209,24 @@ export default function LandingPage() {
             </motion.div>
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2}
               className="relative">
-              <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-3xl p-8 lg:p-12 text-white">
+              <div className="bg-gradient-to-br from-[#e86c2a] to-[#c4501a] rounded-3xl p-8 lg:p-12 text-white">
                 <div className="space-y-6">
                   <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4">
-                    <Shield className="h-8 w-8 text-[#e86c2a]" />
+                    <Shield className="h-8 w-8 text-white" />
                     <div>
                       <p className="font-bold">Segurança Total</p>
                       <p className="text-sm text-white/60">RLS, criptografia e isolamento de dados</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4">
-                    <TrendingUp className="h-8 w-8 text-[#e86c2a]" />
+                    <TrendingUp className="h-8 w-8 text-white" />
                     <div>
                       <p className="font-bold">Crescimento Mensurável</p>
                       <p className="text-sm text-white/60">Métricas de engajamento em tempo real</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 bg-white/10 rounded-xl p-4">
-                    <Star className="h-8 w-8 text-[#e86c2a]" />
+                    <Star className="h-8 w-8 text-white" />
                     <div>
                       <p className="font-bold">Suporte Especializado</p>
                       <p className="text-sm text-white/60">Time dedicado com experiência política</p>
@@ -356,7 +356,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="bg-black text-white py-16">
+      <footer id="contact" className="bg-[#e86c2a] text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-2">
@@ -369,7 +369,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div>
-              <h4 className="font-bold mb-4 text-[#e86c2a]">Links</h4>
+              <h4 className="font-bold mb-4 text-white">Links</h4>
               <ul className="space-y-2 text-sm text-white/50">
                 <li><a href="#features" className="hover:text-white transition-colors">Funcionalidades</a></li>
                 <li><a href="#plans" className="hover:text-white transition-colors">Planos</a></li>
@@ -378,7 +378,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-bold mb-4 text-[#e86c2a]">Contato</h4>
+              <h4 className="font-bold mb-4 text-white">Contato</h4>
               <ul className="space-y-2 text-sm text-white/50">
                 <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> (95) 99113-1237</li>
                 <li>contato@radareleitoral.net</li>
