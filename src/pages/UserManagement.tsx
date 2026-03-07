@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ interface UserRow {
 
 export default function UserManagement() {
   const { tenantId, roles, user } = useAuth();
+  const { userLimit } = useSubscription();
   const canDelete = roles.includes("super_admin") || roles.includes("admin_gabinete") || roles.includes("coordenador");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,6 +131,11 @@ export default function UserManagement() {
   useEffect(() => { fetchUsers(); }, [tenantId]);
 
   const handleCreate = async () => {
+    const currentActiveCount = users.filter((u) => u.status === "approved").length;
+    if (userLimit !== Infinity && currentActiveCount >= userLimit) {
+      toast.error(`Limite de ${userLimit} usuários atingido. Faça upgrade do seu plano.`);
+      return;
+    }
     if (!newEmail || !newName || !newPassword) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
@@ -244,18 +251,28 @@ export default function UserManagement() {
   const pendingUsers = users.filter((u) => u.status === "pending");
 
   const activeUsers = users.filter((u) => u.status === "approved");
+  const hasReachedUserLimit = userLimit !== Infinity && activeUsers.length >= userLimit;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Gestão de Usuários</h1>
-          <p className="text-muted-foreground">Cadastre usuários e defina suas permissões de acesso</p>
+          <p className="text-muted-foreground">
+            Cadastre usuários e defina suas permissões de acesso
+            {userLimit !== Infinity && (
+              <span className={`ml-2 font-medium ${hasReachedUserLimit ? "text-destructive" : "text-primary"}`}>
+                ({activeUsers.length}/{userLimit} usuários)
+              </span>
+            )}
+          </p>
         </div>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button><UserPlus className="h-4 w-4 mr-2" /> Novo Usuário</Button>
+            <Button disabled={hasReachedUserLimit}>
+              <UserPlus className="h-4 w-4 mr-2" /> {hasReachedUserLimit ? "Limite atingido" : "Novo Usuário"}
+            </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
