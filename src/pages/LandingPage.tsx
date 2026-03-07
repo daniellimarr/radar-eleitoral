@@ -84,7 +84,7 @@ export default function LandingPage() {
               Entrar
             </Button>
             <Button onClick={() => navigate("/auth")} className="bg-[#e86c2a] hover:bg-[#d45d1f] text-white text-sm font-semibold px-5">
-              Começar Grátis
+              Começar Agora
             </Button>
           </div>
         </div>
