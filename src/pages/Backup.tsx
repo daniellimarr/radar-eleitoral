@@ -207,7 +207,7 @@ export default function Backup() {
           continue;
         }
         if (data && data.length > 0) {
-          const csv = convertToCSV(data as Record<string, unknown>[]);
+          const csv = convertToCSV(data as unknown as Record<string, unknown>[]);
           const date = new Date().toISOString().slice(0, 10);
           downloadCSV(csv, `backup_${key}_${date}.csv`);
           exported++;
