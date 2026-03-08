@@ -36,7 +36,7 @@ export default function Leaders() {
   const fetchLeaders = async () => {
     if (!tenantId) return;
     const { data } = await supabase
-      .from("contacts")
+      .from("contacts_decrypted")
       .select("*")
       .eq("tenant_id", tenantId)
       .eq("is_leader", true)
