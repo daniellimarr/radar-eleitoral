@@ -13,8 +13,6 @@ const ASAAS_BASE_URL = ASAAS_ENV === "production"
   : "https://sandbox.asaas.com/api/v3";
 
 serve(async (req) => {
-  console.log("[ASAAS-CREATE-CUSTOMER] DEBUG ENV:", ASAAS_ENV, "URL:", ASAAS_BASE_URL, "KEY prefix:", ASAAS_API_KEY?.substring(0, 15));
-  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -54,6 +52,20 @@ serve(async (req) => {
       .single();
 
     if (profile?.asaas_customer_id) {
+      // If CPF provided, update customer in Asaas
+      if (cpf) {
+        console.log("[ASAAS-CREATE-CUSTOMER] Updating customer CPF:", profile.asaas_customer_id);
+        const updateRes = await fetch(`${ASAAS_BASE_URL}/customers/${profile.asaas_customer_id}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "access_token": ASAAS_API_KEY,
+          },
+          body: JSON.stringify({ cpfCnpj: cpf }),
+        });
+        const updateData = await updateRes.json();
+        console.log("[ASAAS-CREATE-CUSTOMER] Update response:", JSON.stringify(updateData));
+      }
       return new Response(JSON.stringify({ customer_id: profile.asaas_customer_id }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

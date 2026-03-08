@@ -10,6 +10,15 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import logoImg from "@/assets/logo-radar-eleitoral.png";
 import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const icons: Record<AsaasPlanKey, React.ReactNode> = {
   mensal: <Award className="h-8 w-8" />,
@@ -22,15 +31,25 @@ export default function Planos() {
   const { subscribed, planName } = useSubscription();
   const navigate = useNavigate();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
+  const [cpf, setCpf] = useState("");
+  const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
 
-  const ensureAsaasCustomer = async () => {
-    // Check if customer already exists
-    if (profile?.asaas_customer_id) return profile.asaas_customer_id;
+  const formatCpf = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  };
 
+  const ensureAsaasCustomer = async (cpfValue: string) => {
+    // Always call the function to ensure CPF is updated even if customer exists
     const { data, error } = await supabase.functions.invoke("asaas-create-customer", {
       body: {
         name: profile?.full_name || user?.email,
         email: user?.email,
+        cpf: cpfValue,
       },
     });
 
@@ -44,12 +63,21 @@ export default function Planos() {
       return;
     }
 
+    // Always ask for CPF on first subscription
+    if (!cpf) {
+      setSelectedPlanKey(planKey);
+      setCpfDialogOpen(true);
+      return;
+    }
+
+    await processSubscription(planKey, cpf.replace(/\D/g, ""));
+  };
+
+  const processSubscription = async (planKey: string, cpfValue?: string) => {
     setLoadingPlan(planKey);
     try {
-      // Step 1: Ensure customer exists in Asaas
-      await ensureAsaasCustomer();
+      await ensureAsaasCustomer(cpfValue || "");
 
-      // Step 2: Create subscription
       const { data, error } = await supabase.functions.invoke("asaas-create-subscription", {
         body: { plan_key: planKey },
       });
@@ -57,7 +85,6 @@ export default function Planos() {
       if (error) throw error;
 
       if (data?.payment_url) {
-        // Redirect to Asaas checkout
         window.location.href = data.payment_url;
       } else {
         toast.error("Erro ao gerar link de pagamento. Tente novamente.");
@@ -67,6 +94,18 @@ export default function Planos() {
       toast.error(err.message || "Erro ao processar assinatura");
     } finally {
       setLoadingPlan(null);
+    }
+  };
+
+  const handleCpfSubmit = async () => {
+    const digits = cpf.replace(/\D/g, "");
+    if (digits.length !== 11) {
+      toast.error("CPF deve ter 11 dígitos");
+      return;
+    }
+    setCpfDialogOpen(false);
+    if (selectedPlanKey) {
+      await processSubscription(selectedPlanKey, digits);
     }
   };
 
@@ -149,6 +188,36 @@ export default function Planos() {
           );
         })}
       </div>
+
+      <Dialog open={cpfDialogOpen} onOpenChange={setCpfDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Informe seu CPF</DialogTitle>
+            <DialogDescription>
+              Para gerar a cobrança, precisamos do seu CPF.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="cpf">CPF</Label>
+              <Input
+                id="cpf"
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChange={(e) => setCpf(formatCpf(e.target.value))}
+                maxLength={14}
+              />
+            </div>
+            <Button
+              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+              onClick={handleCpfSubmit}
+              disabled={cpf.replace(/\D/g, "").length !== 11}
+            >
+              Continuar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
