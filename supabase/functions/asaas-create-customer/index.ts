@@ -13,8 +13,6 @@ const ASAAS_BASE_URL = ASAAS_ENV === "production"
   : "https://sandbox.asaas.com/api/v3";
 
 serve(async (req) => {
-  console.log("[ASAAS-CREATE-CUSTOMER] DEBUG ENV:", ASAAS_ENV, "URL:", ASAAS_BASE_URL, "KEY prefix:", ASAAS_API_KEY?.substring(0, 15));
-  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
