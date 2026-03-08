@@ -125,8 +125,27 @@ serve(async (req) => {
       next_due_date: dueDateStr,
     });
 
-    // Get the payment link for the first invoice
-    const invoiceUrl = asaasData.paymentLink || `https://www.asaas.com/c/${asaasData.id}`;
+    // Get payment link from first payment/invoice
+    let invoiceUrl = "";
+    
+    // Wait a moment for Asaas to generate the first payment
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Fetch payments for this subscription
+    const paymentsRes = await fetch(`${ASAAS_BASE_URL}/payments?subscription=${asaasData.id}`, {
+      headers: { "access_token": ASAAS_API_KEY },
+    });
+    const paymentsData = await paymentsRes.json();
+    console.log("[ASAAS-CREATE-SUBSCRIPTION] Payments:", JSON.stringify(paymentsData));
+    
+    if (paymentsData?.data?.length > 0) {
+      const firstPayment = paymentsData.data[0];
+      invoiceUrl = firstPayment.invoiceUrl || firstPayment.bankSlipUrl || `${ASAAS_BASE_URL.replace('/api/v3', '')}/i/${firstPayment.id}`;
+    } else {
+      // Fallback
+      const baseUrl = ASAAS_BASE_URL.includes("sandbox") ? "https://sandbox.asaas.com" : "https://www.asaas.com";
+      invoiceUrl = `${baseUrl}/c/${asaasData.id}`;
+    }
 
     return new Response(JSON.stringify({
       subscription_id: asaasData.id,
