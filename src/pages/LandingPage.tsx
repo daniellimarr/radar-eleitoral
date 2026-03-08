@@ -170,13 +170,21 @@ export default function LandingPage() {
             <button onClick={() => scrollTo("contact")} className="hover:text-[#FF6B00] transition-colors">Contato</button>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={() => navigate("/auth")} className="text-sm font-medium text-gray-600">
-              Entrar
-            </Button>
-            <Button onClick={() => navigate("/auth")}
-              className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-sm font-semibold px-5 rounded-lg shadow-md shadow-[#FF6B00]/20">
-              Começar Agora
-            </Button>
+            {user ? (
+              <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); navigate("/"); }} className="text-sm font-medium text-gray-600">
+                Sair
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" onClick={() => navigate("/auth")} className="text-sm font-medium text-gray-600">
+                  Entrar
+                </Button>
+                <Button onClick={() => navigate("/auth")}
+                  className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-sm font-semibold px-5 rounded-lg shadow-md shadow-[#FF6B00]/20">
+                  Começar Agora
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </nav>
