@@ -69,6 +69,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "appointments_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts_decrypted"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "appointments_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -604,6 +611,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "demands_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts_decrypted"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "demands_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -783,6 +797,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "leaders_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts_decrypted"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "leaders_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -949,6 +970,13 @@ export type Database = {
             columns: ["leader_contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registration_links_leader_contact_id_fkey"
+            columns: ["leader_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts_decrypted"
             referencedColumns: ["id"]
           },
           {
@@ -1326,6 +1354,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "voter_interactions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts_decrypted"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "voter_interactions_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -1437,6 +1472,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "whatsapp_send_logs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts_decrypted"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "whatsapp_send_logs_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -1447,9 +1489,124 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      contacts_decrypted: {
+        Row: {
+          address: string | null
+          address_number: string | null
+          birth_date: string | null
+          category: string | null
+          cep: string | null
+          city: string | null
+          cpf: string | null
+          created_at: string | null
+          deleted_at: string | null
+          email: string | null
+          engagement: Database["public"]["Enums"]["engagement_level"] | null
+          gender: string | null
+          has_whatsapp: boolean | null
+          id: string | null
+          is_leader: boolean | null
+          latitude: number | null
+          leader_id: string | null
+          longitude: number | null
+          name: string | null
+          neighborhood: string | null
+          nickname: string | null
+          observations: string | null
+          phone: string | null
+          registered_by: string | null
+          state: string | null
+          subcategory: string | null
+          tags: string[] | null
+          tenant_id: string | null
+          updated_at: string | null
+          voting_location: string | null
+          voting_section: string | null
+          voting_zone: string | null
+        }
+        Insert: {
+          address?: string | null
+          address_number?: string | null
+          birth_date?: string | null
+          category?: string | null
+          cep?: string | null
+          city?: string | null
+          cpf?: never
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          engagement?: Database["public"]["Enums"]["engagement_level"] | null
+          gender?: string | null
+          has_whatsapp?: boolean | null
+          id?: string | null
+          is_leader?: boolean | null
+          latitude?: number | null
+          leader_id?: string | null
+          longitude?: number | null
+          name?: string | null
+          neighborhood?: string | null
+          nickname?: string | null
+          observations?: string | null
+          phone?: never
+          registered_by?: string | null
+          state?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          voting_location?: string | null
+          voting_section?: string | null
+          voting_zone?: string | null
+        }
+        Update: {
+          address?: string | null
+          address_number?: string | null
+          birth_date?: string | null
+          category?: string | null
+          cep?: string | null
+          city?: string | null
+          cpf?: never
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          engagement?: Database["public"]["Enums"]["engagement_level"] | null
+          gender?: string | null
+          has_whatsapp?: boolean | null
+          id?: string | null
+          is_leader?: boolean | null
+          latitude?: number | null
+          leader_id?: string | null
+          longitude?: number | null
+          name?: string | null
+          neighborhood?: string | null
+          nickname?: string | null
+          observations?: string | null
+          phone?: never
+          registered_by?: string | null
+          state?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          voting_location?: string | null
+          voting_section?: string | null
+          voting_zone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      decrypt_sensitive: { Args: { val: string }; Returns: string }
+      encrypt_sensitive: { Args: { val: string }; Returns: string }
+      encryption_key: { Args: never; Returns: string }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
