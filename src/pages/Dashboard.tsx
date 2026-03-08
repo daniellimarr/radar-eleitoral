@@ -196,6 +196,13 @@ export default function Dashboard() {
                     {userLimit === Infinity
                       ? "Usuários ilimitados"
                       : `${userLimit} usuários`}
+                    {subscriptionEnd && (() => {
+                      const d = new Date(subscriptionEnd);
+                      const day = String(d.getDate()).padStart(2, '0');
+                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                      const year = d.getFullYear();
+                      return ` · Expira em ${day}/${month}/${year}`;
+                    })()}
                   </p>
                 </div>
               </div>
