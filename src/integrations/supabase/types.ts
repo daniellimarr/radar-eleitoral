@@ -853,6 +853,66 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          asaas_payment_id: string | null
+          billing_type: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          payment_date: string | null
+          status: string
+          subscription_id: string | null
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          asaas_payment_id?: string | null
+          billing_type?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          payment_date?: string | null
+          status?: string
+          subscription_id?: string | null
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          asaas_payment_id?: string | null
+          billing_type?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          payment_date?: string | null
+          status?: string
+          subscription_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           contact_limit: number
@@ -891,6 +951,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          asaas_customer_id: string | null
           avatar_url: string | null
           created_at: string
           full_name: string | null
@@ -902,6 +963,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          asaas_customer_id?: string | null
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
@@ -913,6 +975,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          asaas_customer_id?: string | null
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
@@ -990,12 +1053,15 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          asaas_customer_id: string | null
+          asaas_subscription_id: string | null
           cancelled_at: string | null
           created_at: string
           expires_at: string | null
           id: string
           kirvano_subscription_id: string | null
           kirvano_transaction_id: string | null
+          next_due_date: string | null
           plan_name: string
           started_at: string
           status: string
@@ -1004,12 +1070,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
           cancelled_at?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
           kirvano_subscription_id?: string | null
           kirvano_transaction_id?: string | null
+          next_due_date?: string | null
           plan_name: string
           started_at?: string
           status?: string
@@ -1018,12 +1087,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
           cancelled_at?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
           kirvano_subscription_id?: string | null
           kirvano_transaction_id?: string | null
+          next_due_date?: string | null
           plan_name?: string
           started_at?: string
           status?: string
