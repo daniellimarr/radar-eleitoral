@@ -57,7 +57,7 @@ serve(async (req) => {
       // Create tenant
       const { data: tenant, error: tenantError } = await supabaseAdmin
         .from("tenants")
-        .insert({ name: userName, status: "ativo", contact_limit: 5000 })
+        .insert({ name: userName, status: "suspenso", contact_limit: 5000 })
         .select("id")
         .single();
 
