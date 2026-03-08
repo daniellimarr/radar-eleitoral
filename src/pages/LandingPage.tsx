@@ -462,6 +462,8 @@ export default function LandingPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
             className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {landingPlans.map((plan, i) => {
+              const planKey = planKeyMap[plan.name];
+              const isLoading = loadingPlan === planKey;
               return (
                 <motion.div key={plan.name} variants={fadeUp} custom={i}
                   className={`relative rounded-2xl p-8 border-2 transition-all ${
@@ -487,13 +489,18 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <Button
-                    onClick={() => navigate("/planos")}
+                    onClick={() => handleSubscribe(plan.name)}
+                    disabled={isLoading}
                     className={`w-full mt-6 py-6 text-base font-bold rounded-xl transition-all ${
                       plan.popular
                         ? "bg-[#FF6B00] hover:bg-[#e55f00] text-white shadow-lg shadow-[#FF6B00]/20"
                         : "bg-[#111111] hover:bg-[#222] text-white"
                     }`}>
-                    Assinar Agora <ChevronRight className="ml-1 h-4 w-4" />
+                    {isLoading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando...</>
+                    ) : (
+                      <>Assinar Agora <ChevronRight className="ml-1 h-4 w-4" /></>
+                    )}
                   </Button>
                 </motion.div>
               );
