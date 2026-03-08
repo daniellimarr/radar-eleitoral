@@ -65,6 +65,7 @@ const landingPlans = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const isLoggedInWithoutSub = !!user;
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
   const [cpf, setCpf] = useState("");
