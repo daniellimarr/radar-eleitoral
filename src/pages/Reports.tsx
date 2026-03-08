@@ -56,7 +56,7 @@ export default function Reports() {
     if (data && data.length > 0) {
       const leaderIds = data.map((l: any) => l.id);
       const { data: allVoters } = await supabase
-        .from("contacts")
+        .from("contacts_decrypted")
         .select("leader_id")
         .eq("tenant_id", tenantId)
         .is("deleted_at", null)
