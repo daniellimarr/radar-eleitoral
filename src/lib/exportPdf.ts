@@ -169,11 +169,14 @@ export function printTable(tableElement: HTMLElement, title: string) {
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
 
+  const safeTitle = escapeHtml(title);
+  const safeTableHtml = sanitizeHtml(tableElement.outerHTML);
+
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${title}</title>
+      <title>${safeTitle}</title>
       <style>
         body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
         .header { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #1e3a5f; padding-bottom: 10px; margin-bottom: 20px; }
@@ -198,11 +201,11 @@ export function printTable(tableElement: HTMLElement, title: string) {
           <p>Tecnologia a serviço da política</p>
         </div>
         <div class="right">
-          <div class="title">${title}</div>
+          <div class="title">${safeTitle}</div>
           <div class="date">Emitido em: ${new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
         </div>
       </div>
-      ${tableElement.outerHTML}
+      ${safeTableHtml}
       <script>window.onload = () => { window.print(); window.close(); }<\/script>
     </body>
     </html>
