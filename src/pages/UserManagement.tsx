@@ -53,11 +53,8 @@ interface UserRow {
 
 export default function UserManagement() {
   const { tenantId, roles, user, hasRole } = useAuth();
-
-  // Role guard: only super_admin, admin_gabinete, or coordenador can access
-  const isAuthorized = hasRole('super_admin') || hasRole('admin_gabinete') || hasRole('coordenador');
-  if (!isAuthorized) return <Navigate to="/dashboard" replace />;
   const { userLimit } = useSubscription();
+  const isAuthorized = hasRole('super_admin') || hasRole('admin_gabinete') || hasRole('coordenador');
   const canDelete = roles.includes("super_admin") || roles.includes("admin_gabinete") || roles.includes("coordenador");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
