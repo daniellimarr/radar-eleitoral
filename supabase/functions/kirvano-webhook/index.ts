@@ -83,9 +83,15 @@ serve(async (req) => {
         .eq("tenant_id", profile.tenant_id)
         .eq("status", "active");
 
-      // Create new subscription (30 days)
+      // Determine expiration based on plan
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 30);
+      if (planKey.includes("anual") || planKey.includes("ouro")) {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      } else if (planKey.includes("trimestral") || planKey.includes("prata")) {
+        expiresAt.setDate(expiresAt.getDate() + 90);
+      } else {
+        expiresAt.setDate(expiresAt.getDate() + 30);
+      }
 
       await supabaseClient.from("subscriptions").insert({
         tenant_id: profile.tenant_id,
@@ -97,7 +103,13 @@ serve(async (req) => {
         expires_at: expiresAt.toISOString(),
       });
 
-      console.log("[KIRVANO-WEBHOOK] Subscription activated:", planName, "for tenant:", profile.tenant_id);
+      // Activate tenant (gabinete)
+      await supabaseClient
+        .from("tenants")
+        .update({ status: "ativo" })
+        .eq("id", profile.tenant_id);
+
+      console.log("[KIRVANO-WEBHOOK] Subscription activated:", planName, "for tenant:", profile.tenant_id, "expires:", expiresAt.toISOString());
 
     } else if (event === "subscription_cancelled" || event === "cancelled" || event === "refunded") {
       await supabaseClient
@@ -106,12 +118,24 @@ serve(async (req) => {
         .eq("tenant_id", profile.tenant_id)
         .eq("status", "active");
 
-      console.log("[KIRVANO-WEBHOOK] Subscription cancelled for tenant:", profile.tenant_id);
+      // Suspend tenant (gabinete)
+      await supabaseClient
+        .from("tenants")
+        .update({ status: "suspenso" })
+        .eq("id", profile.tenant_id);
+
+      console.log("[KIRVANO-WEBHOOK] Subscription cancelled, tenant suspended:", profile.tenant_id);
 
     } else if (event === "subscription_renewed" || event === "renewed") {
-      // Extend by 30 days
+      // Extend based on plan
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 30);
+      if (planKey.includes("anual") || planKey.includes("ouro")) {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      } else if (planKey.includes("trimestral") || planKey.includes("prata")) {
+        expiresAt.setDate(expiresAt.getDate() + 90);
+      } else {
+        expiresAt.setDate(expiresAt.getDate() + 30);
+      }
 
       await supabaseClient
         .from("subscriptions")
@@ -119,7 +143,13 @@ serve(async (req) => {
         .eq("tenant_id", profile.tenant_id)
         .eq("status", "active");
 
-      console.log("[KIRVANO-WEBHOOK] Subscription renewed for tenant:", profile.tenant_id);
+      // Ensure tenant is active on renewal
+      await supabaseClient
+        .from("tenants")
+        .update({ status: "ativo" })
+        .eq("id", profile.tenant_id);
+
+      console.log("[KIRVANO-WEBHOOK] Subscription renewed for tenant:", profile.tenant_id, "expires:", expiresAt.toISOString());
     }
 
     return new Response(JSON.stringify({ received: true }), {
