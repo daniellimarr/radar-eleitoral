@@ -56,11 +56,7 @@ serve(async (req) => {
       });
     }
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      { auth: { persistSession: false } }
-    );
+    // supabaseAdmin already created above
 
     // Get profile with asaas_customer_id
     const { data: profile } = await supabaseAdmin
