@@ -2,6 +2,37 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import logoRadar from "@/assets/logo-radar-eleitoral.png";
 
+// Sanitize text to prevent XSS when interpolated into HTML
+function escapeHtml(str: string): string {
+  const div = document.createElement("div");
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+// Sanitize HTML content to remove script tags and event handlers
+function sanitizeHtml(html: string): string {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  // Remove all script elements
+  doc.querySelectorAll("script").forEach((el) => el.remove());
+  // Remove event handler attributes
+  doc.querySelectorAll("*").forEach((el) => {
+    Array.from(el.attributes).forEach((attr) => {
+      if (attr.name.startsWith("on")) {
+        el.removeAttribute(attr.name);
+      }
+    });
+    // Remove javascript: URLs
+    if (el.hasAttribute("href") && el.getAttribute("href")?.startsWith("javascript:")) {
+      el.removeAttribute("href");
+    }
+    if (el.hasAttribute("src") && el.getAttribute("src")?.startsWith("javascript:")) {
+      el.removeAttribute("src");
+    }
+  });
+  return doc.body.innerHTML;
+}
+
 interface ExportPdfOptions {
   title: string;
   filename: string;
