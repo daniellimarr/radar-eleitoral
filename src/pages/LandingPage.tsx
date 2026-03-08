@@ -44,9 +44,9 @@ const benefits = [
 ];
 
 const landingPlans = [
-  { name: "Plano Mensal", tag: "Ideal para começar", price: "259", period: "/mês", icon: Award, popular: false, checkout_url: PLANS.bronze.checkout_url },
-  { name: "Plano Trimestral", tag: "Melhor economia", price: "699", period: "/trimestre", icon: Star, popular: true, checkout_url: PLANS.prata.checkout_url },
-  { name: "Plano Anual", tag: "Melhor custo-benefício", price: "2.499", period: "/ano", icon: Gem, popular: false, checkout_url: PLANS.ouro.checkout_url },
+  { name: "Plano Mensal", tag: "Ideal para começar", price: "97", period: "/mês", icon: Award, popular: false },
+  { name: "Plano Trimestral", tag: "Melhor economia", price: "247", period: "/trimestre", icon: Star, popular: true },
+  { name: "Plano Anual", tag: "Melhor custo-benefício", price: "697", period: "/ano", icon: Gem, popular: false },
 ];
 
 export default function LandingPage() {
