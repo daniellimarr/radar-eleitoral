@@ -352,43 +352,72 @@ export default function LandingPage() {
       <section id="pricing" className="py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
-            className="text-center max-w-3xl mx-auto mb-16">
+            className="text-center max-w-3xl mx-auto mb-4">
             <span className="text-[#FF6B00] font-semibold text-sm uppercase tracking-wider">Planos</span>
             <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold">
-              Planos simples para equipes políticas
+              O melhor custo benefício
             </h2>
+            <p className="mt-2 text-[#FF6B00] text-xl font-bold">Nº 1 do Brasil</p>
+            <p className="mt-4 text-gray-500 text-lg">
+              Formas de pagamento: PIX ou Cartão de Crédito — Liberação imediata
+            </p>
           </motion.div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
             className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {plans.map((plan, i) => (
-              <motion.div key={plan.name} variants={fadeUp} custom={i}
-                className={`relative rounded-2xl p-8 border-2 transition-all ${
-                  plan.popular
-                    ? "border-[#FF6B00] bg-white shadow-2xl shadow-[#FF6B00]/10 scale-[1.03]"
-                    : "border-gray-200 bg-white hover:border-gray-300"
-                }`}>
-                {plan.popular && (
-                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#FF6B00] text-white text-xs font-bold px-5 py-1.5 rounded-full shadow-md">
-                    Mais Popular
-                  </span>
-                )}
-                <p className="text-sm text-gray-400 font-medium">{plan.tag}</p>
-                <h3 className="text-xl font-bold mt-1">{plan.name}</h3>
-                <div className="mt-5 flex items-baseline gap-1">
-                  <span className="text-sm text-gray-400">R$</span>
-                  <span className="text-5xl font-extrabold text-[#FF6B00]">{plan.price}</span>
-                  <span className="text-gray-400 text-sm">{plan.period}</span>
-                </div>
-                <Button onClick={() => navigate("/auth")}
-                  className={`w-full mt-8 py-6 text-base font-bold rounded-xl transition-all ${
-                    plan.popular
-                      ? "bg-[#FF6B00] hover:bg-[#e55f00] text-white shadow-lg shadow-[#FF6B00]/20"
-                      : "bg-[#111111] hover:bg-[#222] text-white"
+            {planCards.map(({ key, icon: Icon }, i) => {
+              const plan = PLANS[key];
+              const isPopular = 'popular' in plan && plan.popular;
+              return (
+                <motion.div key={plan.name} variants={fadeUp} custom={i}
+                  className={`relative rounded-2xl p-8 border-2 transition-all ${
+                    isPopular
+                      ? "border-[#FF6B00] bg-white shadow-2xl shadow-[#FF6B00]/10 scale-[1.03]"
+                      : "border-gray-200 bg-white hover:border-gray-300"
                   }`}>
-                  Assinar Agora <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
-              </motion.div>
-            ))}
+                  {isPopular && (
+                    <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#FF6B00] text-white text-xs font-bold px-5 py-1.5 rounded-full shadow-md">
+                      Mais Popular
+                    </span>
+                  )}
+                  <div className="text-center mb-4">
+                    <Icon className="h-8 w-8 text-[#FF6B00] mx-auto mb-2" />
+                    <h3 className="text-xl font-bold">{plan.name}</h3>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-sm text-gray-500">R$</span>
+                      <span className="text-4xl font-extrabold text-[#FF6B00]">{plan.price},00</span>
+                      <span className="text-gray-500 text-sm">/mês</span>
+                    </div>
+                    <p className="text-sm text-gray-400 mt-1">PIX ou Cartão de Crédito</p>
+                    <p className="text-sm text-gray-400">Liberação imediata</p>
+                  </div>
+                  <a
+                    href={plan.checkout_url || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block mt-6"
+                  >
+                    <Button
+                      className={`w-full py-6 text-base font-bold rounded-xl uppercase tracking-wide transition-all ${
+                        isPopular
+                          ? "bg-[#FF6B00] hover:bg-[#e55f00] text-white shadow-lg shadow-[#FF6B00]/20"
+                          : "bg-[#2ab573] hover:bg-[#239b62] text-white"
+                      }`}>
+                      Contratar Agora
+                    </Button>
+                  </a>
+                  <ul className="mt-6 space-y-3">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-3 text-sm text-gray-600">
+                        <Check className="h-4 w-4 text-[#2ab573] flex-shrink-0 mt-0.5" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       </section>
