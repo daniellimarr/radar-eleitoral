@@ -64,14 +64,14 @@ export default function Planos() {
       return;
     }
 
-    // Always ask for CPF on first subscription
-    if (!cpf) {
+    if (!cpf || !customerEmail) {
       setSelectedPlanKey(planKey);
+      setCustomerEmail(user?.email || "");
       setCpfDialogOpen(true);
       return;
     }
 
-    await processSubscription(planKey, cpf.replace(/\D/g, ""));
+    await processSubscription(planKey, cpf.replace(/\D/g, ""), customerEmail);
   };
 
   const processSubscription = async (planKey: string, cpfValue?: string) => {
