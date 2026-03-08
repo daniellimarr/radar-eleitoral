@@ -128,6 +128,7 @@ const NotificationBell = React.forwardRef<HTMLDivElement>(function NotificationB
                       new_demand: "/demands",
                       new_leader: "/leaders",
                       financial: "/financial",
+                      new_appointment: "/appointments",
                       info: "/dashboard",
                     };
                     const route = routes[n.type];
