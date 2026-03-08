@@ -582,6 +582,47 @@ export default function LandingPage() {
       >
         <MessageSquare className="h-6 w-6" />
       </a>
+
+      {/* Dialog de dados para cobrança */}
+      <Dialog open={cpfDialogOpen} onOpenChange={setCpfDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dados para cobrança</DialogTitle>
+            <DialogDescription>
+              Informe seu e-mail e CPF para gerar a cobrança.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="customerEmail">E-mail</Label>
+              <Input
+                id="customerEmail"
+                type="email"
+                placeholder="seu@email.com"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="cpf">CPF</Label>
+              <Input
+                id="cpf"
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChange={(e) => setCpf(formatCpf(e.target.value))}
+                maxLength={14}
+              />
+            </div>
+            <Button
+              className="w-full bg-[#FF6B00] hover:bg-[#e55f00] text-white font-bold"
+              onClick={handleCpfSubmit}
+              disabled={cpf.replace(/\D/g, "").length !== 11 || !customerEmail.includes("@")}
+            >
+              Continuar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
