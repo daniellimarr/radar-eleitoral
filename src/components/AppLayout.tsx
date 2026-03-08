@@ -44,7 +44,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }
 
   // Check subscription - redirect to landing if not subscribed
-  if (!subscribed && !isAdminRole && location.pathname !== "/assinatura") {
+  if (!subscribed && !isSuperAdmin && location.pathname !== "/assinatura") {
     return <Navigate to="/" replace />;
   }
 
