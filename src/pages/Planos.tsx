@@ -33,6 +33,7 @@ export default function Planos() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
   const [cpf, setCpf] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
 
   const formatCpf = (value: string) => {
