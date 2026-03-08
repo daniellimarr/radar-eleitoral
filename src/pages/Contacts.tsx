@@ -139,7 +139,7 @@ export default function Contacts() {
       }
     } else {
       const { data } = await supabase
-        .from("contacts")
+        .from("contacts_decrypted")
         .select("id, name, nickname")
         .eq("tenant_id", tenantId)
         .eq("is_leader", true)
