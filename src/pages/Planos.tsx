@@ -60,6 +60,7 @@ export default function Planos() {
   const handleSubscribe = async (planKey: string) => {
     if (!user) {
       toast.error("Faça login para assinar um plano");
+      navigate("/auth", { state: { returnTo: "/planos" } });
       return;
     }
 
