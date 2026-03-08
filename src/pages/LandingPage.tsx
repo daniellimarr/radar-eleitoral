@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -5,10 +6,22 @@ import {
   Users, ClipboardList, Crown, Rocket, BarChart3, ShieldCheck,
   ArrowRight, Check, ChevronRight, MessageSquare, Phone, Mail,
   Building2, UserCheck, Briefcase, Vote, UsersRound, AlertTriangle,
-  Layers, Zap, Star, Eye, Award, Gem
+  Layers, Zap, Star, Eye, Award, Gem, Loader2
 } from "lucide-react";
 import logo from "@/assets/logo-radar-eleitoral.png";
 import { ASAAS_PLANS } from "@/lib/asaas";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
