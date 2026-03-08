@@ -40,7 +40,7 @@ export default function Reports() {
 
   const fetchContacts = async () => {
     if (!tenantId) return;
-    let query = supabase.from("contacts").select("*").eq("tenant_id", tenantId).is("deleted_at", null).order("name");
+    let query = supabase.from("contacts_decrypted").select("*").eq("tenant_id", tenantId).is("deleted_at", null).order("name");
     if (searchContacts) query = query.ilike("name", `%${searchContacts}%`);
     const { data } = await query;
     setContacts(data || []);
