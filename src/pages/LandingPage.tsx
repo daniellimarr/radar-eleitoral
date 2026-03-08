@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -5,10 +6,22 @@ import {
   Users, ClipboardList, Crown, Rocket, BarChart3, ShieldCheck,
   ArrowRight, Check, ChevronRight, MessageSquare, Phone, Mail,
   Building2, UserCheck, Briefcase, Vote, UsersRound, AlertTriangle,
-  Layers, Zap, Star, Eye, Award, Gem
+  Layers, Zap, Star, Eye, Award, Gem, Loader2
 } from "lucide-react";
 import logo from "@/assets/logo-radar-eleitoral.png";
 import { ASAAS_PLANS } from "@/lib/asaas";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
@@ -51,9 +64,93 @@ const landingPlans = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
+  const [cpf, setCpf] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const formatCpf = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  };
+
+  const planKeyMap: Record<string, string> = {
+    "Plano Mensal": "mensal",
+    "Plano Trimestral": "trimestral",
+    "Plano Anual": "anual",
+  };
+
+  const handleSubscribe = (planName: string) => {
+    const planKey = planKeyMap[planName];
+    if (!planKey) return;
+
+    if (!user) {
+      toast.error("Faça login para assinar um plano");
+      navigate("/auth", { state: { returnTo: "/" } });
+      return;
+    }
+
+    setSelectedPlanKey(planKey);
+    setCustomerEmail(user?.email || "");
+    setCpfDialogOpen(true);
+  };
+
+  const ensureAsaasCustomer = async (cpfValue: string, emailValue: string) => {
+    const { data, error } = await supabase.functions.invoke("asaas-create-customer", {
+      body: {
+        name: profile?.full_name || emailValue,
+        email: emailValue,
+        cpf: cpfValue,
+      },
+    });
+    if (error) throw new Error("Erro ao criar cliente no gateway de pagamento");
+    return data.customer_id;
+  };
+
+  const processSubscription = async (planKey: string, cpfValue: string, emailValue: string) => {
+    setLoadingPlan(planKey);
+    try {
+      await ensureAsaasCustomer(cpfValue, emailValue);
+      const { data, error } = await supabase.functions.invoke("asaas-create-subscription", {
+        body: { plan_key: planKey },
+      });
+      if (error) throw error;
+      if (data?.payment_url) {
+        window.location.href = data.payment_url;
+      } else {
+        toast.error("Erro ao gerar link de pagamento. Tente novamente.");
+      }
+    } catch (err: any) {
+      console.error("Subscription error:", err);
+      toast.error(err.message || "Erro ao processar assinatura");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
+  const handleCpfSubmit = async () => {
+    const digits = cpf.replace(/\D/g, "");
+    if (digits.length !== 11) {
+      toast.error("CPF deve ter 11 dígitos");
+      return;
+    }
+    if (!customerEmail || !customerEmail.includes("@")) {
+      toast.error("Informe um e-mail válido");
+      return;
+    }
+    setCpfDialogOpen(false);
+    if (selectedPlanKey) {
+      await processSubscription(selectedPlanKey, digits, customerEmail);
+    }
   };
 
   return (
@@ -365,6 +462,8 @@ export default function LandingPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
             className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {landingPlans.map((plan, i) => {
+              const planKey = planKeyMap[plan.name];
+              const isLoading = loadingPlan === planKey;
               return (
                 <motion.div key={plan.name} variants={fadeUp} custom={i}
                   className={`relative rounded-2xl p-8 border-2 transition-all ${
@@ -390,13 +489,18 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <Button
-                    onClick={() => navigate("/planos")}
+                    onClick={() => handleSubscribe(plan.name)}
+                    disabled={isLoading}
                     className={`w-full mt-6 py-6 text-base font-bold rounded-xl transition-all ${
                       plan.popular
                         ? "bg-[#FF6B00] hover:bg-[#e55f00] text-white shadow-lg shadow-[#FF6B00]/20"
                         : "bg-[#111111] hover:bg-[#222] text-white"
                     }`}>
-                    Assinar Agora <ChevronRight className="ml-1 h-4 w-4" />
+                    {isLoading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando...</>
+                    ) : (
+                      <>Assinar Agora <ChevronRight className="ml-1 h-4 w-4" /></>
+                    )}
                   </Button>
                 </motion.div>
               );
@@ -478,6 +582,47 @@ export default function LandingPage() {
       >
         <MessageSquare className="h-6 w-6" />
       </a>
+
+      {/* Dialog de dados para cobrança */}
+      <Dialog open={cpfDialogOpen} onOpenChange={setCpfDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dados para cobrança</DialogTitle>
+            <DialogDescription>
+              Informe seu e-mail e CPF para gerar a cobrança.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="customerEmail">E-mail</Label>
+              <Input
+                id="customerEmail"
+                type="email"
+                placeholder="seu@email.com"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="cpf">CPF</Label>
+              <Input
+                id="cpf"
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChange={(e) => setCpf(formatCpf(e.target.value))}
+                maxLength={14}
+              />
+            </div>
+            <Button
+              className="w-full bg-[#FF6B00] hover:bg-[#e55f00] text-white font-bold"
+              onClick={handleCpfSubmit}
+              disabled={cpf.replace(/\D/g, "").length !== 11 || !customerEmail.includes("@")}
+            >
+              Continuar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

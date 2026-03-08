@@ -42,10 +42,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  // Check subscription - redirect to /planos if not subscribed
-  // Allow access to /assinatura page even without subscription
+  // Check subscription - redirect to landing if not subscribed
   if (!subscribed && !isAdminRole && location.pathname !== "/assinatura") {
-    return <Navigate to="/planos" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (
