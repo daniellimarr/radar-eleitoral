@@ -44,12 +44,11 @@ export default function Planos() {
     return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
   };
 
-  const ensureAsaasCustomer = async (cpfValue: string) => {
-    // Always call the function to ensure CPF is updated even if customer exists
+  const ensureAsaasCustomer = async (cpfValue: string, emailValue: string) => {
     const { data, error } = await supabase.functions.invoke("asaas-create-customer", {
       body: {
-        name: profile?.full_name || user?.email,
-        email: user?.email,
+        name: profile?.full_name || emailValue,
+        email: emailValue,
         cpf: cpfValue,
       },
     });
