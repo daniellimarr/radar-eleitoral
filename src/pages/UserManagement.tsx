@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
@@ -51,8 +52,9 @@ interface UserRow {
 }
 
 export default function UserManagement() {
-  const { tenantId, roles, user } = useAuth();
+  const { tenantId, roles, user, hasRole } = useAuth();
   const { userLimit } = useSubscription();
+  const isAuthorized = hasRole('super_admin') || hasRole('admin_gabinete') || hasRole('coordenador');
   const canDelete = roles.includes("super_admin") || roles.includes("admin_gabinete") || roles.includes("coordenador");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -252,6 +254,8 @@ export default function UserManagement() {
 
   const activeUsers = users.filter((u) => u.status === "approved");
   const hasReachedUserLimit = userLimit !== Infinity && activeUsers.length >= userLimit;
+
+  if (!isAuthorized) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="space-y-6">
