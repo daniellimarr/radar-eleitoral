@@ -48,7 +48,7 @@ export default function Reports() {
 
   const fetchLeaders = async () => {
     if (!tenantId) return;
-    let query = supabase.from("contacts").select("*").eq("tenant_id", tenantId).eq("is_leader", true).is("deleted_at", null).order("name");
+    let query = supabase.from("contacts_decrypted").select("*").eq("tenant_id", tenantId).eq("is_leader", true).is("deleted_at", null).order("name");
     if (searchLeaders) query = query.ilike("name", `%${searchLeaders}%`);
     const { data } = await query;
     setLeaders(data || []);
