@@ -35,7 +35,7 @@ serve(async (req) => {
     const findSubscription = async (asaasSubId: string) => {
       const { data } = await supabase
         .from("subscriptions")
-        .select("*, profiles!inner(tenant_id)")
+        .select("*")
         .eq("asaas_subscription_id", asaasSubId)
         .order("created_at", { ascending: false })
         .limit(1);
