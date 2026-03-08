@@ -197,12 +197,22 @@ export default function Planos() {
       <Dialog open={cpfDialogOpen} onOpenChange={setCpfDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Informe seu CPF</DialogTitle>
+            <DialogTitle>Dados para cobrança</DialogTitle>
             <DialogDescription>
-              Para gerar a cobrança, precisamos do seu CPF.
+              Informe seu e-mail e CPF para gerar a cobrança.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="customerEmail">E-mail</Label>
+              <Input
+                id="customerEmail"
+                type="email"
+                placeholder="seu@email.com"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+              />
+            </div>
             <div>
               <Label htmlFor="cpf">CPF</Label>
               <Input
@@ -216,7 +226,7 @@ export default function Planos() {
             <Button
               className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
               onClick={handleCpfSubmit}
-              disabled={cpf.replace(/\D/g, "").length !== 11}
+              disabled={cpf.replace(/\D/g, "").length !== 11 || !customerEmail.includes("@")}
             >
               Continuar
             </Button>
