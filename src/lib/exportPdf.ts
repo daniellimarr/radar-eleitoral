@@ -2,6 +2,37 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import logoRadar from "@/assets/logo-radar-eleitoral.png";
 
+// Sanitize text to prevent XSS when interpolated into HTML
+function escapeHtml(str: string): string {
+  const div = document.createElement("div");
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+// Sanitize HTML content to remove script tags and event handlers
+function sanitizeHtml(html: string): string {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  // Remove all script elements
+  doc.querySelectorAll("script").forEach((el) => el.remove());
+  // Remove event handler attributes
+  doc.querySelectorAll("*").forEach((el) => {
+    Array.from(el.attributes).forEach((attr) => {
+      if (attr.name.startsWith("on")) {
+        el.removeAttribute(attr.name);
+      }
+    });
+    // Remove javascript: URLs
+    if (el.hasAttribute("href") && el.getAttribute("href")?.startsWith("javascript:")) {
+      el.removeAttribute("href");
+    }
+    if (el.hasAttribute("src") && el.getAttribute("src")?.startsWith("javascript:")) {
+      el.removeAttribute("src");
+    }
+  });
+  return doc.body.innerHTML;
+}
+
 interface ExportPdfOptions {
   title: string;
   filename: string;
@@ -138,11 +169,14 @@ export function printTable(tableElement: HTMLElement, title: string) {
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
 
+  const safeTitle = escapeHtml(title);
+  const safeTableHtml = sanitizeHtml(tableElement.outerHTML);
+
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${title}</title>
+      <title>${safeTitle}</title>
       <style>
         body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
         .header { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #1e3a5f; padding-bottom: 10px; margin-bottom: 20px; }
@@ -167,11 +201,11 @@ export function printTable(tableElement: HTMLElement, title: string) {
           <p>Tecnologia a serviço da política</p>
         </div>
         <div class="right">
-          <div class="title">${title}</div>
+          <div class="title">${safeTitle}</div>
           <div class="date">Emitido em: ${new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
         </div>
       </div>
-      ${tableElement.outerHTML}
+      ${safeTableHtml}
       <script>window.onload = () => { window.print(); window.close(); }<\/script>
     </body>
     </html>
