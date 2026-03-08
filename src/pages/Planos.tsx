@@ -64,14 +64,14 @@ export default function Planos() {
       return;
     }
 
-    // If no asaas_customer_id yet, ask for CPF first
-    if (!profile?.asaas_customer_id) {
+    // Always ask for CPF on first subscription
+    if (!cpf) {
       setSelectedPlanKey(planKey);
       setCpfDialogOpen(true);
       return;
     }
 
-    await processSubscription(planKey);
+    await processSubscription(planKey, cpf.replace(/\D/g, ""));
   };
 
   const processSubscription = async (planKey: string, cpfValue?: string) => {
