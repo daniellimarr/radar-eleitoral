@@ -8,7 +8,7 @@ import {
   Layers, Zap, Star, Eye, Award, Gem
 } from "lucide-react";
 import logo from "@/assets/logo-radar-eleitoral.png";
-import { PLANS } from "@/lib/stripe";
+import { ASAAS_PLANS } from "@/lib/asaas";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
@@ -44,9 +44,9 @@ const benefits = [
 ];
 
 const landingPlans = [
-  { name: "Plano Mensal", tag: "Ideal para começar", price: "259", period: "/mês", icon: Award, popular: false, checkout_url: PLANS.bronze.checkout_url },
-  { name: "Plano Trimestral", tag: "Melhor economia", price: "699", period: "/trimestre", icon: Star, popular: true, checkout_url: PLANS.prata.checkout_url },
-  { name: "Plano Anual", tag: "Melhor custo-benefício", price: "2.499", period: "/ano", icon: Gem, popular: false, checkout_url: PLANS.ouro.checkout_url },
+  { name: "Plano Mensal", tag: "Ideal para começar", price: "97", period: "/mês", icon: Award, popular: false },
+  { name: "Plano Trimestral", tag: "Melhor economia", price: "247", period: "/trimestre", icon: Star, popular: true },
+  { name: "Plano Anual", tag: "Melhor custo-benefício", price: "697", period: "/ano", icon: Gem, popular: false },
 ];
 
 export default function LandingPage() {
@@ -389,21 +389,15 @@ export default function LandingPage() {
                       <span className="text-gray-500 text-sm">{plan.period}</span>
                     </div>
                   </div>
-                  <a
-                    href={plan.checkout_url || "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block mt-6"
-                  >
-                    <Button
-                      className={`w-full py-6 text-base font-bold rounded-xl transition-all ${
-                        plan.popular
-                          ? "bg-[#FF6B00] hover:bg-[#e55f00] text-white shadow-lg shadow-[#FF6B00]/20"
-                          : "bg-[#111111] hover:bg-[#222] text-white"
-                      }`}>
-                      Assinar Agora <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </a>
+                  <Button
+                    onClick={() => navigate("/auth")}
+                    className={`w-full mt-6 py-6 text-base font-bold rounded-xl transition-all ${
+                      plan.popular
+                        ? "bg-[#FF6B00] hover:bg-[#e55f00] text-white shadow-lg shadow-[#FF6B00]/20"
+                        : "bg-[#111111] hover:bg-[#222] text-white"
+                    }`}>
+                    Assinar Agora <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
                 </motion.div>
               );
             })}

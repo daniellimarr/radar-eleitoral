@@ -12,6 +12,15 @@ verify_jwt = false
 [functions.kirvano-webhook]
 verify_jwt = false
 
+[functions.asaas-create-customer]
+verify_jwt = false
+
+[functions.asaas-create-subscription]
+verify_jwt = false
+
+[functions.asaas-webhook]
+verify_jwt = false
+
 [functions.change-password]
 verify_jwt = false
 
