@@ -64,9 +64,93 @@ const landingPlans = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
+  const [cpf, setCpf] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const formatCpf = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  };
+
+  const planKeyMap: Record<string, string> = {
+    "Plano Mensal": "mensal",
+    "Plano Trimestral": "trimestral",
+    "Plano Anual": "anual",
+  };
+
+  const handleSubscribe = (planName: string) => {
+    const planKey = planKeyMap[planName];
+    if (!planKey) return;
+
+    if (!user) {
+      toast.error("Faça login para assinar um plano");
+      navigate("/auth", { state: { returnTo: "/" } });
+      return;
+    }
+
+    setSelectedPlanKey(planKey);
+    setCustomerEmail(user?.email || "");
+    setCpfDialogOpen(true);
+  };
+
+  const ensureAsaasCustomer = async (cpfValue: string, emailValue: string) => {
+    const { data, error } = await supabase.functions.invoke("asaas-create-customer", {
+      body: {
+        name: profile?.full_name || emailValue,
+        email: emailValue,
+        cpf: cpfValue,
+      },
+    });
+    if (error) throw new Error("Erro ao criar cliente no gateway de pagamento");
+    return data.customer_id;
+  };
+
+  const processSubscription = async (planKey: string, cpfValue: string, emailValue: string) => {
+    setLoadingPlan(planKey);
+    try {
+      await ensureAsaasCustomer(cpfValue, emailValue);
+      const { data, error } = await supabase.functions.invoke("asaas-create-subscription", {
+        body: { plan_key: planKey },
+      });
+      if (error) throw error;
+      if (data?.payment_url) {
+        window.location.href = data.payment_url;
+      } else {
+        toast.error("Erro ao gerar link de pagamento. Tente novamente.");
+      }
+    } catch (err: any) {
+      console.error("Subscription error:", err);
+      toast.error(err.message || "Erro ao processar assinatura");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
+  const handleCpfSubmit = async () => {
+    const digits = cpf.replace(/\D/g, "");
+    if (digits.length !== 11) {
+      toast.error("CPF deve ter 11 dígitos");
+      return;
+    }
+    if (!customerEmail || !customerEmail.includes("@")) {
+      toast.error("Informe um e-mail válido");
+      return;
+    }
+    setCpfDialogOpen(false);
+    if (selectedPlanKey) {
+      await processSubscription(selectedPlanKey, digits, customerEmail);
+    }
   };
 
   return (
