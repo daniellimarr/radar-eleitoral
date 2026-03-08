@@ -200,7 +200,8 @@ export default function Backup() {
 
     try {
       for (const key of selected) {
-        const { data, error } = await supabase.from(key).select("*");
+        const tableName = key === "contacts" ? "contacts_decrypted" : key;
+        const { data, error } = await supabase.from(tableName).select("*");
         if (error) {
           toast({ title: `Erro ao exportar ${key}`, description: error.message, variant: "destructive" });
           continue;

@@ -143,7 +143,7 @@ export default function PublicRegistration() {
         const { data: tenant } = await supabase.from("tenants").select("name").eq("id", link.tenant_id).maybeSingle();
         if (tenant) setTenantName(tenant.name);
         if (link.leader_contact_id) {
-          const { data: leader } = await supabase.from("contacts").select("name, nickname").eq("id", link.leader_contact_id).maybeSingle();
+          const { data: leader } = await supabase.from("contacts_decrypted").select("name, nickname").eq("id", link.leader_contact_id).maybeSingle();
           if (leader) setLeaderName(leader.nickname || leader.name);
         }
       }

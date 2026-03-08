@@ -74,7 +74,7 @@ export default function Leaders() {
     if (!voters[leaderId]) {
       setLoadingVoters(leaderId);
       const { data } = await supabase
-        .from("contacts")
+        .from("contacts_decrypted")
         .select("id, name, phone, city, engagement")
         .eq("leader_id", leaderId)
         .is("deleted_at", null)

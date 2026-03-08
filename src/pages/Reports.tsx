@@ -72,7 +72,7 @@ export default function Reports() {
   const fetchLeaderVoters = async (leaderId: string) => {
     if (leaderVoters[leaderId]) return;
     const { data } = await supabase
-      .from("contacts")
+      .from("contacts_decrypted")
       .select("*")
       .eq("tenant_id", tenantId!)
       .eq("leader_id", leaderId)

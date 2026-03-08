@@ -139,7 +139,7 @@ export default function Chat() {
         // But leaders table doesn't have user_id directly. We need to match by full_name
         // Actually, contacts.registered_by = user_id for operadores
         const { data: leaderContacts } = await supabase
-          .from("contacts")
+          .from("contacts_decrypted")
           .select("registered_by, neighborhood, city")
           .in("registered_by", operadorIds)
           .not("neighborhood", "is", null)

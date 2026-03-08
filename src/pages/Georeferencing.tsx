@@ -175,7 +175,7 @@ export default function Georeferencing() {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from("contacts")
+          .from("contacts_decrypted")
           .select("id, name, nickname, phone, email, city, neighborhood, address, address_number, cep, state, latitude, longitude, is_leader, leader_id, category, gender")
           .eq("tenant_id", profile.tenant_id!)
           .is("deleted_at", null);
