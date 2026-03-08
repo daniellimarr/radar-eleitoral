@@ -73,14 +73,11 @@ serve(async (req) => {
     console.log("[ASAAS-CREATE-SUBSCRIPTION] Plan:", plan_key, plan.name);
 
     // Get profile with asaas_customer_id
-    const { data: profiles, error: profileError } = await supabaseAdmin
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("asaas_customer_id, tenant_id")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    const profile = profiles?.[0] || null;
+      .maybeSingle();
     console.log("[ASAAS-CREATE-SUBSCRIPTION] Profile:", JSON.stringify(profile), "Error:", profileError?.message);
 
     if (!profile?.asaas_customer_id) {
