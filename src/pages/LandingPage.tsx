@@ -389,21 +389,15 @@ export default function LandingPage() {
                       <span className="text-gray-500 text-sm">{plan.period}</span>
                     </div>
                   </div>
-                  <a
-                    href={plan.checkout_url || "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block mt-6"
-                  >
-                    <Button
-                      className={`w-full py-6 text-base font-bold rounded-xl transition-all ${
-                        plan.popular
-                          ? "bg-[#FF6B00] hover:bg-[#e55f00] text-white shadow-lg shadow-[#FF6B00]/20"
-                          : "bg-[#111111] hover:bg-[#222] text-white"
-                      }`}>
-                      Assinar Agora <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </a>
+                  <Button
+                    onClick={() => navigate("/auth")}
+                    className={`w-full mt-6 py-6 text-base font-bold rounded-xl transition-all ${
+                      plan.popular
+                        ? "bg-[#FF6B00] hover:bg-[#e55f00] text-white shadow-lg shadow-[#FF6B00]/20"
+                        : "bg-[#111111] hover:bg-[#222] text-white"
+                    }`}>
+                    Assinar Agora <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
                 </motion.div>
               );
             })}
