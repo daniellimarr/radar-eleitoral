@@ -7,9 +7,10 @@ const corsHeaders = {
 };
 
 const ASAAS_API_KEY = Deno.env.get("ASAAS_API_KEY")!;
-const ASAAS_BASE_URL = ASAAS_API_KEY?.startsWith("$aact_")
-  ? "https://sandbox.asaas.com/api/v3"
-  : "https://api.asaas.com/v3";
+const ASAAS_ENV = Deno.env.get("ASAAS_ENV") || "sandbox";
+const ASAAS_BASE_URL = ASAAS_ENV === "production"
+  ? "https://api.asaas.com/v3"
+  : "https://sandbox.asaas.com/api/v3";
 
 const PLANS: Record<string, { name: string; value: number; cycle: string }> = {
   mensal: { name: "Mensal", value: 97, cycle: "MONTHLY" },
