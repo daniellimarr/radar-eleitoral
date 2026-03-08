@@ -104,9 +104,13 @@ export default function Planos() {
       toast.error("CPF deve ter 11 dígitos");
       return;
     }
+    if (!customerEmail || !customerEmail.includes("@")) {
+      toast.error("Informe um e-mail válido");
+      return;
+    }
     setCpfDialogOpen(false);
     if (selectedPlanKey) {
-      await processSubscription(selectedPlanKey, digits);
+      await processSubscription(selectedPlanKey, digits, customerEmail);
     }
   };
 
