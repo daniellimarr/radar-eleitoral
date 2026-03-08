@@ -43,10 +43,10 @@ const benefits = [
   "Cresça sua base eleitoral com estratégia",
 ];
 
-const plans = [
-  { name: "Plano Mensal", tag: "Ideal para começar", price: "259", period: "/mês" },
-  { name: "Plano Trimestral", tag: "Melhor economia", price: "699", period: "/trimestre", popular: true },
-  { name: "Plano Anual", tag: "Melhor custo-benefício", price: "2.499", period: "/ano" },
+const planCards: { key: PlanKey; icon: typeof Award }[] = [
+  { key: "bronze", icon: Award },
+  { key: "prata", icon: Star },
+  { key: "ouro", icon: Gem },
 ];
 
 export default function LandingPage() {
