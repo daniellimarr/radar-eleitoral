@@ -65,6 +65,7 @@ const landingPlans = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const isLoggedInWithoutSub = !!user;
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
   const [cpf, setCpf] = useState("");
@@ -258,6 +259,27 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Banner para usuários logados sem assinatura ── */}
+      {isLoggedInWithoutSub && (
+        <section className="bg-gradient-to-r from-[#FF6B00] to-[#e55f00] py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3 text-white">
+              <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+              <p className="text-sm sm:text-base font-medium">
+                Olá, <strong>{profile?.full_name || "Usuário"}</strong>! Seu cadastro foi realizado com sucesso. Para acessar o sistema, escolha um plano abaixo e finalize sua assinatura.
+              </p>
+            </div>
+            <Button
+              onClick={() => scrollTo("pricing")}
+              variant="outline"
+              className="bg-white text-[#FF6B00] hover:bg-gray-100 border-white font-bold text-sm px-6 whitespace-nowrap"
+            >
+              Ver Planos <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </section>
+      )}
 
       {/* ── Problema ── */}
       <section className="py-20 lg:py-28 bg-gray-50">
