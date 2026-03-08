@@ -46,24 +46,40 @@ serve(async (req) => {
 
     const userId = userData.user.id;
     console.log("[ASAAS-CREATE-SUBSCRIPTION] User:", userId);
-    const { plan_key } = await req.json();
+    
+    let body;
+    try {
+      body = await req.json();
+      console.log("[ASAAS-CREATE-SUBSCRIPTION] Body:", JSON.stringify(body));
+    } catch (e) {
+      console.error("[ASAAS-CREATE-SUBSCRIPTION] Failed to parse body:", e);
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
+    const { plan_key } = body;
 
     const plan = PLANS[plan_key];
     if (!plan) {
+      console.error("[ASAAS-CREATE-SUBSCRIPTION] Invalid plan_key:", plan_key);
       return new Response(JSON.stringify({ error: "Invalid plan" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // supabaseAdmin already created above
+    console.log("[ASAAS-CREATE-SUBSCRIPTION] Plan:", plan_key, plan.name);
 
     // Get profile with asaas_customer_id
-    const { data: profile } = await supabaseAdmin
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("asaas_customer_id, tenant_id")
       .eq("user_id", userId)
       .single();
+
+    console.log("[ASAAS-CREATE-SUBSCRIPTION] Profile:", JSON.stringify(profile), "Error:", profileError?.message);
 
     if (!profile?.asaas_customer_id) {
       return new Response(JSON.stringify({ error: "Asaas customer not found. Please create customer first." }), {
@@ -77,6 +93,8 @@ serve(async (req) => {
     nextDueDate.setDate(nextDueDate.getDate() + 1);
     const dueDateStr = nextDueDate.toISOString().split("T")[0];
 
+    console.log("[ASAAS-CREATE-SUBSCRIPTION] Creating subscription for customer:", profile.asaas_customer_id);
+
     // Create subscription in Asaas
     const asaasRes = await fetch(`${ASAAS_BASE_URL}/subscriptions`, {
       method: "POST",
@@ -86,7 +104,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         customer: profile.asaas_customer_id,
-        billingType: "UNDEFINED", // Allows PIX, boleto, credit card
+        billingType: "UNDEFINED",
         value: plan.value,
         nextDueDate: dueDateStr,
         cycle: plan.cycle,
@@ -96,7 +114,8 @@ serve(async (req) => {
     });
 
     const asaasData = await asaasRes.json();
-    console.log("[ASAAS-CREATE-SUBSCRIPTION] Response:", JSON.stringify(asaasData));
+    console.log("[ASAAS-CREATE-SUBSCRIPTION] Asaas response status:", asaasRes.status);
+    console.log("[ASAAS-CREATE-SUBSCRIPTION] Asaas response:", JSON.stringify(asaasData));
 
     if (!asaasRes.ok) {
       return new Response(JSON.stringify({ error: "Failed to create subscription", details: asaasData }), {
@@ -115,7 +134,7 @@ serve(async (req) => {
     }
 
     // Save subscription to database
-    await supabaseAdmin.from("subscriptions").insert({
+    const { error: insertError } = await supabaseAdmin.from("subscriptions").insert({
       tenant_id: profile.tenant_id,
       user_id: userId,
       plan_name: plan.name,
@@ -124,28 +143,35 @@ serve(async (req) => {
       asaas_customer_id: profile.asaas_customer_id,
       next_due_date: dueDateStr,
     });
+    
+    console.log("[ASAAS-CREATE-SUBSCRIPTION] Insert result error:", insertError?.message);
 
-    // Get payment link from first payment/invoice
+    // Get payment link - try to get the invoiceUrl from the first payment
     let invoiceUrl = "";
     
-    // Wait a moment for Asaas to generate the first payment
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Fetch payments for this subscription
-    const paymentsRes = await fetch(`${ASAAS_BASE_URL}/payments?subscription=${asaasData.id}`, {
-      headers: { "access_token": ASAAS_API_KEY },
-    });
-    const paymentsData = await paymentsRes.json();
-    console.log("[ASAAS-CREATE-SUBSCRIPTION] Payments:", JSON.stringify(paymentsData));
-    
-    if (paymentsData?.data?.length > 0) {
-      const firstPayment = paymentsData.data[0];
-      invoiceUrl = firstPayment.invoiceUrl || firstPayment.bankSlipUrl || `${ASAAS_BASE_URL.replace('/api/v3', '')}/i/${firstPayment.id}`;
-    } else {
-      // Fallback
+    // Fetch payments for this subscription (try immediately, Asaas usually creates it synchronously)
+    try {
+      const paymentsRes = await fetch(`${ASAAS_BASE_URL}/payments?subscription=${asaasData.id}`, {
+        headers: { "access_token": ASAAS_API_KEY },
+      });
+      const paymentsData = await paymentsRes.json();
+      console.log("[ASAAS-CREATE-SUBSCRIPTION] Payments:", JSON.stringify(paymentsData));
+      
+      if (paymentsData?.data?.length > 0) {
+        const firstPayment = paymentsData.data[0];
+        invoiceUrl = firstPayment.invoiceUrl || firstPayment.bankSlipUrl || "";
+      }
+    } catch (e) {
+      console.error("[ASAAS-CREATE-SUBSCRIPTION] Error fetching payments:", e);
+    }
+
+    if (!invoiceUrl) {
+      // Fallback: construct payment URL
       const baseUrl = ASAAS_BASE_URL.includes("sandbox") ? "https://sandbox.asaas.com" : "https://www.asaas.com";
       invoiceUrl = `${baseUrl}/c/${asaasData.id}`;
     }
+    
+    console.log("[ASAAS-CREATE-SUBSCRIPTION] Final invoiceUrl:", invoiceUrl);
 
     return new Response(JSON.stringify({
       subscription_id: asaasData.id,
