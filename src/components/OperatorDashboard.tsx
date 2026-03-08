@@ -27,7 +27,7 @@ export default function OperatorDashboard() {
           .eq("tenant_id", tenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
         supabase.from("demands").select("*", { count: "exact", head: true })
           .eq("tenant_id", tenantId).in("status", ["aberta", "em_andamento"]),
-        supabase.from("contacts").select("id, name, birth_date, created_at")
+        supabase.from("contacts_decrypted").select("id, name, birth_date, created_at")
           .eq("tenant_id", tenantId).is("deleted_at", null)
           .order("created_at", { ascending: false }).limit(10),
       ]);

@@ -24,7 +24,7 @@ export default function RegistrationLinks() {
     if (!tenantId) return;
     const [linksRes, leadersRes] = await Promise.all([
       supabase.from("registration_links").select("*, leader:contacts!registration_links_leader_contact_id_fkey(id, name, nickname)").eq("tenant_id", tenantId).order("created_at", { ascending: false }),
-      supabase.from("contacts").select("id, name, nickname").eq("tenant_id", tenantId).eq("is_leader", true).is("deleted_at", null).order("name"),
+      supabase.from("contacts_decrypted").select("id, name, nickname").eq("tenant_id", tenantId).eq("is_leader", true).is("deleted_at", null).order("name"),
     ]);
     setLinks(linksRes.data || []);
     setLeaders(leadersRes.data || []);

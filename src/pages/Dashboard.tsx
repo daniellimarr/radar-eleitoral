@@ -75,11 +75,11 @@ export default function Dashboard() {
       const todayEnd = format(now, "yyyy-MM-dd") + "T23:59:59";
 
       const [contactRes, appointmentsRes, birthdayRes, engagementRes, allContactsRes, campaignRes, donationsRes, expensesRes] = await Promise.all([
-        supabase.from("contacts").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).is("deleted_at", null),
+        supabase.from("contacts_decrypted").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).is("deleted_at", null),
         supabase.from("appointments").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
-        supabase.from("contacts").select("birth_date").eq("tenant_id", tenantId).is("deleted_at", null).not("birth_date", "is", null),
-        supabase.from("contacts").select("engagement, neighborhood").eq("tenant_id", tenantId).is("deleted_at", null),
-        supabase.from("contacts").select("created_at").eq("tenant_id", tenantId).is("deleted_at", null),
+        supabase.from("contacts_decrypted").select("birth_date").eq("tenant_id", tenantId).is("deleted_at", null).not("birth_date", "is", null),
+        supabase.from("contacts_decrypted").select("engagement, neighborhood").eq("tenant_id", tenantId).is("deleted_at", null),
+        supabase.from("contacts_decrypted").select("created_at").eq("tenant_id", tenantId).is("deleted_at", null),
         supabase.from("campaigns").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(1),
         supabase.from("donations").select("valor").eq("tenant_id", tenantId),
         supabase.from("expenses").select("valor").eq("tenant_id", tenantId),

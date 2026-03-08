@@ -200,13 +200,14 @@ export default function Backup() {
 
     try {
       for (const key of selected) {
-        const { data, error } = await supabase.from(key).select("*");
+        const tableName = key === "contacts" ? "contacts_decrypted" : key;
+        const { data, error } = await supabase.from(tableName as any).select("*");
         if (error) {
           toast({ title: `Erro ao exportar ${key}`, description: error.message, variant: "destructive" });
           continue;
         }
         if (data && data.length > 0) {
-          const csv = convertToCSV(data as Record<string, unknown>[]);
+          const csv = convertToCSV(data as unknown as Record<string, unknown>[]);
           const date = new Date().toISOString().slice(0, 10);
           downloadCSV(csv, `backup_${key}_${date}.csv`);
           exported++;

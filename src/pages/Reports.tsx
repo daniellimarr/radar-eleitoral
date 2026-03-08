@@ -40,7 +40,7 @@ export default function Reports() {
 
   const fetchContacts = async () => {
     if (!tenantId) return;
-    let query = supabase.from("contacts").select("*").eq("tenant_id", tenantId).is("deleted_at", null).order("name");
+    let query = supabase.from("contacts_decrypted").select("*").eq("tenant_id", tenantId).is("deleted_at", null).order("name");
     if (searchContacts) query = query.ilike("name", `%${searchContacts}%`);
     const { data } = await query;
     setContacts(data || []);
@@ -48,7 +48,7 @@ export default function Reports() {
 
   const fetchLeaders = async () => {
     if (!tenantId) return;
-    let query = supabase.from("contacts").select("*").eq("tenant_id", tenantId).eq("is_leader", true).is("deleted_at", null).order("name");
+    let query = supabase.from("contacts_decrypted").select("*").eq("tenant_id", tenantId).eq("is_leader", true).is("deleted_at", null).order("name");
     if (searchLeaders) query = query.ilike("name", `%${searchLeaders}%`);
     const { data } = await query;
     setLeaders(data || []);
@@ -56,7 +56,7 @@ export default function Reports() {
     if (data && data.length > 0) {
       const leaderIds = data.map((l: any) => l.id);
       const { data: allVoters } = await supabase
-        .from("contacts")
+        .from("contacts_decrypted")
         .select("leader_id")
         .eq("tenant_id", tenantId)
         .is("deleted_at", null)
@@ -72,7 +72,7 @@ export default function Reports() {
   const fetchLeaderVoters = async (leaderId: string) => {
     if (leaderVoters[leaderId]) return;
     const { data } = await supabase
-      .from("contacts")
+      .from("contacts_decrypted")
       .select("*")
       .eq("tenant_id", tenantId!)
       .eq("leader_id", leaderId)

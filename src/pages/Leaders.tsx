@@ -36,7 +36,7 @@ export default function Leaders() {
   const fetchLeaders = async () => {
     if (!tenantId) return;
     const { data } = await supabase
-      .from("contacts")
+      .from("contacts_decrypted")
       .select("*")
       .eq("tenant_id", tenantId)
       .eq("is_leader", true)
@@ -48,7 +48,7 @@ export default function Leaders() {
     if (data && data.length > 0) {
       const leaderIds = data.map((l: any) => l.id);
       const { data: allVoters } = await supabase
-        .from("contacts")
+        .from("contacts_decrypted")
         .select("leader_id")
         .in("leader_id", leaderIds)
         .is("deleted_at", null);
@@ -74,7 +74,7 @@ export default function Leaders() {
     if (!voters[leaderId]) {
       setLoadingVoters(leaderId);
       const { data } = await supabase
-        .from("contacts")
+        .from("contacts_decrypted")
         .select("id, name, phone, city, engagement")
         .eq("leader_id", leaderId)
         .is("deleted_at", null)
