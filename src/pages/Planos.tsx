@@ -74,10 +74,10 @@ export default function Planos() {
     await processSubscription(planKey, cpf.replace(/\D/g, ""), customerEmail);
   };
 
-  const processSubscription = async (planKey: string, cpfValue?: string) => {
+  const processSubscription = async (planKey: string, cpfValue?: string, emailValue?: string) => {
     setLoadingPlan(planKey);
     try {
-      await ensureAsaasCustomer(cpfValue || "");
+      await ensureAsaasCustomer(cpfValue || "", emailValue || customerEmail);
 
       const { data, error } = await supabase.functions.invoke("asaas-create-subscription", {
         body: { plan_key: planKey },
