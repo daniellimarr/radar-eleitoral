@@ -1,39 +1,73 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Award, Star, Crown, ArrowLeft } from "lucide-react";
-import { PLANS, PlanKey } from "@/lib/stripe";
+import { Check, Award, Star, Crown, ArrowLeft, Loader2 } from "lucide-react";
+import { ASAAS_PLANS, AsaasPlanKey } from "@/lib/asaas";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import logoImg from "@/assets/logo-radar-eleitoral.png";
+import { useState } from "react";
 
-const icons: Record<PlanKey, React.ReactNode> = {
-  bronze: <Award className="h-8 w-8" />,
-  prata: <Star className="h-8 w-8" />,
-  ouro: <Crown className="h-8 w-8" />,
+const icons: Record<AsaasPlanKey, React.ReactNode> = {
+  mensal: <Award className="h-8 w-8" />,
+  trimestral: <Star className="h-8 w-8" />,
+  anual: <Crown className="h-8 w-8" />,
 };
 
 export default function Planos() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { subscribed, planName } = useSubscription();
   const navigate = useNavigate();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  const handleSubscribe = (checkoutUrl: string) => {
+  const ensureAsaasCustomer = async () => {
+    // Check if customer already exists
+    if (profile?.asaas_customer_id) return profile.asaas_customer_id;
+
+    const { data, error } = await supabase.functions.invoke("asaas-create-customer", {
+      body: {
+        name: profile?.full_name || user?.email,
+        email: user?.email,
+      },
+    });
+
+    if (error) throw new Error("Erro ao criar cliente no gateway de pagamento");
+    return data.customer_id;
+  };
+
+  const handleSubscribe = async (planKey: string) => {
     if (!user) {
       toast.error("Faça login para assinar um plano");
       return;
     }
-    if (!checkoutUrl) {
-      toast.error("URL de checkout ainda não configurada para este plano");
-      return;
+
+    setLoadingPlan(planKey);
+    try {
+      // Step 1: Ensure customer exists in Asaas
+      await ensureAsaasCustomer();
+
+      // Step 2: Create subscription
+      const { data, error } = await supabase.functions.invoke("asaas-create-subscription", {
+        body: { plan_key: planKey },
+      });
+
+      if (error) throw error;
+
+      if (data?.payment_url) {
+        // Redirect to Asaas checkout
+        window.location.href = data.payment_url;
+      } else {
+        toast.error("Erro ao gerar link de pagamento. Tente novamente.");
+      }
+    } catch (err: any) {
+      console.error("Subscription error:", err);
+      toast.error(err.message || "Erro ao processar assinatura");
+    } finally {
+      setLoadingPlan(null);
     }
-    // Append user email to checkout URL so Kirvano webhook can match the user
-    const separator = checkoutUrl.includes("?") ? "&" : "?";
-    const urlWithEmail = `${checkoutUrl}${separator}email=${encodeURIComponent(user.email || "")}`;
-    // Redirect in the same tab so user returns to success page after payment
-    window.location.href = urlWithEmail;
   };
 
   return (
@@ -48,15 +82,16 @@ export default function Planos() {
         <h1 className="text-3xl md:text-4xl font-bold mb-1">O melhor custo benefício</h1>
         <p className="text-primary text-2xl md:text-3xl font-bold mb-3">Nº 1 do Brasil</p>
         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-          Formas de pagamento: PIX ou Cartão de Crédito — Liberação imediata
+          Formas de pagamento: PIX, Boleto ou Cartão de Crédito — Liberação imediata
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full">
-        {(Object.keys(PLANS) as PlanKey[]).map((key) => {
-          const plan = PLANS[key];
+        {(Object.keys(ASAAS_PLANS) as AsaasPlanKey[]).map((key) => {
+          const plan = ASAAS_PLANS[key];
           const isCurrentPlan = subscribed && planName?.toLowerCase() === plan.name.toLowerCase();
           const isPopular = "popular" in plan && plan.popular;
+          const isLoading = loadingPlan === key;
 
           return (
             <Card
@@ -79,21 +114,27 @@ export default function Planos() {
                 <div className="mx-auto mb-3 text-primary">{icons[key]}</div>
                 <CardTitle className="text-2xl">{plan.name}</CardTitle>
                 <div className="mt-4">
-                  <span className="text-primary text-3xl font-extrabold">R$ {plan.price},00</span>
-                  <span className="text-muted-foreground">/mês</span>
+                  <span className="text-primary text-3xl font-extrabold">R$ {plan.price}</span>
+                  <span className="text-muted-foreground">{plan.period}</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
-                  PIX ou Cartão de Crédito<br />Liberação imediata
+                  PIX, Boleto ou Cartão<br />Liberação imediata
                 </p>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
                 <Button
                   className="w-full mb-6 bg-emerald-500 hover:bg-emerald-600 text-white"
                   size="lg"
-                  disabled={isCurrentPlan}
-                  onClick={() => handleSubscribe(plan.checkout_url)}
+                  disabled={isCurrentPlan || isLoading}
+                  onClick={() => handleSubscribe(key)}
                 >
-                  {isCurrentPlan ? "Plano Atual" : "CONTRATAR AGORA"}
+                  {isLoading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando...</>
+                  ) : isCurrentPlan ? (
+                    "Plano Atual"
+                  ) : (
+                    "CONTRATAR AGORA"
+                  )}
                 </Button>
                 <ul className="space-y-3 flex-1">
                   {plan.features.map((f) => (

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { getPlanLimits } from "@/lib/stripe";
+import { getPlanLimits } from "@/lib/asaas";
 
 interface SubscriptionContextType {
   subscribed: boolean;
@@ -19,7 +19,7 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   planName: null,
   subscriptionEnd: null,
   contactLimit: 5000,
-  userLimit: 2,
+  userLimit: 5,
   checkSubscription: async () => {},
 });
 
@@ -30,7 +30,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [planName, setPlanName] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [contactLimit, setContactLimit] = useState(5000);
-  const [userLimit, setUserLimit] = useState(2);
+  const [userLimit, setUserLimit] = useState(5);
 
   const checkSubscription = useCallback(async () => {
     if (!session) {
@@ -39,12 +39,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Wait for auth to finish loading roles
-    if (authLoading) {
-      return;
-    }
+    if (authLoading) return;
 
-    // Only super_admin bypasses subscription check
     if (roles.includes("super_admin")) {
       setSubscribed(true);
       setPlanName("Super Admin");
@@ -69,7 +65,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       } else {
         setPlanName(null);
         setContactLimit(5000);
-        setUserLimit(2);
+        setUserLimit(5);
       }
     } catch (err) {
       console.error("Error checking subscription:", err);
@@ -87,7 +83,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   }, [session, checkSubscription]);
 
-  // Auto-refresh every 60 seconds
   useEffect(() => {
     if (!session) return;
     const interval = setInterval(checkSubscription, 60000);
