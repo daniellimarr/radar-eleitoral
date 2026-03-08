@@ -8,7 +8,7 @@ import {
   Layers, Zap, Star, Eye, Award, Gem
 } from "lucide-react";
 import logo from "@/assets/logo-radar-eleitoral.png";
-import { PLANS, type PlanKey } from "@/lib/stripe";
+import { PLANS } from "@/lib/stripe";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
@@ -43,10 +43,10 @@ const benefits = [
   "Cresça sua base eleitoral com estratégia",
 ];
 
-const planCards: { key: PlanKey; icon: typeof Award }[] = [
-  { key: "bronze", icon: Award },
-  { key: "prata", icon: Star },
-  { key: "ouro", icon: Gem },
+const landingPlans = [
+  { name: "Plano Mensal", tag: "Ideal para começar", price: "259", period: "/mês", icon: Award, popular: false, checkout_url: PLANS.bronze.checkout_url },
+  { name: "Plano Trimestral", tag: "Melhor economia", price: "699", period: "/trimestre", icon: Star, popular: true, checkout_url: PLANS.prata.checkout_url },
+  { name: "Plano Anual", tag: "Melhor custo-benefício", price: "2.499", period: "/ano", icon: Gem, popular: false, checkout_url: PLANS.ouro.checkout_url },
 ];
 
 export default function LandingPage() {
@@ -364,33 +364,30 @@ export default function LandingPage() {
           </motion.div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
             className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {planCards.map(({ key, icon: Icon }, i) => {
-              const plan = PLANS[key];
-              const isPopular = 'popular' in plan && plan.popular;
+            {landingPlans.map((plan, i) => {
               return (
                 <motion.div key={plan.name} variants={fadeUp} custom={i}
                   className={`relative rounded-2xl p-8 border-2 transition-all ${
-                    isPopular
+                    plan.popular
                       ? "border-[#FF6B00] bg-white shadow-2xl shadow-[#FF6B00]/10 scale-[1.03]"
                       : "border-gray-200 bg-white hover:border-gray-300"
                   }`}>
-                  {isPopular && (
+                  {plan.popular && (
                     <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#FF6B00] text-white text-xs font-bold px-5 py-1.5 rounded-full shadow-md">
                       Mais Popular
                     </span>
                   )}
                   <div className="text-center mb-4">
-                    <Icon className="h-8 w-8 text-[#FF6B00] mx-auto mb-2" />
+                    <plan.icon className="h-8 w-8 text-[#FF6B00] mx-auto mb-2" />
+                    <p className="text-sm text-gray-400 font-medium">{plan.tag}</p>
                     <h3 className="text-xl font-bold">{plan.name}</h3>
                   </div>
                   <div className="text-center">
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-sm text-gray-500">R$</span>
-                      <span className="text-4xl font-extrabold text-[#FF6B00]">{plan.price},00</span>
-                      <span className="text-gray-500 text-sm">/mês</span>
+                      <span className="text-4xl font-extrabold text-[#FF6B00]">{plan.price}</span>
+                      <span className="text-gray-500 text-sm">{plan.period}</span>
                     </div>
-                    <p className="text-sm text-gray-400 mt-1">PIX ou Cartão de Crédito</p>
-                    <p className="text-sm text-gray-400">Liberação imediata</p>
                   </div>
                   <a
                     href={plan.checkout_url || "#"}
@@ -399,22 +396,14 @@ export default function LandingPage() {
                     className="block mt-6"
                   >
                     <Button
-                      className={`w-full py-6 text-base font-bold rounded-xl uppercase tracking-wide transition-all ${
-                        isPopular
+                      className={`w-full py-6 text-base font-bold rounded-xl transition-all ${
+                        plan.popular
                           ? "bg-[#FF6B00] hover:bg-[#e55f00] text-white shadow-lg shadow-[#FF6B00]/20"
-                          : "bg-[#2ab573] hover:bg-[#239b62] text-white"
+                          : "bg-[#111111] hover:bg-[#222] text-white"
                       }`}>
-                      Contratar Agora
+                      Assinar Agora <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
                   </a>
-                  <ul className="mt-6 space-y-3">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-3 text-sm text-gray-600">
-                        <Check className="h-4 w-4 text-[#2ab573] flex-shrink-0 mt-0.5" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
                 </motion.div>
               );
             })}
