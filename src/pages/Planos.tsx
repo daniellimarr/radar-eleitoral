@@ -33,6 +33,7 @@ export default function Planos() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
   const [cpf, setCpf] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
 
   const formatCpf = (value: string) => {
@@ -43,12 +44,11 @@ export default function Planos() {
     return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
   };
 
-  const ensureAsaasCustomer = async (cpfValue: string) => {
-    // Always call the function to ensure CPF is updated even if customer exists
+  const ensureAsaasCustomer = async (cpfValue: string, emailValue: string) => {
     const { data, error } = await supabase.functions.invoke("asaas-create-customer", {
       body: {
-        name: profile?.full_name || user?.email,
-        email: user?.email,
+        name: profile?.full_name || emailValue,
+        email: emailValue,
         cpf: cpfValue,
       },
     });
@@ -64,20 +64,20 @@ export default function Planos() {
       return;
     }
 
-    // Always ask for CPF on first subscription
-    if (!cpf) {
+    if (!cpf || !customerEmail) {
       setSelectedPlanKey(planKey);
+      setCustomerEmail(user?.email || "");
       setCpfDialogOpen(true);
       return;
     }
 
-    await processSubscription(planKey, cpf.replace(/\D/g, ""));
+    await processSubscription(planKey, cpf.replace(/\D/g, ""), customerEmail);
   };
 
-  const processSubscription = async (planKey: string, cpfValue?: string) => {
+  const processSubscription = async (planKey: string, cpfValue?: string, emailValue?: string) => {
     setLoadingPlan(planKey);
     try {
-      await ensureAsaasCustomer(cpfValue || "");
+      await ensureAsaasCustomer(cpfValue || "", emailValue || customerEmail);
 
       const { data, error } = await supabase.functions.invoke("asaas-create-subscription", {
         body: { plan_key: planKey },
@@ -104,9 +104,13 @@ export default function Planos() {
       toast.error("CPF deve ter 11 dígitos");
       return;
     }
+    if (!customerEmail || !customerEmail.includes("@")) {
+      toast.error("Informe um e-mail válido");
+      return;
+    }
     setCpfDialogOpen(false);
     if (selectedPlanKey) {
-      await processSubscription(selectedPlanKey, digits);
+      await processSubscription(selectedPlanKey, digits, customerEmail);
     }
   };
 
@@ -193,12 +197,22 @@ export default function Planos() {
       <Dialog open={cpfDialogOpen} onOpenChange={setCpfDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Informe seu CPF</DialogTitle>
+            <DialogTitle>Dados para cobrança</DialogTitle>
             <DialogDescription>
-              Para gerar a cobrança, precisamos do seu CPF.
+              Informe seu e-mail e CPF para gerar a cobrança.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="customerEmail">E-mail</Label>
+              <Input
+                id="customerEmail"
+                type="email"
+                placeholder="seu@email.com"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+              />
+            </div>
             <div>
               <Label htmlFor="cpf">CPF</Label>
               <Input
@@ -212,7 +226,7 @@ export default function Planos() {
             <Button
               className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
               onClick={handleCpfSubmit}
-              disabled={cpf.replace(/\D/g, "").length !== 11}
+              disabled={cpf.replace(/\D/g, "").length !== 11 || !customerEmail.includes("@")}
             >
               Continuar
             </Button>
