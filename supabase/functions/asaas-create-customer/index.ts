@@ -54,14 +54,17 @@ serve(async (req) => {
     if (profile?.asaas_customer_id) {
       // If CPF provided, update customer in Asaas
       if (cpf) {
-        await fetch(`${ASAAS_BASE_URL}/customers/${profile.asaas_customer_id}`, {
-          method: "PUT",
+        console.log("[ASAAS-CREATE-CUSTOMER] Updating customer CPF:", profile.asaas_customer_id);
+        const updateRes = await fetch(`${ASAAS_BASE_URL}/customers/${profile.asaas_customer_id}`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             "access_token": ASAAS_API_KEY,
           },
           body: JSON.stringify({ cpfCnpj: cpf }),
         });
+        const updateData = await updateRes.json();
+        console.log("[ASAAS-CREATE-CUSTOMER] Update response:", JSON.stringify(updateData));
       }
       return new Response(JSON.stringify({ customer_id: profile.asaas_customer_id }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
