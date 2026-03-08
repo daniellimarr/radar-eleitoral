@@ -57,12 +57,35 @@ serve(async (req) => {
           break;
         }
 
-        // Update subscription status to active
+        // First get the plan_name to calculate expires_at
+        const { data: existingSub } = await supabase
+          .from("subscriptions")
+          .select("plan_name")
+          .eq("asaas_subscription_id", asaasSubId)
+          .single();
+
+        // Calculate expires_at based on plan
+        let expiresAt: string | null = null;
+        if (existingSub?.plan_name) {
+          const now = new Date();
+          const planLower = existingSub.plan_name.toLowerCase();
+          if (planLower.includes("anual")) {
+            now.setFullYear(now.getFullYear() + 1);
+          } else if (planLower.includes("trimestral")) {
+            now.setDate(now.getDate() + 90);
+          } else {
+            now.setDate(now.getDate() + 30);
+          }
+          expiresAt = now.toISOString();
+        }
+
+        // Update subscription status to active with expires_at
         const { data: subData } = await supabase
           .from("subscriptions")
           .update({
             status: "active",
             next_due_date: payment?.dueDate || null,
+            expires_at: expiresAt,
           })
           .eq("asaas_subscription_id", asaasSubId)
           .select("tenant_id")

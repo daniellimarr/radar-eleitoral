@@ -53,7 +53,7 @@ const engagementWeight: Record<string, number> = {
 
 export default function Dashboard() {
   const { tenantId, hasRole, loading, roles } = useAuth();
-  const { planName, contactLimit, userLimit } = useSubscription();
+  const { planName, contactLimit, userLimit, subscriptionEnd } = useSubscription();
   const navigate = useNavigate();
   const isOperador = hasRole("operador");
   const isSuperAdmin = hasRole("super_admin");
@@ -196,6 +196,13 @@ export default function Dashboard() {
                     {userLimit === Infinity
                       ? "Usuários ilimitados"
                       : `${userLimit} usuários`}
+                    {subscriptionEnd && (() => {
+                      const d = new Date(subscriptionEnd);
+                      const day = String(d.getDate()).padStart(2, '0');
+                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                      const year = d.getFullYear();
+                      return ` · Expira em ${day}/${month}/${year}`;
+                    })()}
                   </p>
                 </div>
               </div>
