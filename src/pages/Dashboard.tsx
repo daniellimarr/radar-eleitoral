@@ -53,7 +53,7 @@ const engagementWeight: Record<string, number> = {
 
 export default function Dashboard() {
   const { tenantId, hasRole, loading, roles } = useAuth();
-  const { planName, contactLimit, userLimit } = useSubscription();
+  const { planName, contactLimit, userLimit, subscriptionEnd } = useSubscription();
   const navigate = useNavigate();
   const isOperador = hasRole("operador");
   const isSuperAdmin = hasRole("super_admin");
