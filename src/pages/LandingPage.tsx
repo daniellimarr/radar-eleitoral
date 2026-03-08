@@ -8,7 +8,7 @@ import {
   Layers, Zap, Star, Eye, Award, Gem
 } from "lucide-react";
 import logo from "@/assets/logo-radar-eleitoral.png";
-import { PLANS, type PlanKey } from "@/lib/stripe";
+import { PLANS } from "@/lib/stripe";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
