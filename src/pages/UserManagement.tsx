@@ -255,6 +255,8 @@ export default function UserManagement() {
   const activeUsers = users.filter((u) => u.status === "approved");
   const hasReachedUserLimit = userLimit !== Infinity && activeUsers.length >= userLimit;
 
+  if (!isAuthorized) return <Navigate to="/dashboard" replace />;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
