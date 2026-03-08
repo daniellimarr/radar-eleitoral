@@ -77,7 +77,7 @@ function App() {
             <Route path="/campaign-files" element={<ProtectedRoute><CampaignFiles /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-            <Route path="/assinatura" element={<ProtectedRoute><Assinatura /></ProtectedRoute>} />
+            <Route path="/assinatura" element={<ProtectedRoute><Planos /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
