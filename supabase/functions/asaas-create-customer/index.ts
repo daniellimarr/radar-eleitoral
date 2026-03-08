@@ -20,39 +20,72 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
-    }
-
-    const userId = claimsData.claims.sub as string;
-    const { name, email, cpf, phone } = await req.json();
-
-    // Check if customer already exists
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { auth: { persistSession: false } }
     );
 
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("asaas_customer_id")
-      .eq("user_id", userId)
-      .single();
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !userData?.user) {
+      console.error("[ASAAS-CREATE-CUSTOMER] Auth error:", userError?.message);
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
-    if (profile?.asaas_customer_id) {
-      // If CPF provided, update customer in Asaas
+    const userId = userData.user.id;
+    const userEmail = userData.user.email;
+    const { name, email, cpf, phone } = await req.json();
+
+    console.log("[ASAAS-CREATE-CUSTOMER] User:", userId);
+
+    // Get or create profile
+    let { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("asaas_customer_id, tenant_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    // If no profile exists, create one with a new tenant
+    if (!profile) {
+      console.log("[ASAAS-CREATE-CUSTOMER] No profile found, creating one...");
+      const userName = name || email || userEmail;
+
+      // Create tenant
+      const { data: tenant, error: tenantError } = await supabaseAdmin
+        .from("tenants")
+        .insert({ name: userName, status: "ativo", contact_limit: 5000 })
+        .select("id")
+        .single();
+
+      if (tenantError) {
+        console.error("[ASAAS-CREATE-CUSTOMER] Tenant creation error:", tenantError.message);
+        return new Response(JSON.stringify({ error: "Failed to create tenant" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // Create profile
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .insert({ user_id: userId, full_name: userName, status: "approved", tenant_id: tenant.id });
+
+      if (profileError) {
+        console.error("[ASAAS-CREATE-CUSTOMER] Profile creation error:", profileError.message);
+        return new Response(JSON.stringify({ error: "Failed to create profile" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // Create role
+      await supabaseAdmin
+        .from("user_roles")
+        .insert({ user_id: userId, role: "admin_gabinete", tenant_id: tenant.id });
+
+      profile = { asaas_customer_id: null, tenant_id: tenant.id };
+    }
+
+    // If customer already exists in Asaas, update CPF if provided
+    if (profile.asaas_customer_id) {
       if (cpf) {
         console.log("[ASAAS-CREATE-CUSTOMER] Updating customer CPF:", profile.asaas_customer_id);
         const updateRes = await fetch(`${ASAAS_BASE_URL}/customers/${profile.asaas_customer_id}`, {
@@ -79,8 +112,8 @@ serve(async (req) => {
         "access_token": ASAAS_API_KEY,
       },
       body: JSON.stringify({
-        name: name || email,
-        email,
+        name: name || email || userEmail,
+        email: email || userEmail,
         cpfCnpj: cpf || undefined,
         mobilePhone: phone || undefined,
         externalReference: userId,
