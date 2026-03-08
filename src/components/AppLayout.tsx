@@ -28,7 +28,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }
 
   // Users created via invite-user are auto-approved; self-registered need approval
-  const isAdminRole = roles.includes("super_admin") || roles.includes("admin_gabinete");
+  const isSuperAdmin = roles.includes("super_admin");
+  const isAdminRole = isSuperAdmin || roles.includes("admin_gabinete");
   if (profileStatus && profileStatus !== "approved" && !isAdminRole) {
     return <PendingApproval />;
   }
