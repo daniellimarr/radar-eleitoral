@@ -106,9 +106,7 @@ export default function LeaderRegistration() {
         setForm({
           name: data.name || "",
           nickname: data.nickname || "",
-          cpf: data.cpf || "",
           phone: data.phone || "",
-          email: data.email || "",
           gender: data.gender || "",
           birth_date: data.birth_date || "",
           has_whatsapp: data.has_whatsapp || false,
@@ -121,10 +119,7 @@ export default function LeaderRegistration() {
           voting_zone: data.voting_zone || "",
           voting_section: data.voting_section || "",
           voting_location: data.voting_location || "",
-          category: data.category || "",
-          subcategory: data.subcategory || "",
           engagement: data.engagement || "nao_trabalhado",
-          observations: data.observations || "",
         });
       }
       setLoadingData(false);
