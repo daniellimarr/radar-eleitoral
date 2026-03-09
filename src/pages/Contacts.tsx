@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Search, Trash2, Edit, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Loader2 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { geocodeByCep } from "@/lib/geocoding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
