@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -68,9 +68,7 @@ export default function LeaderRegistration() {
   const [form, setForm] = useState({
     name: "",
     nickname: "",
-    cpf: "",
     phone: "",
-    email: "",
     gender: "",
     birth_date: "",
     has_whatsapp: false,
@@ -83,10 +81,7 @@ export default function LeaderRegistration() {
     voting_zone: "",
     voting_section: "",
     voting_location: "",
-    category: "",
-    subcategory: "",
     engagement: "nao_trabalhado" as string,
-    observations: "",
   });
 
   useEffect(() => {
@@ -111,9 +106,7 @@ export default function LeaderRegistration() {
         setForm({
           name: data.name || "",
           nickname: data.nickname || "",
-          cpf: data.cpf || "",
           phone: data.phone || "",
-          email: data.email || "",
           gender: data.gender || "",
           birth_date: data.birth_date || "",
           has_whatsapp: data.has_whatsapp || false,
@@ -126,10 +119,7 @@ export default function LeaderRegistration() {
           voting_zone: data.voting_zone || "",
           voting_section: data.voting_section || "",
           voting_location: data.voting_location || "",
-          category: data.category || "",
-          subcategory: data.subcategory || "",
           engagement: data.engagement || "nao_trabalhado",
-          observations: data.observations || "",
         });
       }
       setLoadingData(false);
@@ -171,9 +161,7 @@ export default function LeaderRegistration() {
       const contactData = {
         name: form.name,
         nickname: form.nickname || null,
-        cpf: form.cpf || null,
         phone: form.phone || null,
-        email: form.email || null,
         gender: form.gender || null,
         birth_date: form.birth_date || null,
         has_whatsapp: form.has_whatsapp,
@@ -186,10 +174,7 @@ export default function LeaderRegistration() {
         voting_zone: form.voting_zone || null,
         voting_section: form.voting_section || null,
         voting_location: form.voting_location || null,
-        category: form.category || null,
-        subcategory: form.subcategory || null,
         engagement: form.engagement as any,
-        observations: form.observations || null,
         latitude: geoCoords.latitude,
         longitude: geoCoords.longitude,
       };
@@ -351,16 +336,8 @@ export default function LeaderRegistration() {
                 <Input value={form.nickname} onChange={(e) => update("nickname", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>CPF</Label>
-                <Input value={form.cpf} onChange={(e) => update("cpf", e.target.value)} />
-              </div>
-              <div className="space-y-2">
                 <Label>Celular</Label>
                 <Input value={form.phone} onChange={(e) => update("phone", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>E-mail</Label>
-                <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Gênero</Label>
@@ -434,14 +411,6 @@ export default function LeaderRegistration() {
                 <Input value={form.voting_location} onChange={(e) => update("voting_location", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Categoria</Label>
-                <Input value={form.category} onChange={(e) => update("category", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Subcategoria</Label>
-                <Input value={form.subcategory} onChange={(e) => update("subcategory", e.target.value)} />
-              </div>
-              <div className="space-y-2">
                 <Label>Nível de Envolvimento</Label>
                 <Select value={form.engagement} onValueChange={(v) => update("engagement", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -454,10 +423,6 @@ export default function LeaderRegistration() {
                     <SelectItem value="envolvimento_perdido">Envolvimento Perdido</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Observações</Label>
-                <Textarea value={form.observations} onChange={(e) => update("observations", e.target.value)} rows={4} />
               </div>
             </CardContent>
           </Card>

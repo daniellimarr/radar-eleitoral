@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Search, Trash2, Edit, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Loader2 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { geocodeByCep } from "@/lib/geocoding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,12 +33,12 @@ const genderOptions = [
 ];
 
 const defaultContact = {
-  name: "", nickname: "", cpf: "", gender: "", birth_date: "",
-  phone: "", has_whatsapp: false, email: "", cep: "", address: "",
+  name: "", nickname: "", gender: "", birth_date: "",
+  phone: "", has_whatsapp: false, cep: "", address: "",
   address_number: "", neighborhood: "", city: "Boa Vista", state: "RR",
   voting_zone: "", voting_section: "", voting_location: "",
-  engagement: "nao_trabalhado" as const, is_leader: false, observations: "",
-  category: "", subcategory: "", leader_id: "",
+  engagement: "nao_trabalhado" as const, is_leader: false,
+  leader_id: "",
 };
 
 export default function Contacts() {
@@ -54,45 +54,9 @@ export default function Contacts() {
   const [showAddress, setShowAddress] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [geoCoords, setGeoCoords] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
-  const [cpfStatus, setCpfStatus] = useState<{ valid: boolean | null; message: string; loading: boolean }>({ valid: null, message: "", loading: false });
+  
   const tableRef = useRef<HTMLTableElement>(null);
 
-  const formatCpf = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    return digits
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-  };
-
-  const validateCpf = (cpf: string) => {
-    const cleaned = cpf.replace(/\D/g, "");
-    if (cleaned.length !== 11) {
-      setCpfStatus({ valid: null, message: "", loading: false });
-      return;
-    }
-    if (/^(\d)\1{10}$/.test(cleaned)) {
-      setCpfStatus({ valid: false, message: "CPF inválido", loading: false });
-      return;
-    }
-    let sum = 0;
-    for (let i = 0; i < 9; i++) sum += parseInt(cleaned[i]) * (10 - i);
-    let rem = (sum * 10) % 11;
-    if (rem === 10) rem = 0;
-    if (rem !== parseInt(cleaned[9])) {
-      setCpfStatus({ valid: false, message: "CPF inválido", loading: false });
-      return;
-    }
-    sum = 0;
-    for (let i = 0; i < 10; i++) sum += parseInt(cleaned[i]) * (11 - i);
-    rem = (sum * 10) % 11;
-    if (rem === 10) rem = 0;
-    if (rem !== parseInt(cleaned[10])) {
-      setCpfStatus({ valid: false, message: "CPF inválido", loading: false });
-      return;
-    }
-    setCpfStatus({ valid: true, message: "CPF válido", loading: false });
-  };
 
   const handleCepBlur = async () => {
     if (!form.cep || form.cep.replace(/\D/g, "").length !== 8) return;
@@ -177,19 +141,6 @@ export default function Contacts() {
       toast.error("Nome é obrigatório");
       return;
     }
-    const cleanedCpf = form.cpf.replace(/\D/g, "");
-    if (!cleanedCpf || cleanedCpf.length !== 11) {
-      toast.error("CPF é obrigatório e deve ter 11 dígitos");
-      return;
-    }
-    if (cpfStatus.valid === false) {
-      toast.error("CPF inválido. Corrija antes de salvar.");
-      return;
-    }
-    if (cpfStatus.loading) {
-      toast.error("Aguarde a validação do CPF.");
-      return;
-    }
     setLoading(true);
 
 
@@ -197,12 +148,10 @@ export default function Contacts() {
     const payload = {
       name: trimmedName,
       nickname: form.nickname || null,
-      cpf: form.cpf || null,
       gender: form.gender || null,
       birth_date: form.birth_date || null,
       phone: form.phone || null,
       has_whatsapp: form.has_whatsapp,
-      email: form.email || null,
       cep: form.cep || null,
       address: form.address || null,
       address_number: form.address_number || null,
@@ -214,9 +163,6 @@ export default function Contacts() {
       voting_location: form.voting_location || null,
       engagement: form.engagement as "nao_trabalhado" | "em_prospeccao" | "conquistado" | "criando_envolvimento" | "falta_trabalhar" | "envolvimento_perdido",
       is_leader: form.is_leader,
-      observations: form.observations || null,
-      category: form.category || null,
-      subcategory: form.subcategory || null,
       leader_id: form.leader_id || null,
       tenant_id: tenantId,
       registered_by: user?.id,
@@ -249,21 +195,19 @@ export default function Contacts() {
 
   const handleEdit = (contact: any) => {
     setForm({
-      name: contact.name || "", nickname: contact.nickname || "", cpf: contact.cpf || "",
+      name: contact.name || "", nickname: contact.nickname || "",
       gender: contact.gender || "", birth_date: contact.birth_date || "",
       phone: contact.phone || "", has_whatsapp: contact.has_whatsapp || false,
-      email: contact.email || "", cep: contact.cep || "", address: contact.address || "",
+      cep: contact.cep || "", address: contact.address || "",
       address_number: contact.address_number || "", neighborhood: contact.neighborhood || "",
       city: contact.city || "Boa Vista", state: contact.state || "RR",
       voting_zone: contact.voting_zone || "", voting_section: contact.voting_section || "",
       voting_location: contact.voting_location || "",
       engagement: contact.engagement || "nao_trabalhado",
-      is_leader: contact.is_leader || false, observations: contact.observations || "",
-      category: contact.category || "", subcategory: contact.subcategory || "",
+      is_leader: contact.is_leader || false,
       leader_id: contact.leader_id || "",
     });
     setEditingId(contact.id);
-    setCpfStatus({ valid: null, message: "", loading: false });
     setIsOpen(true);
   };
 
@@ -281,7 +225,7 @@ export default function Contacts() {
         <h1 className="text-2xl font-bold">Cadastro &gt; Contato</h1>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setForm(defaultContact); setEditingId(null); setCpfStatus({ valid: null, message: "", loading: false }); }}>
+            <Button onClick={() => { setForm(defaultContact); setEditingId(null); }}>
               <Plus className="h-4 w-4 mr-2" /> NOVO CADASTRO
             </Button>
           </DialogTrigger>
@@ -320,35 +264,6 @@ export default function Contacts() {
                           ))}
                         </SelectContent>
                       </Select>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label>CPF *</Label>
-                    <Input
-                      value={form.cpf}
-                      onChange={(e) => {
-                        const formatted = formatCpf(e.target.value);
-                        updateField("cpf", formatted);
-                        setCpfStatus({ valid: null, message: "", loading: false });
-                      }}
-                      onBlur={() => validateCpf(form.cpf)}
-                      placeholder="000.000.000-00"
-                      maxLength={14}
-                    />
-                    {cpfStatus.loading && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Loader2 className="h-3 w-3 animate-spin" /> Validando CPF...
-                      </p>
-                    )}
-                    {cpfStatus.valid === true && (
-                      <p className="text-xs text-green-600 flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" /> {cpfStatus.message}
-                      </p>
-                    )}
-                    {cpfStatus.valid === false && (
-                      <p className="text-xs text-destructive flex items-center gap-1">
-                        <XCircle className="h-3 w-3" /> {cpfStatus.message}
-                      </p>
                     )}
                   </div>
                 </div>
@@ -406,27 +321,6 @@ export default function Contacts() {
                     <Checkbox checked={form.has_whatsapp} onCheckedChange={(c) => updateField("has_whatsapp", c)} id="whats" />
                     <Label htmlFor="whats">Whats?</Label>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>E-mail</Label>
-                  <Input type="email" value={form.email} onChange={(e) => updateField("email", e.target.value)} />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Categoria</Label>
-                    <Input value={form.category} onChange={(e) => updateField("category", e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Subcategoria</Label>
-                    <Input value={form.subcategory} onChange={(e) => updateField("subcategory", e.target.value)} />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Observação</Label>
-                  <Textarea value={form.observations} onChange={(e) => updateField("observations", e.target.value)} rows={4} />
                 </div>
               </TabsContent>
 
