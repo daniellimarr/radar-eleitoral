@@ -31,7 +31,7 @@ import TenantManagement from "@/pages/TenantManagement";
 import PlanManagement from "@/pages/PlanManagement";
 import Planos from "@/pages/Planos";
 import Assinatura from "@/pages/Assinatura";
-import PaymentSuccess from "@/pages/PaymentSuccess";
+
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
