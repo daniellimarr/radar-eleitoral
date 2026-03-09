@@ -57,42 +57,6 @@ export default function Contacts() {
   
   const tableRef = useRef<HTMLTableElement>(null);
 
-  const formatCpf = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    return digits
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-  };
-
-  const validateCpf = (cpf: string) => {
-    const cleaned = cpf.replace(/\D/g, "");
-    if (cleaned.length !== 11) {
-      setCpfStatus({ valid: null, message: "", loading: false });
-      return;
-    }
-    if (/^(\d)\1{10}$/.test(cleaned)) {
-      setCpfStatus({ valid: false, message: "CPF inválido", loading: false });
-      return;
-    }
-    let sum = 0;
-    for (let i = 0; i < 9; i++) sum += parseInt(cleaned[i]) * (10 - i);
-    let rem = (sum * 10) % 11;
-    if (rem === 10) rem = 0;
-    if (rem !== parseInt(cleaned[9])) {
-      setCpfStatus({ valid: false, message: "CPF inválido", loading: false });
-      return;
-    }
-    sum = 0;
-    for (let i = 0; i < 10; i++) sum += parseInt(cleaned[i]) * (11 - i);
-    rem = (sum * 10) % 11;
-    if (rem === 10) rem = 0;
-    if (rem !== parseInt(cleaned[10])) {
-      setCpfStatus({ valid: false, message: "CPF inválido", loading: false });
-      return;
-    }
-    setCpfStatus({ valid: true, message: "CPF válido", loading: false });
-  };
 
   const handleCepBlur = async () => {
     if (!form.cep || form.cep.replace(/\D/g, "").length !== 8) return;
