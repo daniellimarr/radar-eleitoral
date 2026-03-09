@@ -266,35 +266,6 @@ export default function Contacts() {
                       </Select>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <Label>CPF *</Label>
-                    <Input
-                      value={form.cpf}
-                      onChange={(e) => {
-                        const formatted = formatCpf(e.target.value);
-                        updateField("cpf", formatted);
-                        setCpfStatus({ valid: null, message: "", loading: false });
-                      }}
-                      onBlur={() => validateCpf(form.cpf)}
-                      placeholder="000.000.000-00"
-                      maxLength={14}
-                    />
-                    {cpfStatus.loading && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Loader2 className="h-3 w-3 animate-spin" /> Validando CPF...
-                      </p>
-                    )}
-                    {cpfStatus.valid === true && (
-                      <p className="text-xs text-green-600 flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" /> {cpfStatus.message}
-                      </p>
-                    )}
-                    {cpfStatus.valid === false && (
-                      <p className="text-xs text-destructive flex items-center gap-1">
-                        <XCircle className="h-3 w-3" /> {cpfStatus.message}
-                      </p>
-                    )}
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
