@@ -54,7 +54,7 @@ export default function Contacts() {
   const [showAddress, setShowAddress] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [geoCoords, setGeoCoords] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
-  const [cpfStatus, setCpfStatus] = useState<{ valid: boolean | null; message: string; loading: boolean }>({ valid: null, message: "", loading: false });
+  
   const tableRef = useRef<HTMLTableElement>(null);
 
   const formatCpf = (value: string) => {
