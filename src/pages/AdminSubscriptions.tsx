@@ -34,12 +34,10 @@ export default function AdminSubscriptions() {
   const { hasRole } = useAuth();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
-
-  if (!hasRole("super_admin")) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  const isSuperAdmin = hasRole("super_admin");
 
   useEffect(() => {
+    if (!isSuperAdmin) return;
     const fetchData = async () => {
       setLoading(true);
 
