@@ -411,14 +411,6 @@ export default function LeaderRegistration() {
                 <Input value={form.voting_location} onChange={(e) => update("voting_location", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Categoria</Label>
-                <Input value={form.category} onChange={(e) => update("category", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Subcategoria</Label>
-                <Input value={form.subcategory} onChange={(e) => update("subcategory", e.target.value)} />
-              </div>
-              <div className="space-y-2">
                 <Label>Nível de Envolvimento</Label>
                 <Select value={form.engagement} onValueChange={(v) => update("engagement", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -431,10 +423,6 @@ export default function LeaderRegistration() {
                     <SelectItem value="envolvimento_perdido">Envolvimento Perdido</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Observações</Label>
-                <Textarea value={form.observations} onChange={(e) => update("observations", e.target.value)} rows={4} />
               </div>
             </CardContent>
           </Card>

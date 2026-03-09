@@ -322,27 +322,6 @@ export default function Contacts() {
                     <Label htmlFor="whats">Whats?</Label>
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <Label>E-mail</Label>
-                  <Input type="email" value={form.email} onChange={(e) => updateField("email", e.target.value)} />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Categoria</Label>
-                    <Input value={form.category} onChange={(e) => updateField("category", e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Subcategoria</Label>
-                    <Input value={form.subcategory} onChange={(e) => updateField("subcategory", e.target.value)} />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Observação</Label>
-                  <Textarea value={form.observations} onChange={(e) => updateField("observations", e.target.value)} rows={4} />
-                </div>
               </TabsContent>
 
               <TabsContent value="endereco" className="space-y-4">
