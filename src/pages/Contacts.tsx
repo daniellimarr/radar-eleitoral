@@ -195,21 +195,19 @@ export default function Contacts() {
 
   const handleEdit = (contact: any) => {
     setForm({
-      name: contact.name || "", nickname: contact.nickname || "", cpf: contact.cpf || "",
+      name: contact.name || "", nickname: contact.nickname || "",
       gender: contact.gender || "", birth_date: contact.birth_date || "",
       phone: contact.phone || "", has_whatsapp: contact.has_whatsapp || false,
-      email: contact.email || "", cep: contact.cep || "", address: contact.address || "",
+      cep: contact.cep || "", address: contact.address || "",
       address_number: contact.address_number || "", neighborhood: contact.neighborhood || "",
       city: contact.city || "Boa Vista", state: contact.state || "RR",
       voting_zone: contact.voting_zone || "", voting_section: contact.voting_section || "",
       voting_location: contact.voting_location || "",
       engagement: contact.engagement || "nao_trabalhado",
-      is_leader: contact.is_leader || false, observations: contact.observations || "",
-      category: contact.category || "", subcategory: contact.subcategory || "",
+      is_leader: contact.is_leader || false,
       leader_id: contact.leader_id || "",
     });
     setEditingId(contact.id);
-    setCpfStatus({ valid: null, message: "", loading: false });
     setIsOpen(true);
   };
 
