@@ -161,9 +161,7 @@ export default function LeaderRegistration() {
       const contactData = {
         name: form.name,
         nickname: form.nickname || null,
-        cpf: form.cpf || null,
         phone: form.phone || null,
-        email: form.email || null,
         gender: form.gender || null,
         birth_date: form.birth_date || null,
         has_whatsapp: form.has_whatsapp,
@@ -176,10 +174,7 @@ export default function LeaderRegistration() {
         voting_zone: form.voting_zone || null,
         voting_section: form.voting_section || null,
         voting_location: form.voting_location || null,
-        category: form.category || null,
-        subcategory: form.subcategory || null,
         engagement: form.engagement as any,
-        observations: form.observations || null,
         latitude: geoCoords.latitude,
         longitude: geoCoords.longitude,
       };
