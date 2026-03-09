@@ -225,7 +225,7 @@ export default function Contacts() {
         <h1 className="text-2xl font-bold">Cadastro &gt; Contato</h1>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setForm(defaultContact); setEditingId(null); setCpfStatus({ valid: null, message: "", loading: false }); }}>
+            <Button onClick={() => { setForm(defaultContact); setEditingId(null); }}>
               <Plus className="h-4 w-4 mr-2" /> NOVO CADASTRO
             </Button>
           </DialogTrigger>
