@@ -135,6 +135,36 @@ export default function Contacts() {
 
   useEffect(() => { fetchContacts(); }, [tenantId, search]);
 
+  const generateSlug = (name: string) =>
+    name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+  const ensureLeaderAndLink = async (contactId: string, tid: string) => {
+    // Ensure leader record exists
+    const { data: existingLeader } = await supabase
+      .from("leaders").select("id").eq("contact_id", contactId).maybeSingle();
+    if (!existingLeader) {
+      await supabase.from("leaders").insert({ contact_id: contactId, tenant_id: tid });
+    }
+    // Ensure registration link exists
+    const { data: existingLink } = await supabase
+      .from("registration_links").select("id").eq("leader_contact_id", contactId).eq("tenant_id", tid).maybeSingle();
+    if (!existingLink) {
+      // Get contact name for slug
+      const { data: contact } = await supabase.from("contacts_decrypted").select("name, nickname").eq("id", contactId).single();
+      let slug = generateSlug(contact?.nickname || contact?.name || contactId);
+      const { data: slugExists } = await supabase.from("registration_links").select("id, tenant_id").eq("slug", slug).maybeSingle();
+      if (slugExists && slugExists.tenant_id !== tid) {
+        slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+      }
+      if (!slugExists) {
+        await supabase.from("registration_links").insert({ tenant_id: tid, slug, leader_contact_id: contactId, coordinator_id: user?.id });
+      } else if (slugExists.tenant_id === tid) {
+        await supabase.from("registration_links").update({ leader_contact_id: contactId, coordinator_id: user?.id }).eq("id", slugExists.id);
+      }
+    }
+  };
+
   const handleSave = async () => {
     const trimmedName = form.name?.trim();
     if (!tenantId || !trimmedName) {
@@ -172,8 +202,14 @@ export default function Contacts() {
 
     if (editingId) {
       const { error } = await supabase.from("contacts").update(payload).eq("id", editingId);
-      if (error) toast.error(error.message);
-      else toast.success("Contato atualizado!");
+      if (error) { toast.error(error.message); }
+      else {
+        toast.success("Contato atualizado!");
+        // If marked as leader, ensure leader record + registration link exist
+        if (form.is_leader) {
+          await ensureLeaderAndLink(editingId, tenantId);
+        }
+      }
     } else {
       // Check contact limit before inserting
       if (contactLimit !== Infinity && contacts.length >= contactLimit) {
@@ -181,9 +217,15 @@ export default function Contacts() {
         setLoading(false);
         return;
       }
-      const { error } = await supabase.from("contacts").insert(payload);
-      if (error) toast.error(error.message);
-      else toast.success("Contato cadastrado!");
+      const { data: inserted, error } = await supabase.from("contacts").insert(payload).select("id").single();
+      if (error) { toast.error(error.message); }
+      else {
+        toast.success("Contato cadastrado!");
+        // If marked as leader, create leader record + registration link
+        if (form.is_leader && inserted) {
+          await ensureLeaderAndLink(inserted.id, tenantId);
+        }
+      }
     }
 
     setLoading(false);
