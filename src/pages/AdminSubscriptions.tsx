@@ -59,7 +59,11 @@ export default function AdminSubscriptions() {
       setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [isSuperAdmin]);
+
+  if (!isSuperAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const activeSubs = subscriptions.filter((s) => s.status === "active");
   const cancelledSubs = subscriptions.filter((s) => s.status === "cancelled");
