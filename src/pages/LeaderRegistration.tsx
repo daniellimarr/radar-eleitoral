@@ -336,16 +336,8 @@ export default function LeaderRegistration() {
                 <Input value={form.nickname} onChange={(e) => update("nickname", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>CPF</Label>
-                <Input value={form.cpf} onChange={(e) => update("cpf", e.target.value)} />
-              </div>
-              <div className="space-y-2">
                 <Label>Celular</Label>
                 <Input value={form.phone} onChange={(e) => update("phone", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>E-mail</Label>
-                <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Gênero</Label>
