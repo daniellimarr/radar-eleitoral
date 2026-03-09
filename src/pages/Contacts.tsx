@@ -141,19 +141,6 @@ export default function Contacts() {
       toast.error("Nome é obrigatório");
       return;
     }
-    const cleanedCpf = form.cpf.replace(/\D/g, "");
-    if (!cleanedCpf || cleanedCpf.length !== 11) {
-      toast.error("CPF é obrigatório e deve ter 11 dígitos");
-      return;
-    }
-    if (cpfStatus.valid === false) {
-      toast.error("CPF inválido. Corrija antes de salvar.");
-      return;
-    }
-    if (cpfStatus.loading) {
-      toast.error("Aguarde a validação do CPF.");
-      return;
-    }
     setLoading(true);
 
 
