@@ -28,6 +28,7 @@ import CampaignFiles from "@/pages/CampaignFiles";
 import Reports from "@/pages/Reports";
 import Chat from "@/pages/Chat";
 import TenantManagement from "@/pages/TenantManagement";
+import AdminSubscriptions from "@/pages/AdminSubscriptions";
 import PlanManagement from "@/pages/PlanManagement";
 import Planos from "@/pages/Planos";
 import Assinatura from "@/pages/Assinatura";
