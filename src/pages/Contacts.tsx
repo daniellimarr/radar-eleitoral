@@ -172,8 +172,14 @@ export default function Contacts() {
 
     if (editingId) {
       const { error } = await supabase.from("contacts").update(payload).eq("id", editingId);
-      if (error) toast.error(error.message);
-      else toast.success("Contato atualizado!");
+      if (error) { toast.error(error.message); }
+      else {
+        toast.success("Contato atualizado!");
+        // If marked as leader, ensure leader record + registration link exist
+        if (form.is_leader) {
+          await ensureLeaderAndLink(editingId, tenantId);
+        }
+      }
     } else {
       // Check contact limit before inserting
       if (contactLimit !== Infinity && contacts.length >= contactLimit) {
@@ -181,9 +187,15 @@ export default function Contacts() {
         setLoading(false);
         return;
       }
-      const { error } = await supabase.from("contacts").insert(payload);
-      if (error) toast.error(error.message);
-      else toast.success("Contato cadastrado!");
+      const { data: inserted, error } = await supabase.from("contacts").insert(payload).select("id").single();
+      if (error) { toast.error(error.message); }
+      else {
+        toast.success("Contato cadastrado!");
+        // If marked as leader, create leader record + registration link
+        if (form.is_leader && inserted) {
+          await ensureLeaderAndLink(inserted.id, tenantId);
+        }
+      }
     }
 
     setLoading(false);
