@@ -68,9 +68,7 @@ export default function LeaderRegistration() {
   const [form, setForm] = useState({
     name: "",
     nickname: "",
-    cpf: "",
     phone: "",
-    email: "",
     gender: "",
     birth_date: "",
     has_whatsapp: false,
@@ -83,10 +81,7 @@ export default function LeaderRegistration() {
     voting_zone: "",
     voting_section: "",
     voting_location: "",
-    category: "",
-    subcategory: "",
     engagement: "nao_trabalhado" as string,
-    observations: "",
   });
 
   useEffect(() => {
