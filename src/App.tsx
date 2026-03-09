@@ -28,6 +28,8 @@ import CampaignFiles from "@/pages/CampaignFiles";
 import Reports from "@/pages/Reports";
 import Chat from "@/pages/Chat";
 import TenantManagement from "@/pages/TenantManagement";
+import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
+import AdminSubscriptions from "@/pages/AdminSubscriptions";
 import PlanManagement from "@/pages/PlanManagement";
 import Planos from "@/pages/Planos";
 import Assinatura from "@/pages/Assinatura";
@@ -57,6 +59,7 @@ function App() {
             
             
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
             <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
             <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
             <Route path="/demands" element={<ProtectedRoute><Demands /></ProtectedRoute>} />
@@ -73,6 +76,7 @@ function App() {
             <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             <Route path="/admin/tenants" element={<ProtectedRoute><TenantManagement /></ProtectedRoute>} />
             <Route path="/admin/plans" element={<ProtectedRoute><PlanManagement /></ProtectedRoute>} />
+            <Route path="/admin/subscriptions" element={<ProtectedRoute><AdminSubscriptions /></ProtectedRoute>} />
             <Route path="/backup" element={<ProtectedRoute><Backup /></ProtectedRoute>} />
             <Route path="/campaign-files" element={<ProtectedRoute><CampaignFiles /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
