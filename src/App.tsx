@@ -54,7 +54,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/cadastro/:slug" element={<PublicRegistration />} />
             <Route path="/planos" element={<LandingPage />} />
-            <Route path="/pagamento-sucesso" element={<PaymentSuccess />} />
+            
             
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
