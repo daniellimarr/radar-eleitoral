@@ -127,6 +127,9 @@ export default function Reports() {
   };
 
   // Build a printable element with only selected data
+  const esc = (s: string | null | undefined): string =>
+    (s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
   const buildSelectedElement = (
     type: "contacts" | "leaders",
     selected: Set<string>,
@@ -155,11 +158,11 @@ export default function Reports() {
             ${filteredData.map((c, i) => `
               <tr style="border-bottom:1px solid #ddd;${i % 2 === 1 ? 'background:#f9f9f9;' : ''}">
                 <td style="padding:6px;">${i + 1}</td>
-                <td style="padding:6px; font-weight:500;">${c.name}</td>
-                <td style="padding:6px;">${c.phone || "-"}</td>
-                <td style="padding:6px;">${c.city || "-"}</td>
-                <td style="padding:6px;">${c.neighborhood || "-"}</td>
-                <td style="padding:6px;">${engagementLabels[c.engagement] || c.engagement || "-"}</td>
+                <td style="padding:6px; font-weight:500;">${esc(c.name)}</td>
+                <td style="padding:6px;">${esc(c.phone) || "-"}</td>
+                <td style="padding:6px;">${esc(c.city) || "-"}</td>
+                <td style="padding:6px;">${esc(c.neighborhood) || "-"}</td>
+                <td style="padding:6px;">${esc(engagementLabels[c.engagement] || c.engagement) || "-"}</td>
                 <td style="padding:6px;">${new Date(c.created_at).toLocaleDateString("pt-BR")}</td>
               </tr>
             `).join("")}
@@ -175,10 +178,10 @@ export default function Reports() {
         html += `
           <div style="margin-bottom:24px; page-break-inside:avoid;">
             <h3 style="color:#1e3a5f; border-bottom:2px solid #1e3a5f; padding-bottom:4px; margin-bottom:8px;">
-              Liderança: ${leader.name}
+              Liderança: ${esc(leader.name)}
             </h3>
             <p style="font-size:11px; color:#666; margin-bottom:8px;">
-              Celular: ${leader.phone || "-"} | Cidade: ${leader.city || "-"} | Bairro: ${leader.neighborhood || "-"}
+              Celular: ${esc(leader.phone) || "-"} | Cidade: ${esc(leader.city) || "-"} | Bairro: ${esc(leader.neighborhood) || "-"}
             </p>
             ${voters.length === 0
               ? '<p style="font-size:12px; color:#999;">Nenhum eleitor cadastrado</p>'
@@ -196,10 +199,10 @@ export default function Reports() {
                     ${voters.map((v: any, j: number) => `
                       <tr style="border-bottom:1px solid #eee;${j % 2 === 1 ? 'background:#f9f9f9;' : ''}">
                         <td style="padding:4px;">${j + 1}</td>
-                        <td style="padding:4px; font-weight:500;">${v.name}</td>
-                        <td style="padding:4px;">${v.phone || "-"}</td>
-                        <td style="padding:4px;">${v.city || "-"}</td>
-                        <td style="padding:4px;">${v.neighborhood || "-"}</td>
+                        <td style="padding:4px; font-weight:500;">${esc(v.name)}</td>
+                        <td style="padding:4px;">${esc(v.phone) || "-"}</td>
+                        <td style="padding:4px;">${esc(v.city) || "-"}</td>
+                        <td style="padding:4px;">${esc(v.neighborhood) || "-"}</td>
                       </tr>
                     `).join("")}
                   </tbody>

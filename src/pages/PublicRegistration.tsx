@@ -142,9 +142,9 @@ export default function PublicRegistration() {
         setLeaderContactId(link.leader_contact_id);
         const { data: tenant } = await supabase.from("tenants").select("name").eq("id", link.tenant_id).maybeSingle();
         if (tenant) setTenantName(tenant.name);
-        if (link.leader_contact_id) {
-          const { data: leader } = await supabase.from("contacts_decrypted").select("name, nickname").eq("id", link.leader_contact_id).maybeSingle();
-          if (leader) setLeaderName(leader.nickname || leader.name);
+        if (link.leader_contact_id && slug) {
+          const { data: leaderData } = await supabase.rpc("get_leader_name_for_link", { p_slug: slug });
+          if (leaderData && leaderData.length > 0) setLeaderName(leaderData[0].leader_name || "");
         }
       }
       setLoading(false);

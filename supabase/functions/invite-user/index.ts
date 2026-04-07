@@ -63,6 +63,14 @@ Deno.serve(async (req) => {
     const { email, full_name, password, role, modules } = await req.json();
     if (!email || !password || !full_name) throw new Error("Dados incompletos");
 
+    // Validate role against allowed values and enforce role ceiling
+    const ROLE_HIERARCHY = ['operador', 'assessor', 'coordenador', 'admin_gabinete', 'super_admin'];
+    const callerMaxIdx = roles.includes('super_admin') ? 4 : 3; // admin_gabinete max = index 3
+    const assignedIdx = ROLE_HIERARCHY.indexOf(role || 'operador');
+    if (assignedIdx < 0 || assignedIdx > callerMaxIdx) {
+      throw new Error('Não é possível atribuir esse perfil de acesso');
+    }
+
     // Create user via admin API — handle "email already exists"
     let userId: string;
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
