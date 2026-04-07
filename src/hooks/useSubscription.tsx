@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { getPlanLimits } from "@/lib/asaas";
 
 interface SubscriptionContextType {
   subscribed: boolean;
@@ -10,6 +9,8 @@ interface SubscriptionContextType {
   subscriptionEnd: string | null;
   contactLimit: number;
   userLimit: number;
+  durationDays: number;
+  hasPremiumModules: boolean;
   checkSubscription: () => Promise<void>;
 }
 
@@ -20,6 +21,8 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   subscriptionEnd: null,
   contactLimit: 5000,
   userLimit: 5,
+  durationDays: 30,
+  hasPremiumModules: false,
   checkSubscription: async () => {},
 });
 
@@ -31,6 +34,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [contactLimit, setContactLimit] = useState(5000);
   const [userLimit, setUserLimit] = useState(5);
+  const [durationDays, setDurationDays] = useState(30);
+  const [hasPremiumModules, setHasPremiumModules] = useState(false);
 
   const checkSubscription = useCallback(async () => {
     if (!session) {
@@ -46,6 +51,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setPlanName("Super Admin");
       setContactLimit(Infinity);
       setUserLimit(Infinity);
+      setDurationDays(Infinity);
+      setHasPremiumModules(true);
       setLoading(false);
       return;
     }
@@ -56,17 +63,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
       setSubscribed(data.subscribed || false);
       setSubscriptionEnd(data.subscription_end || null);
-
-      if (data.plan_name) {
-        setPlanName(data.plan_name);
-        const limits = getPlanLimits(data.plan_name);
-        setContactLimit(limits.contact_limit);
-        setUserLimit(limits.user_limit);
-      } else {
-        setPlanName(null);
-        setContactLimit(5000);
-        setUserLimit(5);
-      }
+      setPlanName(data.plan_name || null);
+      setContactLimit(data.contact_limit ?? 5000);
+      setUserLimit(data.user_limit ?? 5);
+      setDurationDays(data.duration_days ?? 30);
+      setHasPremiumModules(data.has_premium_modules ?? false);
     } catch (err) {
       console.error("Error checking subscription:", err);
       setSubscribed(false);
@@ -90,7 +91,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }, [session, checkSubscription]);
 
   return (
-    <SubscriptionContext.Provider value={{ subscribed, loading, planName, subscriptionEnd, contactLimit, userLimit, checkSubscription }}>
+    <SubscriptionContext.Provider value={{ subscribed, loading, planName, subscriptionEnd, contactLimit, userLimit, durationDays, hasPremiumModules, checkSubscription }}>
       {children}
     </SubscriptionContext.Provider>
   );

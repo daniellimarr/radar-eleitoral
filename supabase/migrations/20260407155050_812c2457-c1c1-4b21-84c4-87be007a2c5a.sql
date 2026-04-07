@@ -1,0 +1,1 @@
+ALTER TABLE public.plans ADD COLUMN duration_days integer NOT NULL DEFAULT 30;

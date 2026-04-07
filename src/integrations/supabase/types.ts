@@ -917,6 +917,7 @@ export type Database = {
         Row: {
           contact_limit: number
           created_at: string
+          duration_days: number
           has_premium_modules: boolean
           id: string
           is_active: boolean
@@ -928,6 +929,7 @@ export type Database = {
         Insert: {
           contact_limit?: number
           created_at?: string
+          duration_days?: number
           has_premium_modules?: boolean
           id?: string
           is_active?: boolean
@@ -939,6 +941,7 @@ export type Database = {
         Update: {
           contact_limit?: number
           created_at?: string
+          duration_days?: number
           has_premium_modules?: boolean
           id?: string
           is_active?: boolean

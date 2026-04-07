@@ -18,6 +18,7 @@ interface Plan {
   monthly_price: number;
   contact_limit: number;
   user_limit: number;
+  duration_days: number;
   has_premium_modules: boolean;
   is_active: boolean;
 }
@@ -28,14 +29,14 @@ export default function PlanManagement() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Plan | null>(null);
-  const [form, setForm] = useState({ name: "", monthly_price: "0", contact_limit: "1000", user_limit: "5", has_premium_modules: false, is_active: true });
+  const [form, setForm] = useState({ name: "", monthly_price: "0", contact_limit: "1000", user_limit: "5", duration_days: "30", has_premium_modules: false, is_active: true });
 
   const isSuperAdmin = hasRole("super_admin");
 
   const fetchPlans = async () => {
     setLoading(true);
     const { data } = await supabase.from("plans").select("*").order("monthly_price");
-    if (data) setPlans(data);
+    if (data) setPlans(data as Plan[]);
     setLoading(false);
   };
 
@@ -43,7 +44,7 @@ export default function PlanManagement() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: "", monthly_price: "0", contact_limit: "1000", user_limit: "5", has_premium_modules: false, is_active: true });
+    setForm({ name: "", monthly_price: "0", contact_limit: "1000", user_limit: "5", duration_days: "30", has_premium_modules: false, is_active: true });
     setDialogOpen(true);
   };
 
@@ -54,6 +55,7 @@ export default function PlanManagement() {
       monthly_price: String(p.monthly_price),
       contact_limit: String(p.contact_limit),
       user_limit: String(p.user_limit),
+      duration_days: String(p.duration_days),
       has_premium_modules: p.has_premium_modules,
       is_active: p.is_active,
     });
@@ -67,6 +69,7 @@ export default function PlanManagement() {
       monthly_price: parseFloat(form.monthly_price) || 0,
       contact_limit: parseInt(form.contact_limit) || 1000,
       user_limit: parseInt(form.user_limit) || 5,
+      duration_days: parseInt(form.duration_days) || 30,
       has_premium_modules: form.has_premium_modules,
       is_active: form.is_active,
     };
@@ -82,6 +85,17 @@ export default function PlanManagement() {
     }
     setDialogOpen(false);
     fetchPlans();
+  };
+
+  const formatDuration = (days: number) => {
+    if (days <= 0) return "Ilimitado";
+    if (days === 1) return "1 dia";
+    if (days < 30) return `${days} dias`;
+    if (days === 30) return "1 mês";
+    if (days === 90) return "3 meses";
+    if (days === 180) return "6 meses";
+    if (days === 365) return "1 ano";
+    return `${days} dias`;
   };
 
   if (!isSuperAdmin) {
@@ -105,6 +119,7 @@ export default function PlanManagement() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Preço Mensal</TableHead>
+                <TableHead>Duração</TableHead>
                 <TableHead>Limite Contatos</TableHead>
                 <TableHead>Limite Usuários</TableHead>
                 <TableHead>Premium</TableHead>
@@ -114,13 +129,14 @@ export default function PlanManagement() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
               ) : plans.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum plano cadastrado.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum plano cadastrado.</TableCell></TableRow>
               ) : plans.map(p => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell>R$ {Number(p.monthly_price).toFixed(2)}</TableCell>
+                  <TableCell><Badge variant="outline">{formatDuration(p.duration_days)}</Badge></TableCell>
                   <TableCell>{p.contact_limit.toLocaleString()}</TableCell>
                   <TableCell>{p.user_limit}</TableCell>
                   <TableCell>{p.has_premium_modules ? <Badge className="bg-purple-100 text-purple-700">Sim</Badge> : "Não"}</TableCell>
@@ -141,6 +157,7 @@ export default function PlanManagement() {
           <div className="space-y-4">
             <div><Label>Nome *</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
             <div><Label>Preço Mensal (R$)</Label><Input type="number" step="0.01" value={form.monthly_price} onChange={e => setForm(f => ({ ...f, monthly_price: e.target.value }))} /></div>
+            <div><Label>Duração (dias)</Label><Input type="number" min="1" value={form.duration_days} onChange={e => setForm(f => ({ ...f, duration_days: e.target.value }))} placeholder="30 = 1 mês, 90 = trimestral, 365 = anual" /></div>
             <div className="grid grid-cols-2 gap-4">
               <div><Label>Limite de Contatos</Label><Input type="number" value={form.contact_limit} onChange={e => setForm(f => ({ ...f, contact_limit: e.target.value }))} /></div>
               <div><Label>Limite de Usuários</Label><Input type="number" value={form.user_limit} onChange={e => setForm(f => ({ ...f, user_limit: e.target.value }))} /></div>
