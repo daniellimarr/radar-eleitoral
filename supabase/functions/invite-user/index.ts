@@ -64,8 +64,9 @@ Deno.serve(async (req) => {
     if (!email || !password || !full_name) throw new Error("Dados incompletos");
 
     // Validate role against allowed values and enforce role ceiling
+    // admin_gabinete can only assign operador, assessor, coordenador (NOT admin_gabinete or super_admin)
     const ROLE_HIERARCHY = ['operador', 'assessor', 'coordenador', 'admin_gabinete', 'super_admin'];
-    const callerMaxIdx = roles.includes('super_admin') ? 4 : 3; // admin_gabinete max = index 3
+    const callerMaxIdx = roles.includes('super_admin') ? 4 : 2; // admin_gabinete max = coordenador (index 2)
     const assignedIdx = ROLE_HIERARCHY.indexOf(role || 'operador');
     if (assignedIdx < 0 || assignedIdx > callerMaxIdx) {
       throw new Error('Não é possível atribuir esse perfil de acesso');

@@ -11,6 +11,17 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Verify webhook authenticity via access token
+  const asaasApiKey = Deno.env.get("ASAAS_API_KEY");
+  const accessToken = req.headers.get("asaas-access-token");
+  if (asaasApiKey && accessToken !== asaasApiKey) {
+    console.error("[ASAAS-WEBHOOK] Invalid or missing access token");
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -19,7 +30,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("[ASAAS-WEBHOOK] Received:", JSON.stringify(body));
+    console.log("[ASAAS-WEBHOOK] Received event:", body.event);
 
     const event = body.event;
     const payment = body.payment;
@@ -30,17 +41,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Helper: find subscription in our DB by asaas_subscription_id
-    const findSubscription = async (asaasSubId: string) => {
-      const { data } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("asaas_subscription_id", asaasSubId)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      return data?.[0] || null;
-    };
 
     // Helper: find subscription by payment's subscription field
     const getSubIdFromPayment = () => {
@@ -57,14 +57,12 @@ serve(async (req) => {
           break;
         }
 
-        // First get the plan_name to calculate expires_at
         const { data: existingSub } = await supabase
           .from("subscriptions")
           .select("plan_name")
           .eq("asaas_subscription_id", asaasSubId)
           .single();
 
-        // Calculate expires_at based on plan
         let expiresAt: string | null = null;
         if (existingSub?.plan_name) {
           const now = new Date();
@@ -79,7 +77,6 @@ serve(async (req) => {
           expiresAt = now.toISOString();
         }
 
-        // Update subscription status to active with expires_at
         const { data: subData } = await supabase
           .from("subscriptions")
           .update({
@@ -92,14 +89,12 @@ serve(async (req) => {
           .single();
 
         if (subData?.tenant_id) {
-          // Activate tenant
           await supabase
             .from("tenants")
             .update({ status: "ativo" })
             .eq("id", subData.tenant_id);
         }
 
-        // Record payment
         if (payment && subData?.tenant_id) {
           const { data: subRecord } = await supabase
             .from("subscriptions")
@@ -191,7 +186,7 @@ serve(async (req) => {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[ASAAS-WEBHOOK] ERROR:", msg);
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: "Internal error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
