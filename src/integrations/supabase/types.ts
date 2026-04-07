@@ -1059,8 +1059,6 @@ export type Database = {
           created_at: string
           expires_at: string | null
           id: string
-          kirvano_subscription_id: string | null
-          kirvano_transaction_id: string | null
           next_due_date: string | null
           plan_name: string
           started_at: string
@@ -1076,8 +1074,6 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
-          kirvano_subscription_id?: string | null
-          kirvano_transaction_id?: string | null
           next_due_date?: string | null
           plan_name: string
           started_at?: string
@@ -1093,8 +1089,6 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
-          kirvano_subscription_id?: string | null
-          kirvano_transaction_id?: string | null
           next_due_date?: string | null
           plan_name?: string
           started_at?: string
