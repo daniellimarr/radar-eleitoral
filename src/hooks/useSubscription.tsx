@@ -78,8 +78,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (session) {
+      setLoading(true);
       checkSubscription();
     } else {
+      setSubscribed(false);
       setLoading(false);
     }
   }, [session, checkSubscription]);
