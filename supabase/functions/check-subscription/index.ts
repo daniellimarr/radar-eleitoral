@@ -27,7 +27,7 @@ serve(async (req) => {
     const user = userData.user;
     if (!user) throw new Error("User not authenticated");
 
-    // Get user's tenant
+    // Get user's tenant with plan info
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("tenant_id")
@@ -39,6 +39,13 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Get tenant with plan
+    const { data: tenant } = await supabaseClient
+      .from("tenants")
+      .select("plan_id, contact_limit, plans(name, contact_limit, user_limit, duration_days, has_premium_modules)")
+      .eq("id", profile.tenant_id)
+      .single();
 
     // Check active subscription in local DB
     const { data: subscription } = await supabaseClient
@@ -58,7 +65,6 @@ serve(async (req) => {
 
     // Check if expired
     if (subscription.expires_at && new Date(subscription.expires_at) < new Date()) {
-      // Mark as expired
       await supabaseClient
         .from("subscriptions")
         .update({ status: "expired" })
@@ -69,11 +75,22 @@ serve(async (req) => {
       });
     }
 
+    // Get limits from plan (DB) or fallback
+    const plan = tenant?.plans as any;
+    const contactLimit = plan?.contact_limit ?? tenant?.contact_limit ?? 5000;
+    const userLimit = plan?.user_limit ?? 5;
+    const durationDays = plan?.duration_days ?? 30;
+    const hasPremiumModules = plan?.has_premium_modules ?? false;
+
     return new Response(JSON.stringify({
       subscribed: true,
       plan_name: subscription.plan_name,
       subscription_end: subscription.expires_at,
       subscription_id: subscription.id,
+      contact_limit: contactLimit,
+      user_limit: userLimit,
+      duration_days: durationDays,
+      has_premium_modules: hasPremiumModules,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
