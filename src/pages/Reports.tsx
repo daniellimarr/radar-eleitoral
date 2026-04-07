@@ -127,6 +127,9 @@ export default function Reports() {
   };
 
   // Build a printable element with only selected data
+  const esc = (s: string | null | undefined): string =>
+    (s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
   const buildSelectedElement = (
     type: "contacts" | "leaders",
     selected: Set<string>,
