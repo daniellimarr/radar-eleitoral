@@ -1679,6 +1679,12 @@ export type Database = {
       decrypt_sensitive: { Args: { val: string }; Returns: string }
       encrypt_sensitive: { Args: { val: string }; Returns: string }
       encryption_key: { Args: never; Returns: string }
+      get_leader_name_for_link: {
+        Args: { p_slug: string }
+        Returns: {
+          leader_name: string
+        }[]
+      }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
