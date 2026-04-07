@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ export default function Auth() {
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -28,17 +29,7 @@ export default function Auth() {
     if (error) {
       toast.error(error.message);
     } else {
-      // Check if user is super_admin to redirect accordingly
-      if (data?.user) {
-        const { data: rolesData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id);
-        const isSuperAdmin = rolesData?.some((r: any) => r.role === "super_admin");
-        navigate(isSuperAdmin ? "/dashboard" : "/dashboard");
-      } else {
-        navigate("/dashboard");
-      }
+      navigate("/dashboard");
     }
     setIsLoading(false);
   };
@@ -46,21 +37,18 @@ export default function Auth() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const { error } = await signUp(registerEmail, registerPassword, registerName);
+    const { error, data } = await signUp(registerEmail, registerPassword, registerName);
     if (error) {
       toast.error(error.message);
       setIsLoading(false);
       return;
     }
-    // Auto-login after signup (auto-confirm is enabled)
-    const { error: loginError } = await signIn(registerEmail, registerPassword);
-    if (loginError) {
-      toast.success("Cadastro realizado! Faça login para continuar.");
-      setIsLoading(false);
-      return;
-    }
-    toast.success("Cadastro realizado! Escolha seu plano para acessar o sistema.");
-    navigate("/planos");
+    // Clear form and switch to login tab
+    setRegisterName("");
+    setRegisterEmail("");
+    setRegisterPassword("");
+    setActiveTab("login");
+    toast.success("Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta e depois faça login.");
     setIsLoading(false);
   };
 
@@ -79,7 +67,7 @@ export default function Auth() {
             </div>
           </div>
 
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Entrar</TabsTrigger>
               <TabsTrigger value="register">Cadastrar</TabsTrigger>
