@@ -224,6 +224,30 @@ const sidebarItems = [
 export default function Demo() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [settingUpDemo, setSettingUpDemo] = useState(false);
+
+  const handleTestSystem = async () => {
+    setSettingUpDemo(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("setup-demo");
+      if (error) throw error;
+      
+      // Login with demo credentials
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+      
+      if (loginError) throw loginError;
+      
+      toast.success("Bem-vindo ao modo teste! Explore o sistema livremente.");
+      navigate("/dashboard");
+    } catch (err: any) {
+      toast.error("Erro ao configurar demo: " + (err.message || "Tente novamente"));
+    } finally {
+      setSettingUpDemo(false);
+    }
+  };
 
   return (
     <SidebarProvider>
