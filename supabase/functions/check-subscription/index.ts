@@ -27,7 +27,7 @@ serve(async (req) => {
     const user = userData.user;
     if (!user) throw new Error("User not authenticated");
 
-    // Get user's tenant with plan info
+    // Get user's tenant
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("tenant_id")
@@ -43,34 +43,49 @@ serve(async (req) => {
     // Get tenant with plan
     const { data: tenant } = await supabaseClient
       .from("tenants")
-      .select("plan_id, contact_limit, plans(name, contact_limit, user_limit, duration_days, has_premium_modules)")
+      .select("plan_id, contact_limit, status, plans(name, contact_limit, user_limit, duration_days, has_premium_modules)")
       .eq("id", profile.tenant_id)
       .single();
 
-    // Check active subscription in local DB
+    // Check active subscription
     const { data: subscription } = await supabaseClient
       .from("subscriptions")
       .select("*")
       .eq("tenant_id", profile.tenant_id)
-      .eq("status", "active")
+      .in("status", ["active", "past_due"])
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (!subscription) {
-      return new Response(JSON.stringify({ subscribed: false }), {
+      return new Response(JSON.stringify({ 
+        subscribed: false,
+        expired: false,
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // Check if expired
     if (subscription.expires_at && new Date(subscription.expires_at) < new Date()) {
+      // Mark subscription as expired
       await supabaseClient
         .from("subscriptions")
         .update({ status: "expired" })
         .eq("id", subscription.id);
 
-      return new Response(JSON.stringify({ subscribed: false }), {
+      // Suspend tenant
+      await supabaseClient
+        .from("tenants")
+        .update({ status: "suspenso" })
+        .eq("id", profile.tenant_id);
+
+      return new Response(JSON.stringify({ 
+        subscribed: false, 
+        expired: true,
+        plan_name: subscription.plan_name,
+        expired_at: subscription.expires_at,
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -91,6 +106,7 @@ serve(async (req) => {
       user_limit: userLimit,
       duration_days: durationDays,
       has_premium_modules: hasPremiumModules,
+      expired: false,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

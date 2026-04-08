@@ -11,7 +11,6 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Verify webhook authenticity via access token
   const asaasApiKey = Deno.env.get("ASAAS_API_KEY");
   const accessToken = req.headers.get("asaas-access-token");
   if (asaasApiKey && accessToken !== asaasApiKey) {
@@ -42,7 +41,6 @@ serve(async (req) => {
       });
     }
 
-    // Helper: find subscription by payment's subscription field
     const getSubIdFromPayment = () => {
       return payment?.subscription || subscription?.id || null;
     };
@@ -57,24 +55,38 @@ serve(async (req) => {
           break;
         }
 
+        // Get subscription with tenant info
         const { data: existingSub } = await supabase
           .from("subscriptions")
-          .select("plan_name")
+          .select("plan_name, tenant_id")
           .eq("asaas_subscription_id", asaasSubId)
           .single();
 
+        // Calculate expires_at using duration_days from plans table
         let expiresAt: string | null = null;
-        if (existingSub?.plan_name) {
-          const now = new Date();
-          const planLower = existingSub.plan_name.toLowerCase();
-          if (planLower.includes("anual")) {
-            now.setFullYear(now.getFullYear() + 1);
-          } else if (planLower.includes("trimestral")) {
-            now.setDate(now.getDate() + 90);
-          } else {
-            now.setDate(now.getDate() + 30);
+        if (existingSub?.tenant_id) {
+          const { data: tenant } = await supabase
+            .from("tenants")
+            .select("plan_id, plans(duration_days)")
+            .eq("id", existingSub.tenant_id)
+            .single();
+
+          const plan = tenant?.plans as any;
+          let durationDays = plan?.duration_days;
+
+          // Fallback to plan name if no plan linked
+          if (!durationDays && existingSub?.plan_name) {
+            const planLower = existingSub.plan_name.toLowerCase();
+            if (planLower.includes("anual")) durationDays = 365;
+            else if (planLower.includes("trimestral")) durationDays = 90;
+            else durationDays = 30;
           }
-          expiresAt = now.toISOString();
+
+          if (durationDays) {
+            const expDate = new Date();
+            expDate.setDate(expDate.getDate() + durationDays);
+            expiresAt = expDate.toISOString();
+          }
         }
 
         const { data: subData } = await supabase
@@ -88,6 +100,7 @@ serve(async (req) => {
           .select("tenant_id")
           .single();
 
+        // Activate tenant
         if (subData?.tenant_id) {
           await supabase
             .from("tenants")
@@ -95,6 +108,7 @@ serve(async (req) => {
             .eq("id", subData.tenant_id);
         }
 
+        // Record payment
         if (payment && subData?.tenant_id) {
           const { data: subRecord } = await supabase
             .from("subscriptions")

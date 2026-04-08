@@ -11,6 +11,8 @@ interface SubscriptionContextType {
   userLimit: number;
   durationDays: number;
   hasPremiumModules: boolean;
+  expired: boolean;
+  expiredAt: string | null;
   checkSubscription: () => Promise<void>;
 }
 
@@ -23,6 +25,8 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   userLimit: 5,
   durationDays: 30,
   hasPremiumModules: false,
+  expired: false,
+  expiredAt: null,
   checkSubscription: async () => {},
 });
 
@@ -36,6 +40,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [userLimit, setUserLimit] = useState(5);
   const [durationDays, setDurationDays] = useState(30);
   const [hasPremiumModules, setHasPremiumModules] = useState(false);
+  const [expired, setExpired] = useState(false);
+  const [expiredAt, setExpiredAt] = useState<string | null>(null);
 
   const checkSubscription = useCallback(async () => {
     if (!session) {
@@ -53,6 +59,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setUserLimit(Infinity);
       setDurationDays(Infinity);
       setHasPremiumModules(true);
+      setExpired(false);
+      setExpiredAt(null);
       setLoading(false);
       return;
     }
@@ -68,6 +76,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setUserLimit(data.user_limit ?? 5);
       setDurationDays(data.duration_days ?? 30);
       setHasPremiumModules(data.has_premium_modules ?? false);
+      setExpired(data.expired || false);
+      setExpiredAt(data.expired_at || null);
     } catch (err) {
       console.error("Error checking subscription:", err);
       setSubscribed(false);
@@ -93,7 +103,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }, [session, checkSubscription]);
 
   return (
-    <SubscriptionContext.Provider value={{ subscribed, loading, planName, subscriptionEnd, contactLimit, userLimit, durationDays, hasPremiumModules, checkSubscription }}>
+    <SubscriptionContext.Provider value={{ subscribed, loading, planName, subscriptionEnd, contactLimit, userLimit, durationDays, hasPremiumModules, expired, expiredAt, checkSubscription }}>
       {children}
     </SubscriptionContext.Provider>
   );

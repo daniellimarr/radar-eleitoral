@@ -3,16 +3,57 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import NotificationBell from "@/components/NotificationBell";
 import PendingApproval from "@/pages/PendingApproval";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+function ExpiredSubscriptionScreen({ planName, expiredAt }: { planName: string | null; expiredAt: string | null }) {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center p-4">
+      <Card className="max-w-md w-full border-destructive/50">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+          </div>
+          <CardTitle className="text-2xl">Assinatura Expirada</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+          <p className="text-muted-foreground">
+            Seu plano <strong>{planName || "atual"}</strong> expirou
+            {expiredAt && (
+              <> em <strong>{format(new Date(expiredAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</strong></>
+            )}.
+          </p>
+          <p className="text-muted-foreground text-sm">
+            O acesso ao sistema está bloqueado até que você renove sua assinatura.
+          </p>
+          <div className="flex flex-col gap-3 pt-4">
+            <Button onClick={() => navigate("/planos")} size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600">
+              Renovar Plano
+            </Button>
+            <Button variant="ghost" onClick={() => signOut()} size="sm">
+              Sair
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading, profile, profileStatus, roles } = useAuth();
-  const { subscribed, loading: subLoading } = useSubscription();
+  const { subscribed, loading: subLoading, expired, expiredAt, planName } = useSubscription();
   const location = useLocation();
 
   if (loading) {
@@ -27,14 +68,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Users created via invite-user are auto-approved; self-registered need approval
   const isSuperAdmin = roles.includes("super_admin");
   const isAdminRole = isSuperAdmin || roles.includes("admin_gabinete");
   if (profileStatus && profileStatus !== "approved" && !isAdminRole) {
     return <PendingApproval />;
   }
 
-  // Show loading while subscription is being checked
   if (subLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -43,7 +82,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  // Check subscription - redirect to landing if not subscribed
+  // Show expired screen with renewal option
+  if (expired && !isSuperAdmin) {
+    return <ExpiredSubscriptionScreen planName={planName} expiredAt={expiredAt} />;
+  }
+
+  // Not subscribed at all - redirect to landing
   if (!subscribed && !isSuperAdmin && location.pathname !== "/assinatura") {
     return <Navigate to="/" replace />;
   }
