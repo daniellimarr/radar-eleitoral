@@ -12,7 +12,7 @@ import {
   DollarSign, MapPin, Crown, ArrowRight, BarChart3, Flag, Megaphone,
   Car, Package, Link2, Home, Eye, ArrowLeft, Star, Phone,
   Mail, FolderDown, Database, FileText, Shield, Send, Image,
-  Video, Mic, Clock, CheckCircle, XCircle, AlertTriangle, Download
+  Video, Mic, Clock, CheckCircle, XCircle, AlertTriangle, Download, Loader2
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
