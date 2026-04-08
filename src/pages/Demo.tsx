@@ -326,14 +326,33 @@ export default function Demo() {
         </Sidebar>
 
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-3 flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Eye className="h-4 w-4" />
               <span>Modo Demonstração — Dados fictícios para visualização</span>
             </div>
-            <Button size="sm" variant="secondary" onClick={() => navigate("/auth")} className="text-xs font-bold">
-              Assinar Agora <ArrowRight className="ml-1 h-3 w-3" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={handleTestSystem}
+                disabled={settingUpDemo}
+                className="text-xs font-bold bg-white text-amber-700 border-white hover:bg-amber-50 hover:text-amber-800"
+              >
+                {settingUpDemo ? (
+                  <>
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" /> Configurando...
+                  </>
+                ) : (
+                  <>
+                    🚀 Testar o Sistema (Login Demo)
+                  </>
+                )}
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => navigate("/auth")} className="text-xs font-bold">
+                Assinar Agora <ArrowRight className="ml-1 h-3 w-3" />
+              </Button>
+            </div>
           </div>
 
           <header className="h-14 border-b flex items-center justify-between px-4 bg-card">
