@@ -34,6 +34,7 @@ import PlanManagement from "@/pages/PlanManagement";
 import Planos from "@/pages/Planos";
 import Assinatura from "@/pages/Assinatura";
 
+import Demo from "@/pages/Demo";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/cadastro/:slug" element={<PublicRegistration />} />
             <Route path="/planos" element={<LandingPage />} />
+            <Route path="/demo" element={<Demo />} />
             
             
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
