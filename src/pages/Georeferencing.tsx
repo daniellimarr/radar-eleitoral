@@ -5,9 +5,11 @@ import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MapPin, Search } from "lucide-react";
+import { MapPin, Search, RefreshCw, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 
 // Fix default marker icons
