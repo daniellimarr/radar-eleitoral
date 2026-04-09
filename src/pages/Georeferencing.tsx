@@ -352,6 +352,26 @@ export default function Georeferencing() {
             </div>
           </div>
 
+          {pendingGeoCount > 0 && (
+            <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
+              <p className="text-xs text-muted-foreground mb-2">
+                <strong>{pendingGeoCount}</strong> contato(s) com CEP sem geolocalização
+              </p>
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={handleBatchGeocode}
+                disabled={geocoding}
+              >
+                {geocoding ? (
+                  <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Processando...</>
+                ) : (
+                  <><RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Geolocalizar Todos</>
+                )}
+              </Button>
+            </div>
+          )}
+
           <p className="text-[10px] text-muted-foreground mt-4">
             Geo Referenciamento é realizado por CEP e por aproximação. O número da localidade não é considerado.
           </p>
