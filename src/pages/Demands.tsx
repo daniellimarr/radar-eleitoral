@@ -29,9 +29,15 @@ export default function Demands() {
   const [demands, setDemands] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", status: "aberta", priority: "normal" });
+  const [form, setForm] = useState({ title: "", description: "", status: "aberta", priority: "normal", contact_id: "", leader_id: "" });
   const [loading, setLoading] = useState(false);
   const tableRef = useRef<HTMLTableElement>(null);
+
+  // Contacts & Leaders state
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [leaders, setLeaders] = useState<any[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<any[]>([]);
+  const [contactSearch, setContactSearch] = useState("");
 
   // Documents state
   const [docsDialogOpen, setDocsDialogOpen] = useState(false);
@@ -42,9 +48,39 @@ export default function Demands() {
   const [previewMimeType, setPreviewMimeType] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const fetchContacts = async () => {
+    if (!tenantId) return;
+    const { data } = await supabase.from("contacts").select("id, name, leader_id").eq("tenant_id", tenantId).is("deleted_at", null).order("name");
+    setContacts(data || []);
+    setFilteredContacts(data || []);
+  };
+
+  const fetchLeaders = async () => {
+    if (!tenantId) return;
+    const { data } = await supabase.from("leaders").select("id, contact_id, contacts(id, name)").eq("tenant_id", tenantId);
+    setLeaders(data || []);
+  };
+
+  useEffect(() => { if (tenantId) { fetchContacts(); fetchLeaders(); } }, [tenantId]);
+
+  // Filter contacts by leader
+  useEffect(() => {
+    let filtered = contacts;
+    if (form.leader_id) {
+      const leader = leaders.find(l => l.id === form.leader_id);
+      if (leader) {
+        filtered = contacts.filter(c => c.leader_id === leader.contact_id);
+      }
+    }
+    if (contactSearch) {
+      filtered = filtered.filter(c => c.name.toLowerCase().includes(contactSearch.toLowerCase()));
+    }
+    setFilteredContacts(filtered);
+  }, [form.leader_id, contactSearch, contacts, leaders]);
+
   const fetchDemands = async () => {
     if (!tenantId) return;
-    let query = supabase.from("demands").select("*").eq("tenant_id", tenantId).is("deleted_at", null).order("created_at", { ascending: false });
+    let query = supabase.from("demands").select("*, contacts(name, leader_id)").eq("tenant_id", tenantId).is("deleted_at", null).order("created_at", { ascending: false });
     if (search) query = query.ilike("title", `%${search}%`);
     const { data } = await query;
     setDemands(data || []);
@@ -55,12 +91,15 @@ export default function Demands() {
   const handleSave = async () => {
     if (!tenantId || !form.title) { toast.error("Título é obrigatório"); return; }
     setLoading(true);
-    const { error } = await supabase.from("demands").insert([{
-      ...form, tenant_id: tenantId, responsible_id: user?.id,
+    const insertData: any = {
+      title: form.title, description: form.description, priority: form.priority,
+      tenant_id: tenantId, responsible_id: user?.id,
       status: form.status as "aberta" | "em_andamento" | "concluida" | "cancelada",
-    }]);
+    };
+    if (form.contact_id) insertData.contact_id = form.contact_id;
+    const { error } = await supabase.from("demands").insert([insertData]);
     if (error) toast.error(error.message);
-    else { toast.success("Demanda cadastrada!"); setIsOpen(false); setForm({ title: "", description: "", status: "aberta", priority: "normal" }); fetchDemands(); }
+    else { toast.success("Demanda cadastrada!"); setIsOpen(false); setForm({ title: "", description: "", status: "aberta", priority: "normal", contact_id: "", leader_id: "" }); setContactSearch(""); fetchDemands(); }
     setLoading(false);
   };
 
@@ -193,6 +232,31 @@ export default function Demands() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label>Liderança (filtro)</Label>
+                <Select value={form.leader_id} onValueChange={(v) => setForm(p => ({ ...p, leader_id: v, contact_id: "" }))}>
+                  <SelectTrigger><SelectValue placeholder="Todas as lideranças" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas</SelectItem>
+                    {leaders.map((l: any) => (
+                      <SelectItem key={l.id} value={l.id}>{(l.contacts as any)?.name || "Líder"}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Pessoa (contato cadastrado)</Label>
+                <Input placeholder="Buscar contato..." value={contactSearch} onChange={(e) => setContactSearch(e.target.value)} className="mb-2" />
+                <Select value={form.contact_id} onValueChange={(v) => setForm(p => ({ ...p, contact_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um contato" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhum</SelectItem>
+                    {filteredContacts.map((c: any) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <Button onClick={handleSave} disabled={loading} className="w-full">{loading ? "Salvando..." : "Cadastrar"}</Button>
             </div>
           </DialogContent>
@@ -211,6 +275,7 @@ export default function Demands() {
             <TableHeader>
               <TableRow>
                 <TableHead>Título</TableHead>
+                <TableHead>Pessoa</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Prioridade</TableHead>
                 <TableHead>Data</TableHead>
@@ -220,10 +285,11 @@ export default function Demands() {
             </TableHeader>
             <TableBody>
               {demands.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma demanda</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma demanda</TableCell></TableRow>
               ) : demands.map((d) => (
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">{d.title}</TableCell>
+                  <TableCell>{(d.contacts as any)?.name || "—"}</TableCell>
                   <TableCell>
                     <Badge className={statusOptions.find(s => s.value === d.status)?.color}>
                       {statusOptions.find(s => s.value === d.status)?.label}
