@@ -232,16 +232,36 @@ export default function Demands() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label>Liderança (filtro)</Label>
+                <Select value={form.leader_id} onValueChange={(v) => setForm(p => ({ ...p, leader_id: v, contact_id: "" }))}>
+                  <SelectTrigger><SelectValue placeholder="Todas as lideranças" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas</SelectItem>
+                    {leaders.map((l: any) => (
+                      <SelectItem key={l.id} value={l.id}>{(l.contacts as any)?.name || "Líder"}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Pessoa (contato cadastrado)</Label>
+                <Input placeholder="Buscar contato..." value={contactSearch} onChange={(e) => setContactSearch(e.target.value)} className="mb-2" />
+                <Select value={form.contact_id} onValueChange={(v) => setForm(p => ({ ...p, contact_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um contato" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhum</SelectItem>
+                    {filteredContacts.map((c: any) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <Button onClick={handleSave} disabled={loading} className="w-full">{loading ? "Salvando..." : "Cadastrar"}</Button>
             </div>
           </DialogContent>
           </Dialog>
         </div>
-      </div>
-
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-10" placeholder="Pesquisar demanda..." value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       <Card>
