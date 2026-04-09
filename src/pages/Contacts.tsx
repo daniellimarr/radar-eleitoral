@@ -265,13 +265,13 @@ export default function Contacts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Cadastro &gt; Contato</h1>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={(open) => { if (!open) return; setIsOpen(open); }}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setForm(defaultContact); setEditingId(null); }}>
+            <Button onClick={() => { setForm(defaultContact); setEditingId(null); setIsOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" /> NOVO CADASTRO
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle>{editingId ? "Editar Contato" : "Novo Cadastro"}</DialogTitle>
             </DialogHeader>
