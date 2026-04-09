@@ -52,7 +52,7 @@ function ExpiredSubscriptionScreen({ planName, expiredAt }: { planName: string |
 }
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const { user, loading, profile, profileStatus, roles } = useAuth();
+  const { user, loading, profile, profileStatus, roles, signOut } = useAuth();
   const { subscribed, loading: subLoading, expired, expiredAt, planName } = useSubscription();
   const location = useLocation();
 
