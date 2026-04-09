@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
 
     // Create user via admin API — handle "email already exists"
     let userId: string;
+    let isNewUser = false;
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password,
@@ -95,6 +96,35 @@ Deno.serve(async (req) => {
       }
     } else {
       userId = newUser.user.id;
+      isNewUser = true;
+    }
+
+    // For new users, the handle_new_user trigger auto-creates an orphan tenant + role.
+    // We need to clean those up before assigning the correct tenant.
+    if (isNewUser) {
+      // Get the auto-created orphan tenant (different from caller's tenant)
+      const { data: autoProfile } = await adminClient
+        .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", userId)
+        .single();
+
+      const orphanTenantId = autoProfile?.tenant_id;
+
+      // Delete auto-created roles for the orphan tenant
+      if (orphanTenantId && orphanTenantId !== callerProfile.tenant_id) {
+        await adminClient
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId)
+          .eq("tenant_id", orphanTenantId);
+
+        // Soft-delete the orphan tenant (it has no other users)
+        await adminClient
+          .from("tenants")
+          .update({ deleted_at: new Date().toISOString(), status: "cancelado" })
+          .eq("id", orphanTenantId);
+      }
     }
 
     // Set profile tenant
@@ -103,7 +133,13 @@ Deno.serve(async (req) => {
       .update({ tenant_id: callerProfile.tenant_id, full_name, status: "approved" })
       .eq("user_id", userId);
 
-    // Set role
+    // Remove any existing roles for this user in the target tenant, then set the new one
+    await adminClient
+      .from("user_roles")
+      .delete()
+      .eq("user_id", userId)
+      .eq("tenant_id", callerProfile.tenant_id);
+
     if (role) {
       await adminClient.from("user_roles").insert({
         user_id: userId,
@@ -114,6 +150,13 @@ Deno.serve(async (req) => {
 
     // Set module permissions
     if (modules && Array.isArray(modules) && modules.length > 0) {
+      // Clear existing permissions first
+      await adminClient
+        .from("user_permissions")
+        .delete()
+        .eq("user_id", userId)
+        .eq("tenant_id", callerProfile.tenant_id);
+
       const permRows = modules.map((m: string) => ({
         user_id: userId,
         tenant_id: callerProfile.tenant_id,
