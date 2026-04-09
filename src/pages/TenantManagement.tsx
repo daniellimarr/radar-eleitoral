@@ -407,9 +407,15 @@ export default function TenantManagement() {
                           <KeyRound className="h-3 w-3" />
                         </Button>
                       )}
+                      <Button size="sm" variant="outline" className="text-emerald-600 border-emerald-300 hover:bg-emerald-50" onClick={() => {
+                          setGrantAccessTarget(t);
+                          setGrantAccessDays("30");
+                        }} title="Liberar acesso gratuito">
+                          <ShieldCheck className="h-3 w-3" />
+                        </Button>
                       <Button size="sm" variant={t.status === "ativo" ? "destructive" : "default"} onClick={() => toggleStatus(t)} title={t.status === "ativo" ? "Suspender" : "Ativar"}>
-                        {t.status === "ativo" ? <Ban className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-                      </Button>
+                         {t.status === "ativo" ? <Ban className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(t)} title="Excluir gabinete">
                         <Trash2 className="h-3 w-3" />
                       </Button>
