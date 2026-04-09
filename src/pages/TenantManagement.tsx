@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Plus, Pencil, Users, Building2, Mail, Loader2, Trash2, Ban, CheckCircle, KeyRound } from "lucide-react";
+import { Plus, Pencil, Users, Building2, Mail, Loader2, Trash2, Ban, CheckCircle, KeyRound, ShieldCheck } from "lucide-react";
 
 interface Tenant {
   id: string;
