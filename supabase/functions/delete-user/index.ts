@@ -6,6 +6,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function respond(ok: boolean, data: Record<string, unknown>) {
+  return new Response(JSON.stringify({ ok, ...data }), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -13,21 +20,19 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Missing authorization");
+    if (!authHeader) return respond(false, { error: "Missing authorization" });
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify caller is admin or coordenador
     const callerClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user: caller } } = await callerClient.auth.getUser();
-    if (!caller) throw new Error("Unauthorized");
+    if (!caller) return respond(false, { error: "Unauthorized" });
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Check caller role
     const { data: callerRoles } = await adminClient
       .from("user_roles")
       .select("role")
@@ -35,30 +40,23 @@ Deno.serve(async (req) => {
 
     const allowedRoles = ["super_admin", "admin_gabinete", "coordenador"];
     const hasPermission = callerRoles?.some((r: any) => allowedRoles.includes(r.role));
-    if (!hasPermission) throw new Error("Sem permissão para excluir usuários");
+    if (!hasPermission) return respond(false, { error: "Sem permissão para excluir usuários" });
 
     const { user_id } = await req.json();
-    if (!user_id) throw new Error("user_id é obrigatório");
+    if (!user_id) return respond(false, { error: "user_id é obrigatório" });
 
-    // Prevent self-deletion
-    if (user_id === caller.id) throw new Error("Não é possível excluir a si mesmo");
+    if (user_id === caller.id) return respond(false, { error: "Não é possível excluir a si mesmo" });
 
     // Delete related data in order
     await adminClient.from("user_permissions").delete().eq("user_id", user_id);
     await adminClient.from("user_roles").delete().eq("user_id", user_id);
     await adminClient.from("profiles").delete().eq("user_id", user_id);
 
-    // Delete auth user
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(user_id);
-    if (deleteError) throw deleteError;
+    if (deleteError) return respond(false, { error: deleteError.message });
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return respond(true, { success: true });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return respond(false, { error: err.message });
   }
 });
