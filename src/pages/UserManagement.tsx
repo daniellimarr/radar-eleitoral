@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, UserPlus, Shield, Loader2, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
+import { Plus, UserPlus, Shield, Loader2, CheckCircle, XCircle, Clock, Trash2, UserCheck, UserX } from "lucide-react";
 
 const AVAILABLE_MODULES = [
   { key: "dashboard", label: "Início / Dashboard" },
@@ -54,8 +54,11 @@ interface UserRow {
 export default function UserManagement() {
   const { tenantId, roles, user, hasRole } = useAuth();
   const { userLimit } = useSubscription();
-  const isAuthorized = hasRole('super_admin') || hasRole('admin_gabinete') || hasRole('coordenador');
+  const isSuperAdmin = hasRole('super_admin');
+  const isAdminGabinete = hasRole('admin_gabinete');
+  const isAuthorized = isSuperAdmin || isAdminGabinete || hasRole('coordenador');
   const canDelete = roles.includes("super_admin") || roles.includes("admin_gabinete") || roles.includes("coordenador");
+  const canManageAccess = isSuperAdmin || isAdminGabinete || hasRole('coordenador');
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -73,11 +76,29 @@ export default function UserManagement() {
   const [editModules, setEditModules] = useState<string[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
+  // Available roles based on caller's role
+  const getAvailableRoles = () => {
+    if (isSuperAdmin) {
+      return [
+        { value: "admin_gabinete", label: "Admin do Gabinete" },
+        { value: "coordenador", label: "Coordenador" },
+        { value: "assessor", label: "Assessor" },
+        { value: "operador", label: "Liderança" },
+      ];
+    }
+    // admin_gabinete and coordenador can only assign up to coordenador
+    return [
+      { value: "coordenador", label: "Coordenador" },
+      { value: "assessor", label: "Assessor" },
+      { value: "operador", label: "Liderança" },
+    ];
+  };
+
   const fetchUsers = async () => {
     if (!tenantId) return;
     setLoading(true);
 
-    // Get profiles for this tenant
+    // Get profiles for this tenant (all statuses)
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, full_name, status" as any)
@@ -190,13 +211,11 @@ export default function UserManagement() {
     if (!tenantId) return;
     setSaving(true);
     try {
-      // Update profile status and assign tenant
       await supabase
         .from("profiles")
         .update({ status: "approved" as any, tenant_id: tenantId })
         .eq("user_id", userId);
 
-      // Assign default role (operador/Liderança)
       const { data: existingRole } = await supabase
         .from("user_roles")
         .select("id")
@@ -234,6 +253,26 @@ export default function UserManagement() {
     }
     setSaving(false);
   };
+
+  const handleToggleAccess = async (userId: string, currentStatus: string) => {
+    if (!tenantId) return;
+    setSaving(true);
+    const newStatus = currentStatus === "approved" ? "suspended" : "approved";
+    try {
+      await supabase
+        .from("profiles")
+        .update({ status: newStatus as any })
+        .eq("user_id", userId)
+        .eq("tenant_id", tenantId);
+
+      toast.success(newStatus === "approved" ? "Acesso liberado!" : "Acesso suspenso!");
+      fetchUsers();
+    } catch (err: any) {
+      toast.error("Erro ao alterar acesso do usuário");
+    }
+    setSaving(false);
+  };
+
   const handleDeleteUser = async (userId: string) => {
     setSaving(true);
     try {
@@ -251,8 +290,8 @@ export default function UserManagement() {
   };
 
   const pendingUsers = users.filter((u) => u.status === "pending");
-
   const activeUsers = users.filter((u) => u.status === "approved");
+  const suspendedUsers = users.filter((u) => u.status === "suspended");
   const hasReachedUserLimit = userLimit !== Infinity && activeUsers.length >= userLimit;
 
   if (!isAuthorized) return <Navigate to="/dashboard" replace />;
@@ -300,10 +339,9 @@ export default function UserManagement() {
                 <Select value={newRole} onValueChange={setNewRole}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin_gabinete">Admin do Gabinete</SelectItem>
-                    <SelectItem value="coordenador">Coordenador</SelectItem>
-                    <SelectItem value="assessor">Assessor</SelectItem>
-                    <SelectItem value="operador">Liderança</SelectItem>
+                    {getAvailableRoles().map((r) => (
+                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -400,13 +438,16 @@ export default function UserManagement() {
       {/* Active Users table */}
       <Card>
         <CardHeader>
-          <CardTitle>Usuários do Sistema</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <UserCheck className="h-5 w-5 text-emerald-500" />
+            Usuários Ativos ({activeUsers.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : activeUsers.length === 0 ? (
-            <p className="text-center py-8 text-muted-foreground">Nenhum usuário cadastrado</p>
+            <p className="text-center py-8 text-muted-foreground">Nenhum usuário ativo</p>
           ) : (
             <Table>
               <TableHeader>
@@ -431,7 +472,7 @@ export default function UserManagement() {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {u.modules.length === 0 ? (
-                          <span className="text-xs text-muted-foreground">Nenhum módulo</span>
+                          <span className="text-xs text-muted-foreground">Todos os módulos</span>
                         ) : (
                           u.modules.map((m) => (
                             <Badge key={m} variant="outline" className="text-xs">
@@ -441,33 +482,47 @@ export default function UserManagement() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button size="sm" variant="outline" onClick={() => openEditPermissions(u)}>
-                        <Shield className="h-4 w-4 mr-1" /> Permissões
-                      </Button>
-                      {canDelete && u.user_id !== user?.id && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="destructive" disabled={saving}>
-                              <Trash2 className="h-4 w-4 mr-1" /> Excluir
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Excluir usuário?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Esta ação é irreversível. O usuário <strong>{u.full_name || "—"}</strong> será removido permanentemente do sistema.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteUser(u.user_id)}>
-                                Confirmar exclusão
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button size="sm" variant="outline" onClick={() => openEditPermissions(u)}>
+                          <Shield className="h-4 w-4 mr-1" /> Permissões
+                        </Button>
+                        {canManageAccess && u.user_id !== user?.id && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-amber-600 border-amber-300 hover:bg-amber-50"
+                            onClick={() => handleToggleAccess(u.user_id, u.status)}
+                            disabled={saving}
+                            title="Suspender acesso"
+                          >
+                            <UserX className="h-4 w-4 mr-1" /> Suspender
+                          </Button>
+                        )}
+                        {canDelete && u.user_id !== user?.id && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive" disabled={saving}>
+                                <Trash2 className="h-4 w-4 mr-1" /> Excluir
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir usuário?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta ação é irreversível. O usuário <strong>{u.full_name || "—"}</strong> será removido permanentemente do sistema.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteUser(u.user_id)}>
+                                  Confirmar exclusão
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -476,6 +531,85 @@ export default function UserManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Suspended Users table */}
+      {suspendedUsers.length > 0 && (
+        <Card className="border-amber-300/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-600">
+              <UserX className="h-5 w-5" />
+              Usuários Suspensos ({suspendedUsers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Perfil</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {suspendedUsers.map((u) => (
+                  <TableRow key={u.user_id} className="opacity-75">
+                    <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
+                    <TableCell>
+                      {u.role ? (
+                        <Badge variant="secondary">{ROLE_LABELS[u.role] || u.role}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Sem perfil</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-amber-600 border-amber-300">Suspenso</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {canManageAccess && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="bg-emerald-500 hover:bg-emerald-600"
+                            onClick={() => handleToggleAccess(u.user_id, u.status)}
+                            disabled={saving}
+                          >
+                            <UserCheck className="h-4 w-4 mr-1" /> Liberar Acesso
+                          </Button>
+                        )}
+                        {canDelete && u.user_id !== user?.id && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive" disabled={saving}>
+                                <Trash2 className="h-4 w-4 mr-1" /> Excluir
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir usuário?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta ação é irreversível. O usuário <strong>{u.full_name || "—"}</strong> será removido permanentemente do sistema.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteUser(u.user_id)}>
+                                  Confirmar exclusão
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
