@@ -151,6 +151,7 @@ export default function Demands() {
     const { data } = await supabase.storage.from("demand-documents").createSignedUrl(doc.storage_path, 120);
     if (data?.signedUrl) {
       setPreviewUrl(data.signedUrl);
+      setPreviewMimeType(doc.mime_type || null);
     }
   };
 
