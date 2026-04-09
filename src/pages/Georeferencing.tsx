@@ -172,25 +172,59 @@ export default function Georeferencing() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [selectedLeader, setSelectedLeader] = useState<string>("all");
 
-  useEffect(() => {
+  const fetchContacts = async () => {
     if (!profile?.tenant_id) return;
-    const fetchContacts = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from("contacts_decrypted")
-          .select("id, name, nickname, phone, email, city, neighborhood, address, address_number, cep, state, latitude, longitude, is_leader, leader_id, category, gender")
-          .eq("tenant_id", profile.tenant_id!)
-          .is("deleted_at", null);
-        if (!error && data) setContacts(data as ContactWithGeo[]);
-      } catch (err) {
-        console.error("Error fetching contacts:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("contacts_decrypted")
+        .select("id, name, nickname, phone, email, city, neighborhood, address, address_number, cep, state, latitude, longitude, is_leader, leader_id, category, gender")
+        .eq("tenant_id", profile.tenant_id!)
+        .is("deleted_at", null);
+      if (!error && data) setContacts(data as ContactWithGeo[]);
+    } catch (err) {
+      console.error("Error fetching contacts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchContacts();
   }, [profile?.tenant_id]);
+
+  const pendingGeoCount = useMemo(() => 
+    contacts.filter(c => !c.latitude && !c.longitude && c.cep && c.cep.replace(/\D/g, "").length === 8).length,
+    [contacts]
+  );
+
+  const handleBatchGeocode = async () => {
+    if (geocoding) return;
+    setGeocoding(true);
+    toast.info("Iniciando geolocalização automática...");
+    try {
+      const { data, error } = await supabase.functions.invoke("batch-geocode");
+      if (error) {
+        toast.error("Erro ao geocodificar contatos");
+        return;
+      }
+      if (data?.ok) {
+        toast.success(data.message);
+        // Refresh contacts
+        await fetchContacts();
+        // If there are remaining, prompt to run again
+        if (data.remaining > 0) {
+          toast.info(`Ainda restam ${data.remaining} contatos. Clique novamente para continuar.`);
+        }
+      } else {
+        toast.error(data?.error || "Erro ao geocodificar");
+      }
+    } catch {
+      toast.error("Erro ao geocodificar contatos");
+    } finally {
+      setGeocoding(false);
+    }
+  };
 
   const cities = useMemo(() => [...new Set(contacts.map((c) => c.city).filter(Boolean))].sort(), [contacts]);
   const neighborhoods = useMemo(() => [...new Set(contacts.map((c) => c.neighborhood).filter(Boolean))].sort(), [contacts]);
