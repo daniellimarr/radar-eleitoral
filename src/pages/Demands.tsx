@@ -39,6 +39,7 @@ export default function Demands() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewMimeType, setPreviewMimeType] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchDemands = async () => {
@@ -150,6 +151,7 @@ export default function Demands() {
     const { data } = await supabase.storage.from("demand-documents").createSignedUrl(doc.storage_path, 120);
     if (data?.signedUrl) {
       setPreviewUrl(data.signedUrl);
+      setPreviewMimeType(doc.mime_type || null);
     }
   };
 
@@ -250,7 +252,7 @@ export default function Demands() {
       </Card>
 
       {/* Documents Dialog */}
-      <Dialog open={docsDialogOpen} onOpenChange={(open) => { setDocsDialogOpen(open); if (!open) { setPreviewUrl(null); } }}>
+      <Dialog open={docsDialogOpen} onOpenChange={(open) => { setDocsDialogOpen(open); if (!open) { setPreviewUrl(null); setPreviewMimeType(null); } }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -288,10 +290,10 @@ export default function Demands() {
               <div className="border rounded-lg p-2 bg-muted/50">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">Pré-visualização</span>
-                  <Button variant="ghost" size="sm" onClick={() => setPreviewUrl(null)}>✕</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setPreviewUrl(null); setPreviewMimeType(null); }}>✕</Button>
                 </div>
-                {previewUrl.includes(".pdf") ? (
-                  <iframe src={previewUrl} className="w-full h-96 rounded" />
+                {previewMimeType === "application/pdf" ? (
+                  <iframe src={previewUrl + "#toolbar=1"} className="w-full h-96 rounded" title="PDF Preview" />
                 ) : (
                   <img src={previewUrl} alt="Preview" className="max-w-full max-h-96 mx-auto rounded" />
                 )}
