@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Plus, Pencil, Users, Building2, Mail, Loader2, Trash2, Ban, CheckCircle, KeyRound } from "lucide-react";
+import { Plus, Pencil, Users, Building2, Mail, Loader2, Trash2, Ban, CheckCircle, KeyRound, ShieldCheck } from "lucide-react";
 
 interface Tenant {
   id: string;
@@ -54,6 +54,9 @@ export default function TenantManagement() {
   const [passwordTarget, setPasswordTarget] = useState<{ userId: string; tenantName: string; email: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [grantAccessTarget, setGrantAccessTarget] = useState<Tenant | null>(null);
+  const [grantAccessDays, setGrantAccessDays] = useState("30");
+  const [grantingAccess, setGrantingAccess] = useState(false);
   const [form, setForm] = useState({
     name: "", document: "", status: "ativo", plan_id: "", contact_limit: "1000",
     admin_name: "", admin_email: "", admin_password: "",
@@ -281,6 +284,53 @@ export default function TenantManagement() {
     }
   };
 
+  const handleGrantAccess = async () => {
+    if (!grantAccessTarget) return;
+    setGrantingAccess(true);
+    try {
+      const days = parseInt(grantAccessDays) || 30;
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + days);
+
+      // Get admin user for this tenant
+      const admin = getAdmin(grantAccessTarget.id);
+      if (!admin) { toast.error("Administrador não encontrado para este gabinete"); setGrantingAccess(false); return; }
+
+      // Deactivate any existing active subscriptions
+      await supabase
+        .from("subscriptions")
+        .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+        .eq("tenant_id", grantAccessTarget.id)
+        .in("status", ["active", "past_due"]);
+
+      // Get plan name
+      const planName = grantAccessTarget.plan_id ? getPlanName(grantAccessTarget.plan_id) : "Acesso Liberado";
+
+      // Create free subscription
+      const { error: subError } = await supabase.from("subscriptions").insert({
+        tenant_id: grantAccessTarget.id,
+        user_id: admin.user_id,
+        plan_name: planName,
+        status: "active",
+        started_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
+      });
+      if (subError) throw subError;
+
+      // Activate tenant
+      await supabase.from("tenants").update({ status: "ativo" as any }).eq("id", grantAccessTarget.id);
+
+      toast.success(`Acesso liberado por ${days} dias para "${grantAccessTarget.name}"!`);
+      setGrantAccessTarget(null);
+      fetchData();
+    } catch (err: any) {
+      console.error("Erro ao liberar acesso:", err);
+      toast.error("Erro ao liberar acesso: " + (err.message || err));
+    } finally {
+      setGrantingAccess(false);
+    }
+  };
+
   if (!isSuperAdmin) {
     return <div className="flex items-center justify-center h-64 text-muted-foreground">Acesso restrito a Super Admins.</div>;
   }
@@ -357,9 +407,15 @@ export default function TenantManagement() {
                           <KeyRound className="h-3 w-3" />
                         </Button>
                       )}
+                      <Button size="sm" variant="outline" className="text-emerald-600 border-emerald-300 hover:bg-emerald-50" onClick={() => {
+                          setGrantAccessTarget(t);
+                          setGrantAccessDays("30");
+                        }} title="Liberar acesso gratuito">
+                          <ShieldCheck className="h-3 w-3" />
+                        </Button>
                       <Button size="sm" variant={t.status === "ativo" ? "destructive" : "default"} onClick={() => toggleStatus(t)} title={t.status === "ativo" ? "Suspender" : "Ativar"}>
-                        {t.status === "ativo" ? <Ban className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-                      </Button>
+                         {t.status === "ativo" ? <Ban className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => setDeleteTarget(t)} title="Excluir gabinete">
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -498,6 +554,45 @@ export default function TenantManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Grant Access Dialog */}
+      <Dialog open={!!grantAccessTarget} onOpenChange={(open) => !open && setGrantAccessTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Liberar Acesso Gratuito</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Gabinete</Label>
+              <Input value={grantAccessTarget?.name || ""} disabled className="bg-muted" />
+            </div>
+            <div>
+              <Label>Plano</Label>
+              <Input value={grantAccessTarget?.plan_id ? getPlanName(grantAccessTarget.plan_id) : "Sem plano"} disabled className="bg-muted" />
+            </div>
+            <div>
+              <Label>Dias de acesso *</Label>
+              <Select value={grantAccessDays} onValueChange={setGrantAccessDays}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 dias</SelectItem>
+                  <SelectItem value="15">15 dias</SelectItem>
+                  <SelectItem value="30">30 dias</SelectItem>
+                  <SelectItem value="90">90 dias</SelectItem>
+                  <SelectItem value="180">180 dias</SelectItem>
+                  <SelectItem value="365">365 dias</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Isso criará uma assinatura gratuita e ativará o gabinete sem necessidade de pagamento.
+            </p>
+            <Button className="w-full" onClick={handleGrantAccess} disabled={grantingAccess}>
+              {grantingAccess && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              Liberar Acesso
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
