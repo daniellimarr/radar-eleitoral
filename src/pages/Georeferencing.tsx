@@ -5,9 +5,11 @@ import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MapPin, Search } from "lucide-react";
+import { MapPin, Search, RefreshCw, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 
 // Fix default marker icons
@@ -162,6 +164,7 @@ export default function Georeferencing() {
   const { profile } = useAuth();
   const [contacts, setContacts] = useState<ContactWithGeo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [geocoding, setGeocoding] = useState(false);
   const [searchName, setSearchName] = useState("");
   const [filterCity, setFilterCity] = useState("all");
   const [filterNeighborhood, setFilterNeighborhood] = useState("all");
@@ -169,25 +172,59 @@ export default function Georeferencing() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [selectedLeader, setSelectedLeader] = useState<string>("all");
 
-  useEffect(() => {
+  const fetchContacts = async () => {
     if (!profile?.tenant_id) return;
-    const fetchContacts = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from("contacts_decrypted")
-          .select("id, name, nickname, phone, email, city, neighborhood, address, address_number, cep, state, latitude, longitude, is_leader, leader_id, category, gender")
-          .eq("tenant_id", profile.tenant_id!)
-          .is("deleted_at", null);
-        if (!error && data) setContacts(data as ContactWithGeo[]);
-      } catch (err) {
-        console.error("Error fetching contacts:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("contacts_decrypted")
+        .select("id, name, nickname, phone, email, city, neighborhood, address, address_number, cep, state, latitude, longitude, is_leader, leader_id, category, gender")
+        .eq("tenant_id", profile.tenant_id!)
+        .is("deleted_at", null);
+      if (!error && data) setContacts(data as ContactWithGeo[]);
+    } catch (err) {
+      console.error("Error fetching contacts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchContacts();
   }, [profile?.tenant_id]);
+
+  const pendingGeoCount = useMemo(() => 
+    contacts.filter(c => !c.latitude && !c.longitude && c.cep && c.cep.replace(/\D/g, "").length === 8).length,
+    [contacts]
+  );
+
+  const handleBatchGeocode = async () => {
+    if (geocoding) return;
+    setGeocoding(true);
+    toast.info("Iniciando geolocalização automática...");
+    try {
+      const { data, error } = await supabase.functions.invoke("batch-geocode");
+      if (error) {
+        toast.error("Erro ao geocodificar contatos");
+        return;
+      }
+      if (data?.ok) {
+        toast.success(data.message);
+        // Refresh contacts
+        await fetchContacts();
+        // If there are remaining, prompt to run again
+        if (data.remaining > 0) {
+          toast.info(`Ainda restam ${data.remaining} contatos. Clique novamente para continuar.`);
+        }
+      } else {
+        toast.error(data?.error || "Erro ao geocodificar");
+      }
+    } catch {
+      toast.error("Erro ao geocodificar contatos");
+    } finally {
+      setGeocoding(false);
+    }
+  };
 
   const cities = useMemo(() => [...new Set(contacts.map((c) => c.city).filter(Boolean))].sort(), [contacts]);
   const neighborhoods = useMemo(() => [...new Set(contacts.map((c) => c.neighborhood).filter(Boolean))].sort(), [contacts]);
@@ -314,6 +351,26 @@ export default function Georeferencing() {
               <span className="text-muted-foreground">Eleitor/Contato</span>
             </div>
           </div>
+
+          {pendingGeoCount > 0 && (
+            <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
+              <p className="text-xs text-muted-foreground mb-2">
+                <strong>{pendingGeoCount}</strong> contato(s) com CEP sem geolocalização
+              </p>
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={handleBatchGeocode}
+                disabled={geocoding}
+              >
+                {geocoding ? (
+                  <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Processando...</>
+                ) : (
+                  <><RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Geolocalizar Todos</>
+                )}
+              </Button>
+            </div>
+          )}
 
           <p className="text-[10px] text-muted-foreground mt-4">
             Geo Referenciamento é realizado por CEP e por aproximação. O número da localidade não é considerado.
