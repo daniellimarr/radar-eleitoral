@@ -290,10 +290,10 @@ export default function Demands() {
               <div className="border rounded-lg p-2 bg-muted/50">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">Pré-visualização</span>
-                  <Button variant="ghost" size="sm" onClick={() => setPreviewUrl(null)}>✕</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setPreviewUrl(null); setPreviewMimeType(null); }}>✕</Button>
                 </div>
-                {previewUrl.includes(".pdf") ? (
-                  <iframe src={previewUrl} className="w-full h-96 rounded" />
+                {previewMimeType === "application/pdf" ? (
+                  <iframe src={previewUrl + "#toolbar=1"} className="w-full h-96 rounded" title="PDF Preview" />
                 ) : (
                   <img src={previewUrl} alt="Preview" className="max-w-full max-h-96 mx-auto rounded" />
                 )}
