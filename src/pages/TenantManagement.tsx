@@ -554,6 +554,45 @@ export default function TenantManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Grant Access Dialog */}
+      <Dialog open={!!grantAccessTarget} onOpenChange={(open) => !open && setGrantAccessTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Liberar Acesso Gratuito</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Gabinete</Label>
+              <Input value={grantAccessTarget?.name || ""} disabled className="bg-muted" />
+            </div>
+            <div>
+              <Label>Plano</Label>
+              <Input value={grantAccessTarget?.plan_id ? getPlanName(grantAccessTarget.plan_id) : "Sem plano"} disabled className="bg-muted" />
+            </div>
+            <div>
+              <Label>Dias de acesso *</Label>
+              <Select value={grantAccessDays} onValueChange={setGrantAccessDays}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 dias</SelectItem>
+                  <SelectItem value="15">15 dias</SelectItem>
+                  <SelectItem value="30">30 dias</SelectItem>
+                  <SelectItem value="90">90 dias</SelectItem>
+                  <SelectItem value="180">180 dias</SelectItem>
+                  <SelectItem value="365">365 dias</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Isso criará uma assinatura gratuita e ativará o gabinete sem necessidade de pagamento.
+            </p>
+            <Button className="w-full" onClick={handleGrantAccess} disabled={grantingAccess}>
+              {grantingAccess && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              Liberar Acesso
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
