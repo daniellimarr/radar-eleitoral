@@ -54,6 +54,9 @@ export default function TenantManagement() {
   const [passwordTarget, setPasswordTarget] = useState<{ userId: string; tenantName: string; email: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [grantAccessTarget, setGrantAccessTarget] = useState<Tenant | null>(null);
+  const [grantAccessDays, setGrantAccessDays] = useState("30");
+  const [grantingAccess, setGrantingAccess] = useState(false);
   const [form, setForm] = useState({
     name: "", document: "", status: "ativo", plan_id: "", contact_limit: "1000",
     admin_name: "", admin_email: "", admin_password: "",
