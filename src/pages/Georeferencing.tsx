@@ -164,6 +164,7 @@ export default function Georeferencing() {
   const { profile } = useAuth();
   const [contacts, setContacts] = useState<ContactWithGeo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [geocoding, setGeocoding] = useState(false);
   const [searchName, setSearchName] = useState("");
   const [filterCity, setFilterCity] = useState("all");
   const [filterNeighborhood, setFilterNeighborhood] = useState("all");
