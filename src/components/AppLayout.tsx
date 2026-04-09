@@ -70,6 +70,31 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const isSuperAdmin = roles.includes("super_admin");
   const isAdminRole = isSuperAdmin || roles.includes("admin_gabinete");
+  if (profileStatus === "suspended" && !isAdminRole) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full border-amber-300/50">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center">
+              <AlertTriangle className="h-8 w-8 text-amber-600" />
+            </div>
+            <CardTitle className="text-2xl">Acesso Suspenso</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-muted-foreground">
+              Seu acesso ao sistema foi suspenso pelo administrador do gabinete.
+            </p>
+            <p className="text-muted-foreground text-sm">
+              Entre em contato com o administrador para solicitar a reativação.
+            </p>
+            <Button variant="ghost" onClick={() => signOut()} size="sm" className="mt-4">
+              Sair
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   if (profileStatus && profileStatus !== "approved" && !isAdminRole) {
     return <PendingApproval />;
   }
