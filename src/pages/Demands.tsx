@@ -234,10 +234,10 @@ export default function Demands() {
               </div>
               <div className="space-y-2">
                 <Label>Liderança (filtro)</Label>
-                <Select value={form.leader_id} onValueChange={(v) => setForm(p => ({ ...p, leader_id: v, contact_id: "" }))}>
+                <Select value={form.leader_id || "__all__"} onValueChange={(v) => setForm(p => ({ ...p, leader_id: v === "__all__" ? "" : v, contact_id: "" }))}>
                   <SelectTrigger><SelectValue placeholder="Todas as lideranças" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="__all__">Todas</SelectItem>
                     {leaders.map((l: any) => (
                       <SelectItem key={l.id} value={l.id}>{(l.contacts as any)?.name || "Líder"}</SelectItem>
                     ))}
@@ -247,10 +247,10 @@ export default function Demands() {
               <div className="space-y-2">
                 <Label>Pessoa (contato cadastrado)</Label>
                 <Input placeholder="Buscar contato..." value={contactSearch} onChange={(e) => setContactSearch(e.target.value)} className="mb-2" />
-                <Select value={form.contact_id} onValueChange={(v) => setForm(p => ({ ...p, contact_id: v }))}>
+                <Select value={form.contact_id || "__none__"} onValueChange={(v) => setForm(p => ({ ...p, contact_id: v === "__none__" ? "" : v }))}>
                   <SelectTrigger><SelectValue placeholder="Selecione um contato" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="__none__">Nenhum</SelectItem>
                     {filteredContacts.map((c: any) => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}
