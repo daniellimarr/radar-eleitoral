@@ -284,6 +284,53 @@ export default function TenantManagement() {
     }
   };
 
+  const handleGrantAccess = async () => {
+    if (!grantAccessTarget) return;
+    setGrantingAccess(true);
+    try {
+      const days = parseInt(grantAccessDays) || 30;
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + days);
+
+      // Get admin user for this tenant
+      const admin = getAdmin(grantAccessTarget.id);
+      if (!admin) { toast.error("Administrador não encontrado para este gabinete"); setGrantingAccess(false); return; }
+
+      // Deactivate any existing active subscriptions
+      await supabase
+        .from("subscriptions")
+        .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+        .eq("tenant_id", grantAccessTarget.id)
+        .in("status", ["active", "past_due"]);
+
+      // Get plan name
+      const planName = grantAccessTarget.plan_id ? getPlanName(grantAccessTarget.plan_id) : "Acesso Liberado";
+
+      // Create free subscription
+      const { error: subError } = await supabase.from("subscriptions").insert({
+        tenant_id: grantAccessTarget.id,
+        user_id: admin.user_id,
+        plan_name: planName,
+        status: "active",
+        started_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
+      });
+      if (subError) throw subError;
+
+      // Activate tenant
+      await supabase.from("tenants").update({ status: "ativo" as any }).eq("id", grantAccessTarget.id);
+
+      toast.success(`Acesso liberado por ${days} dias para "${grantAccessTarget.name}"!`);
+      setGrantAccessTarget(null);
+      fetchData();
+    } catch (err: any) {
+      console.error("Erro ao liberar acesso:", err);
+      toast.error("Erro ao liberar acesso: " + (err.message || err));
+    } finally {
+      setGrantingAccess(false);
+    }
+  };
+
   if (!isSuperAdmin) {
     return <div className="flex items-center justify-center h-64 text-muted-foreground">Acesso restrito a Super Admins.</div>;
   }
