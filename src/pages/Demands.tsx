@@ -264,12 +264,18 @@ export default function Demands() {
         </div>
       </div>
 
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input className="pl-10" placeholder="Pesquisar demanda..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <Table ref={tableRef}>
             <TableHeader>
               <TableRow>
                 <TableHead>Título</TableHead>
+                <TableHead>Pessoa</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Prioridade</TableHead>
                 <TableHead>Data</TableHead>
@@ -279,10 +285,11 @@ export default function Demands() {
             </TableHeader>
             <TableBody>
               {demands.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma demanda</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma demanda</TableCell></TableRow>
               ) : demands.map((d) => (
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">{d.title}</TableCell>
+                  <TableCell>{(d.contacts as any)?.name || "—"}</TableCell>
                   <TableCell>
                     <Badge className={statusOptions.find(s => s.value === d.status)?.color}>
                       {statusOptions.find(s => s.value === d.status)?.label}
