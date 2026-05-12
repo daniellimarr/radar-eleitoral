@@ -66,11 +66,12 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
 
-  useEffect(() => {
-    if (!loading && user) {
-      navigate("/dashboard");
-    }
-  }, [user, loading, navigate]);
+  // Redirecionamento removido para permitir que usuários sem assinatura vejam os planos na LandingPage
+  // useEffect(() => {
+  //   if (!loading && user) {
+  //     navigate("/dashboard");
+  //   }
+  // }, [user, loading, navigate]);
   const isLoggedInWithoutSub = !!user;
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
