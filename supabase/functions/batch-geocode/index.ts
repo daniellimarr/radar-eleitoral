@@ -16,7 +16,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ ok: false, error: "Não autorizado" }), {
-        status: 200,
+        status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -32,7 +32,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) {
       return new Response(JSON.stringify({ ok: false, error: "Não autorizado" }), {
-        status: 200,
+        status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -47,7 +47,7 @@ serve(async (req) => {
 
     if (!profile?.tenant_id) {
       return new Response(JSON.stringify({ ok: false, error: "Tenant não encontrado" }), {
-        status: 200,
+        status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -64,7 +64,7 @@ serve(async (req) => {
 
     if (fetchError) {
       return new Response(JSON.stringify({ ok: false, error: "Erro ao buscar contatos" }), {
-        status: 200,
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -86,38 +86,60 @@ serve(async (req) => {
       if (cleanCep.length !== 8) continue;
 
       try {
-        // Use BrasilAPI
-        const brasilRes = await fetch(`https://brasilapi.com.br/api/cep/v2/${cleanCep}`);
-        if (!brasilRes.ok) continue;
+        let lat = null;
+        let lng = null;
+        let brasilData: any = null;
 
-        const brasilData = await brasilRes.json();
-        let lat = brasilData.location?.coordinates?.latitude || null;
-        let lng = brasilData.location?.coordinates?.longitude || null;
+        // Try BrasilAPI
+        try {
+          const brasilRes = await fetch(`https://brasilapi.com.br/api/cep/v2/${cleanCep}`);
+          if (brasilRes.ok) {
+            brasilData = await brasilRes.json();
+            lat = brasilData.location?.coordinates?.latitude || null;
+            lng = brasilData.location?.coordinates?.longitude || null;
+          }
+        } catch (e) {
+          console.error(`BrasilAPI error for CEP ${cleanCep}:`, e);
+        }
 
-        // Fallback to Nominatim if no coordinates
+        // Fallback to Nominatim if no coordinates found yet
         if (!lat || !lng) {
-          const query = [brasilData.street, brasilData.neighborhood, brasilData.city, brasilData.state, "Brazil"]
-            .filter(Boolean)
-            .join(", ");
+          try {
+            // Build query using available data or just CEP
+            let query = "";
+            if (brasilData) {
+              query = [brasilData.street, brasilData.neighborhood, brasilData.city, brasilData.state, "Brazil"]
+                .filter(Boolean)
+                .join(", ");
+            } else {
+              query = `${cleanCep}, Brazil`;
+            }
 
-          const geoRes = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
-            { headers: { "User-Agent": "GabineteOnline/1.0", "Accept-Language": "pt-BR" } }
-          );
-          const geoData = await geoRes.json();
-          if (geoData.length > 0) {
-            lat = parseFloat(geoData[0].lat);
-            lng = parseFloat(geoData[0].lon);
+            const geoRes = await fetch(
+              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+              { headers: { "User-Agent": "GabineteOnline/1.0", "Accept-Language": "pt-BR" } }
+            );
+            if (geoRes.ok) {
+              const geoData = await geoRes.json();
+              if (geoData.length > 0) {
+                lat = parseFloat(geoData[0].lat);
+                lng = parseFloat(geoData[0].lon);
+              }
+            }
+          } catch (e) {
+            console.error(`Nominatim error for CEP ${cleanCep}:`, e);
           }
         }
 
         if (lat && lng) {
-          const updateData: Record<string, unknown> = { latitude: lat, longitude: lng };
-          // Also fill address fields if empty
-          if (brasilData.street) updateData.address = brasilData.street;
-          if (brasilData.neighborhood) updateData.neighborhood = brasilData.neighborhood;
-          if (brasilData.city) updateData.city = brasilData.city;
-          if (brasilData.state) updateData.state = brasilData.state;
+          const updateData: Record<string, any> = { latitude: lat, longitude: lng };
+          
+          if (brasilData) {
+            if (brasilData.street) updateData.address = brasilData.street;
+            if (brasilData.neighborhood) updateData.neighborhood = brasilData.neighborhood;
+            if (brasilData.city) updateData.city = brasilData.city;
+            if (brasilData.state) updateData.state = brasilData.state;
+          }
 
           const { error: updateError } = await adminClient
             .from("contacts")
@@ -127,10 +149,9 @@ serve(async (req) => {
           if (!updateError) updated++;
         }
 
-        // Small delay to respect rate limits
         await new Promise(resolve => setTimeout(resolve, 200));
-      } catch {
-        // Skip individual errors
+      } catch (err) {
+        console.error(`Error processing contact ${contact.id}:`, err);
         continue;
       }
     }

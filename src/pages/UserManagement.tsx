@@ -420,12 +420,17 @@ export default function UserManagement() {
                       <Badge variant="outline" className="text-warning border-warning">Pendente</Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button size="sm" variant="default" onClick={() => handleApprove(u.user_id)} disabled={saving}>
-                        <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleReject(u.user_id)} disabled={saving}>
-                        <XCircle className="h-4 w-4 mr-1" /> Rejeitar
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button size="sm" variant="outline" onClick={() => openEditPermissions(u)} disabled={saving}>
+                          <Shield className="h-4 w-4 mr-1" /> Permissões
+                        </Button>
+                        <Button size="sm" variant="default" onClick={() => handleApprove(u.user_id)} disabled={saving}>
+                          <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleReject(u.user_id)} disabled={saving}>
+                          <XCircle className="h-4 w-4 mr-1" /> Rejeitar
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -472,7 +477,7 @@ export default function UserManagement() {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {u.modules.length === 0 ? (
-                          <span className="text-xs text-muted-foreground">Todos os módulos</span>
+                          <span className="text-xs text-muted-foreground">Nenhum módulo selecionado</span>
                         ) : (
                           u.modules.map((m) => (
                             <Badge key={m} variant="outline" className="text-xs">

@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
     }
 
     // Set module permissions
-    if (modules && Array.isArray(modules) && modules.length > 0) {
+    if (modules && Array.isArray(modules)) {
       // Clear existing permissions first
       await adminClient
         .from("user_permissions")
@@ -157,12 +157,14 @@ Deno.serve(async (req) => {
         .eq("user_id", userId)
         .eq("tenant_id", callerProfile.tenant_id);
 
-      const permRows = modules.map((m: string) => ({
-        user_id: userId,
-        tenant_id: callerProfile.tenant_id,
-        module: m,
-      }));
-      await adminClient.from("user_permissions").insert(permRows);
+      if (modules.length > 0) {
+        const permRows = modules.map((m: string) => ({
+          user_id: userId,
+          tenant_id: callerProfile.tenant_id,
+          module: m,
+        }));
+        await adminClient.from("user_permissions").insert(permRows);
+      }
     }
 
     return new Response(JSON.stringify({ success: true, user_id: userId }), {
