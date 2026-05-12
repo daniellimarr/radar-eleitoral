@@ -1733,6 +1733,15 @@ export type Database = {
           leader_name: string
         }[]
       }
+      get_registration_link_info: {
+        Args: { p_slug: string }
+        Returns: {
+          leader_contact_id: string
+          leader_name: string
+          tenant_id: string
+          tenant_name: string
+        }[]
+      }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -1743,6 +1752,10 @@ export type Database = {
       }
       is_chat_participant: {
         Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
+      tenant_has_active_registration_link: {
+        Args: { p_tenant_id: string }
         Returns: boolean
       }
     }
