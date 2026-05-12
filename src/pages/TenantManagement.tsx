@@ -226,7 +226,7 @@ export default function TenantManagement() {
 
     try {
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_safe")
         .select("user_id")
         .eq("tenant_id", deleteTarget.id);
 
