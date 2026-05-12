@@ -1729,6 +1729,66 @@ export type Database = {
           },
         ]
       }
+      donations_safe: {
+        Row: {
+          campaign_id: string | null
+          comprovante_url: string | null
+          cpf_cnpj: string | null
+          created_at: string | null
+          data: string | null
+          forma_pagamento: string | null
+          id: string | null
+          nome_doador: string | null
+          tenant_id: string | null
+          tipo: string | null
+          updated_at: string | null
+          valor: number | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          comprovante_url?: string | null
+          cpf_cnpj?: never
+          created_at?: string | null
+          data?: string | null
+          forma_pagamento?: string | null
+          id?: string | null
+          nome_doador?: string | null
+          tenant_id?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Update: {
+          campaign_id?: string | null
+          comprovante_url?: string | null
+          cpf_cnpj?: never
+          created_at?: string | null
+          data?: string | null
+          forma_pagamento?: string | null
+          id?: string | null
+          nome_doador?: string | null
+          tenant_id?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments_safe: {
         Row: {
           amount: number | null
