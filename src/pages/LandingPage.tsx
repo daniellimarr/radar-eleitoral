@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,13 @@ const landingPlans = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
   const isLoggedInWithoutSub = !!user;
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
