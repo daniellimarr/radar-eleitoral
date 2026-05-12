@@ -147,7 +147,7 @@ export function useLeaderRegistration(id: string | undefined) {
     
     setSaving(true);
     try {
-      const contactData = {
+      const contactData: any = {
         ...form,
         latitude: geoCoords.latitude,
         longitude: geoCoords.longitude,
