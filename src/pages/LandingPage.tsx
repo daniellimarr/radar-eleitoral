@@ -64,7 +64,13 @@ const landingPlans = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
   const isLoggedInWithoutSub = !!user;
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
