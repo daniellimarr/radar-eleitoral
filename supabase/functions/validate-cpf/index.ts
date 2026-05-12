@@ -30,9 +30,23 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Require authenticated caller to prevent anonymous CPF/PII enumeration
+  // Require authenticated caller and verify JWT to prevent anonymous CPF/PII enumeration
   const authHeader = req.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ valid: false, message: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+  const token = authHeader.replace('Bearer ', '');
+  const callerClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
+  if (claimsError || !claimsData?.claims?.sub) {
     return new Response(JSON.stringify({ valid: false, message: 'Unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
