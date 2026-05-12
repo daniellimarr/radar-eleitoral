@@ -26,10 +26,7 @@ Deno.serve(async (req) => {
     const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
     if (claimsError || !claimsData?.claims?.sub) {
       console.error("Claims error:", claimsError);
-      return new Response(JSON.stringify({ error: "Não autenticado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond(false, { error: "Não autenticado" }, 401);
     }
 
     const callerId = claimsData.claims.sub;
