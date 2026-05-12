@@ -14,10 +14,7 @@ Deno.serve(async (req) => {
     // Verify caller is authenticated using getClaims (works with ES256)
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Não autenticado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond(false, { error: "Não autenticado" }, 401);
     }
     const token = authHeader.replace("Bearer ", "");
 
