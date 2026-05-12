@@ -23,6 +23,8 @@ export default function Auth() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Ao detectar usuário logado, redirecionamos para o Dashboard.
+    // O AppLayout cuidará de redirecionar para a LandingPage caso não haja assinatura ativa.
     if (!loading && user) {
       navigate("/dashboard", { replace: true });
     }

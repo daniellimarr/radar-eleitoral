@@ -112,8 +112,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return <ExpiredSubscriptionScreen planName={planName} expiredAt={expiredAt} />;
   }
 
-  // Not subscribed at all - redirect to landing
-  if (!subscribed && !isSuperAdmin && location.pathname !== "/assinatura") {
+  // Se não estiver inscrito e não for super_admin, redirecionar para a LandingPage (/)
+  // mas permitir acesso à página de assinatura (/assinatura ou /planos)
+  if (!subscribed && !isSuperAdmin && location.pathname !== "/assinatura" && location.pathname !== "/planos") {
     return <Navigate to="/" replace />;
   }
 
