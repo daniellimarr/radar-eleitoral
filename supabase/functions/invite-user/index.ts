@@ -1,13 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { respond, handleOptions } from "../_shared/responses.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleOptions();
   }
 
   try {
@@ -18,10 +14,7 @@ Deno.serve(async (req) => {
     // Verify caller is authenticated using getClaims (works with ES256)
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Não autenticado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond(false, { error: "Não autenticado" }, 401);
     }
     const token = authHeader.replace("Bearer ", "");
 
@@ -33,10 +26,7 @@ Deno.serve(async (req) => {
     const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
     if (claimsError || !claimsData?.claims?.sub) {
       console.error("Claims error:", claimsError);
-      return new Response(JSON.stringify({ error: "Não autenticado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond(false, { error: "Não autenticado" }, 401);
     }
 
     const callerId = claimsData.claims.sub;
@@ -167,14 +157,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, user_id: userId }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return respond(true, { success: true, user_id: userId });
   } catch (error: any) {
     console.error("invite-user error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return respond(false, { error: error.message }, 400);
   }
 });
