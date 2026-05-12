@@ -25,13 +25,13 @@ export function useUserManagement() {
     try {
       // Get profiles for this tenant (all statuses)
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_safe")
         .select("user_id, full_name, status" as any)
         .eq("tenant_id", tenantId);
 
       // Also fetch pending profiles without tenant
       const { data: pendingProfiles } = await supabase
-        .from("profiles")
+        .from("profiles_safe")
         .select("user_id, full_name, status" as any)
         .is("tenant_id", null)
         .filter("status", "eq", "pending");
