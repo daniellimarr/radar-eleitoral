@@ -3,7 +3,7 @@ import { respond, handleOptions } from "../_shared/responses.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleOptions();
   }
 
   try {
