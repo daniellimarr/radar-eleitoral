@@ -157,14 +157,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, user_id: userId }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return respond(true, { success: true, user_id: userId });
   } catch (error: any) {
     console.error("invite-user error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return respond(false, { error: error.message }, 400);
   }
 });
