@@ -28,6 +28,15 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Require authenticated caller to prevent anonymous CPF/PII enumeration
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ valid: false, message: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const { cpf } = await req.json();
     const cleaned = (cpf || '').replace(/\D/g, '');
@@ -46,10 +55,10 @@ Deno.serve(async (req) => {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        await response.text();
+        // Do NOT return holder name (PII from government source)
         return new Response(JSON.stringify({
           valid: true,
-          name: data.nome || null,
           message: 'CPF válido na Receita Federal.',
           source: 'receita_federal',
         }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
