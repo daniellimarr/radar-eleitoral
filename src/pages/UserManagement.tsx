@@ -472,7 +472,7 @@ export default function UserManagement() {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {u.modules.length === 0 ? (
-                          <span className="text-xs text-muted-foreground">Todos os módulos</span>
+                          <span className="text-xs text-muted-foreground">Nenhum módulo selecionado</span>
                         ) : (
                           u.modules.map((m) => (
                             <Badge key={m} variant="outline" className="text-xs">
