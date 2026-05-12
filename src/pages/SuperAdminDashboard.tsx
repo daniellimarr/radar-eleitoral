@@ -51,7 +51,7 @@ export default function SuperAdminDashboard() {
       const [tenantsRes, plansRes, subsRes] = await Promise.all([
         supabase.from("tenants").select("id, name, status, plan_id, contact_limit, created_at").is("deleted_at", null).order("created_at", { ascending: false }),
         supabase.from("plans").select("*").order("monthly_price"),
-        supabase.from("subscriptions").select("*").order("started_at", { ascending: false }),
+        supabase.from("subscriptions_safe").select("*").order("started_at", { ascending: false }),
       ]);
 
       const plansData = plansRes.data || [];

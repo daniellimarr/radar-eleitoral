@@ -42,7 +42,7 @@ export default function AdminSubscriptions() {
       setLoading(true);
 
       const [subsRes, tenantsRes] = await Promise.all([
-        supabase.from("subscriptions").select("*").order("started_at", { ascending: false }),
+        supabase.from("subscriptions_safe").select("*").order("started_at", { ascending: false }),
         supabase.from("tenants").select("id, name").is("deleted_at", null),
       ]);
 
