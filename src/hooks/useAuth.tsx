@@ -16,6 +16,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, fullName: string) => Promise<any>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<any>;
+  updatePassword: (password: string) => Promise<any>;
   hasRole: (role: string) => boolean;
   hasPermission: (module: string) => boolean;
 }
@@ -130,6 +132,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await AuthService.signOut();
   };
 
+  const resetPassword = async (email: string) => {
+    return AuthService.resetPassword(email);
+  };
+
+  const updatePassword = async (password: string) => {
+    return supabase.auth.updateUser({ password });
+  };
+
   const value = {
     user,
     session,
@@ -143,6 +153,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
+    resetPassword,
+    updatePassword,
     hasRole,
     hasPermission
   };
