@@ -42,4 +42,10 @@ export class AuthService {
   static async signOut() {
     return supabase.auth.signOut();
   }
+
+  static async resetPassword(email: string) {
+    return supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth?reset=true`,
+    });
+  }
 }
