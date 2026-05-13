@@ -1,12 +1,13 @@
 import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
-
-const FUNCTION_URL = "http://localhost:8000/validate-cpf";
+import { handler } from "./index.ts";
 
 Deno.test("validate-cpf rejects requests without Authorization header", async () => {
-  const res = await fetch(FUNCTION_URL, {
+  const req = new Request("http://localhost/validate-cpf", {
     method: "POST",
     body: JSON.stringify({ cpf: "12345678909" }),
   });
+  
+  const res = await handler(req);
   
   assertEquals(res.status, 401);
   const data = await res.json();
@@ -15,13 +16,15 @@ Deno.test("validate-cpf rejects requests without Authorization header", async ()
 });
 
 Deno.test("validate-cpf rejects requests with invalid Authorization format", async () => {
-  const res = await fetch(FUNCTION_URL, {
+  const req = new Request("http://localhost/validate-cpf", {
     method: "POST",
     headers: {
       "Authorization": "InvalidToken"
     },
     body: JSON.stringify({ cpf: "12345678909" }),
   });
+  
+  const res = await handler(req);
   
   assertEquals(res.status, 401);
   const data = await res.json();
@@ -30,7 +33,11 @@ Deno.test("validate-cpf rejects requests with invalid Authorization format", asy
 });
 
 Deno.test("validate-cpf rejects requests with invalid JWT token", async () => {
-  const res = await fetch(FUNCTION_URL, {
+  // Mocking environment variables that are needed
+  Deno.env.set("SUPABASE_URL", "https://example.supabase.co");
+  Deno.env.set("SUPABASE_ANON_KEY", "example-key");
+
+  const req = new Request("http://localhost/validate-cpf", {
     method: "POST",
     headers: {
       "Authorization": "Bearer invalid.jwt.token"
@@ -38,8 +45,8 @@ Deno.test("validate-cpf rejects requests with invalid JWT token", async () => {
     body: JSON.stringify({ cpf: "12345678909" }),
   });
   
-  // The function calls supabase.auth.getClaims(token)
-  // Even if it doesn't fail with an exception, it should return an error or empty sub
+  const res = await handler(req);
+  
   assertEquals(res.status, 401);
   const data = await res.json();
   assertEquals(data.valid, false);
