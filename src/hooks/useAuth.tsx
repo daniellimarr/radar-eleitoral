@@ -33,38 +33,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileStatus, setProfileStatus] = useState<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
-    const { data: profileData } = await supabase
-      .from("profiles_safe")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
-    
-    if (profileData) {
-      setProfile(profileData);
-      setTenantId(profileData.tenant_id);
-      setProfileStatus((profileData as any).status || 'pending');
-    }
+    try {
+      setPermissionsLoading(true);
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles_safe")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      if (profileError) throw profileError;
 
-    const { data: rolesData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    
-    if (rolesData) {
-      setRoles(rolesData.map((r: any) => r.role));
-    }
+      if (profileData) {
+        setProfile(profileData);
+        setTenantId(profileData.tenant_id);
+        setProfileStatus((profileData as any).status || 'pending');
 
-    // Fetch module permissions
-    setPermissionsLoading(true);
-    const { data: permsData } = await supabase
-      .from("user_permissions")
-      .select("module")
-      .eq("user_id", userId);
-    
-    if (permsData) {
-      setUserPermissions(permsData.map((p: any) => p.module));
+        // Fetch roles and permissions in parallel
+        const [rolesRes, permsRes] = await Promise.all([
+          supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId),
+          supabase
+            .from("user_permissions")
+            .select("module")
+            .eq("user_id", userId)
+            .eq("tenant_id", profileData.tenant_id)
+        ]);
+        
+        if (rolesRes.data) {
+          setRoles(rolesRes.data.map((r: any) => r.role));
+        }
+        
+        if (permsRes.data) {
+          setUserPermissions(permsRes.data.map((p: any) => p.module));
+        }
+      } else {
+        // Clear if no profile found
+        setProfile(null);
+        setRoles([]);
+        setTenantId(null);
+        setUserPermissions([]);
+        setProfileStatus(null);
+      }
+    } catch (error) {
+      console.error("Error fetching auth data:", error);
+    } finally {
+      setPermissionsLoading(false);
     }
-    setPermissionsLoading(false);
   };
 
   useEffect(() => {

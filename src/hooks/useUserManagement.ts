@@ -26,13 +26,13 @@ export function useUserManagement() {
       // Get profiles for this tenant (all statuses)
       const { data: profiles } = await supabase
         .from("profiles_safe")
-        .select("user_id, full_name, status" as any)
+        .select("user_id, full_name, email, status" as any)
         .eq("tenant_id", tenantId);
 
       // Also fetch pending profiles without tenant
       const { data: pendingProfiles } = await supabase
         .from("profiles_safe")
-        .select("user_id, full_name, status" as any)
+        .select("user_id, full_name, email, status" as any)
         .is("tenant_id", null)
         .filter("status", "eq", "pending");
 
@@ -45,10 +45,13 @@ export function useUserManagement() {
 
       const userIds = allProfiles.map((p) => p.user_id);
 
-      // Get roles and permissions in parallel
+      // Get roles and permissions in parallel, filtering by the specific users
       const [rolesRes, permsRes] = await Promise.all([
         supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
-        supabase.from("user_permissions").select("user_id, module").eq("tenant_id", tenantId)
+        supabase.from("user_permissions")
+          .select("user_id, module")
+          .in("user_id", userIds)
+          .eq("tenant_id", tenantId)
       ]);
 
       const rolesMap = new Map<string, string>();
@@ -63,7 +66,7 @@ export function useUserManagement() {
       const rows: UserRow[] = allProfiles.map((p: any) => ({
         user_id: p.user_id,
         full_name: p.full_name,
-        email: "", // Email is not available in public profile for privacy
+        email: p.email || "", // Email now available in profile
         role: rolesMap.get(p.user_id) || null,
         modules: permsMap.get(p.user_id) || [],
         status: p.status || "approved",
