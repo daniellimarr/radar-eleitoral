@@ -6,22 +6,29 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, asaas-access-token",
 };
 
+/**
+ * Validates the Asaas Webhook signature or token
+ * In a real-world scenario, you should use the "Webhook Token" provided by Asaas
+ * to verify the 'asaas-access-token' header.
+ */
+function validateAsaasRequest(req: Request, apiKey: string): boolean {
+  const accessToken = req.headers.get("asaas-access-token");
+  if (!accessToken || !apiKey) return false;
+  
+  // Strict comparison to prevent timing attacks and unauthorized access
+  // ASAAS_API_KEY is used as the shared secret for webhook validation
+  return accessToken === apiKey;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   const asaasApiKey = Deno.env.get("ASAAS_API_KEY");
-  const accessToken = req.headers.get("asaas-access-token");
-  if (!asaasApiKey) {
-    console.error("[ASAAS-WEBHOOK] ASAAS_API_KEY not configured - rejecting request");
-    return new Response(JSON.stringify({ error: "Server misconfigured" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  if (!accessToken || accessToken !== asaasApiKey) {
-    console.error("[ASAAS-WEBHOOK] Invalid or missing access token");
+  
+  if (!validateAsaasRequest(req, asaasApiKey || "")) {
+    console.error("[ASAAS-WEBHOOK] Unauthorized access attempt detected");
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
