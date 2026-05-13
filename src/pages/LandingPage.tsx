@@ -58,13 +58,10 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
 
-  // Redirecionamento removido para permitir que usuários sem assinatura vejam os planos na LandingPage
-  // useEffect(() => {
-  //   if (!loading && user) {
-  //     navigate("/dashboard");
-  //   }
-  // }, [user, loading, navigate]);
-  const isLoggedInWithoutSub = !!user;
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  const isLoggedInWithoutSub = false; // Always false since access is free after login
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const scrollTo = (id: string) => {
@@ -108,7 +105,7 @@ export default function LandingPage() {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-500">
             <button onClick={() => scrollTo("features")} className="hover:text-[#FF6B00] transition-colors">Funcionalidades</button>
-            <button onClick={() => scrollTo("pricing")} className="hover:text-[#FF6B00] transition-colors">Planos</button>
+            <button onClick={() => scrollTo("features")} className="hover:text-[#FF6B00] transition-colors">Funcionalidades</button>
             <button onClick={() => scrollTo("benefits")} className="hover:text-[#FF6B00] transition-colors">Benefícios</button>
             <button onClick={() => scrollTo("contact")} className="hover:text-[#FF6B00] transition-colors">Contato</button>
           </div>
@@ -418,69 +415,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Planos ── */}
-      <section id="pricing" className="py-20 lg:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
-            className="text-center max-w-3xl mx-auto mb-4">
-            <span className="text-[#FF6B00] font-semibold text-sm uppercase tracking-wider">Planos</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold">
-              O melhor custo benefício
-            </h2>
-            <p className="mt-2 text-[#FF6B00] text-xl font-bold">Nº 1 do Brasil</p>
-            <p className="mt-4 text-gray-500 text-lg">
-              Formas de pagamento: PIX ou Cartão de Crédito — Liberação imediata
-            </p>
-          </motion.div>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {landingPlans.map((plan, i) => {
-              const planKey = planKeyMap[plan.name];
-              const isLoading = loadingPlan === planKey;
-              return (
-                <motion.div key={plan.name} variants={fadeUp} custom={i}
-                  className={`relative rounded-2xl p-8 border-2 transition-all ${
-                    plan.popular
-                      ? "border-[#FF6B00] bg-white shadow-2xl shadow-[#FF6B00]/10 scale-[1.03]"
-                      : "border-gray-200 bg-white hover:border-gray-300"
-                  }`}>
-                  {plan.popular && (
-                    <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#FF6B00] text-white text-xs font-bold px-5 py-1.5 rounded-full shadow-md">
-                      Mais Popular
-                    </span>
-                  )}
-                  <div className="text-center mb-4">
-                    <plan.icon className="h-8 w-8 text-[#FF6B00] mx-auto mb-2" />
-                    <p className="text-sm text-gray-400 font-medium">{plan.tag}</p>
-                    <h3 className="text-xl font-bold">{plan.name}</h3>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-sm text-gray-500">R$</span>
-                      <span className="text-4xl font-extrabold text-[#FF6B00]">{plan.price}</span>
-                      <span className="text-gray-500 text-sm">{plan.period}</span>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => handleSubscribe(plan.name)}
-                    disabled={isLoading}
-                    className={`w-full mt-6 py-6 text-base font-bold rounded-xl transition-all ${
-                      plan.popular
-                        ? "bg-[#FF6B00] hover:bg-[#e55f00] text-white shadow-lg shadow-[#FF6B00]/20"
-                        : "bg-[#111111] hover:bg-[#222] text-white"
-                    }`}>
-                    {isLoading ? (
-                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando...</>
-                    ) : (
-                      <>Assinar Agora <ChevronRight className="ml-1 h-4 w-4" /></>
-                    )}
-                  </Button>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </div>
-      </section>
+      {/* Pricing section removed as access is now free after login */}
 
       {/* ── CTA Final ── */}
       <section className="py-20 lg:py-28 bg-gradient-to-br from-[#FF6B00] via-[#e55f00] to-[#cc5200]">
@@ -527,7 +462,7 @@ export default function LandingPage() {
               <h4 className="font-bold mb-4 text-white text-sm uppercase tracking-wider">Links</h4>
               <ul className="space-y-3 text-sm text-gray-500">
                 <li><button onClick={() => scrollTo("features")} className="hover:text-white transition-colors">Funcionalidades</button></li>
-                <li><button onClick={() => scrollTo("pricing")} className="hover:text-white transition-colors">Planos</button></li>
+                <li><button onClick={() => scrollTo("features")} className="hover:text-white transition-colors">Funcionalidades</button></li>
                 <li><button onClick={() => scrollTo("contact")} className="hover:text-white transition-colors">Contato</button></li>
                 <li><button onClick={() => navigate("/auth")} className="hover:text-white transition-colors">Sobre</button></li>
               </ul>

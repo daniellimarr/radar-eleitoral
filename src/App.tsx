@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "@/pages/LandingPage";
 import { AuthProvider } from "@/hooks/useAuth";
-import { SubscriptionProvider } from "@/hooks/useSubscription";
+// SubscriptionProvider removed as plans are no longer required
 import AppLayout from "@/components/AppLayout";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
@@ -48,7 +48,7 @@ function App() {
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <SubscriptionProvider>
+          <>{/* SubscriptionProvider removed */ }
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<Auth />} />
@@ -82,7 +82,7 @@ function App() {
             
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </SubscriptionProvider>
+          </>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

@@ -107,16 +107,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  // Show expired screen with renewal option
-  if (expired && !isSuperAdmin) {
-    return <ExpiredSubscriptionScreen planName={planName} expiredAt={expiredAt} />;
-  }
-
-  // Se não estiver inscrito e não for super_admin, redirecionar para a LandingPage (/)
-  // mas permitir acesso à página de assinatura (/assinatura ou /planos)
-  if (!subscribed && !isSuperAdmin && location.pathname !== "/assinatura" && location.pathname !== "/planos") {
-    return <Navigate to="/" replace />;
-  }
+  // All authenticated users have access, subscription check removed
 
   return (
     <SidebarProvider>
