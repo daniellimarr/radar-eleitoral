@@ -118,6 +118,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return userPermissions.includes(module);
   };
 
+  const signIn = async (email: string, password: string) => {
+    return AuthService.signIn(email, password);
+  };
+
+  const signUp = async (email: string, password: string, fullName: string) => {
+    return AuthService.signUp(email, password, fullName);
+  };
+
+  const signOut = async () => {
+    await AuthService.signOut();
+  };
+
   const value = {
     user,
     session,
@@ -128,9 +140,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userPermissions,
     permissionsLoading,
     profileStatus,
-    signIn: AuthService.signIn,
-    signUp: AuthService.signUp,
-    signOut: AuthService.signOut,
+    signIn,
+    signUp,
+    signOut,
     hasRole,
     hasPermission
   };

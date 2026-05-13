@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
-import { UserRow } from "@/types/user-management";
+import { Database } from "@/integrations/supabase/types";
+
+type AppRole = Database["public"]["Enums"]["app_role"];
 
 export class UserService {
   static async fetchTenantProfiles(tenantId: string) {
@@ -62,7 +64,7 @@ export class UserService {
       .maybeSingle();
   }
 
-  static async insertRole(userId: string, role: string, tenantId: string) {
+  static async insertRole(userId: string, role: AppRole, tenantId: string) {
     return supabase.from("user_roles").insert({
       user_id: userId,
       role,
