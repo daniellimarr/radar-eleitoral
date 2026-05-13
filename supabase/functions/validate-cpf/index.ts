@@ -44,6 +44,7 @@ export const handler = async (req: Request) => {
   const token = authHeader.replace('Bearer ', '');
   const callerClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
+    auth: { persistSession: false },
   });
   const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
   if (claimsError || !claimsData?.claims?.sub) {
