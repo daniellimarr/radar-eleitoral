@@ -25,7 +25,7 @@ function isValidCpfAlgorithm(cpf: string): boolean {
   return true;
 }
 
-Deno.serve(async (req) => {
+export const handler = async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -109,3 +109,7 @@ Deno.serve(async (req) => {
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
+
+if (import.meta.main) {
+  Deno.serve(handler);
+}
