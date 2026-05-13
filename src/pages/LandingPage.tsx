@@ -58,13 +58,10 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
 
-  // Redirecionamento removido para permitir que usuários sem assinatura vejam os planos na LandingPage
-  // useEffect(() => {
-  //   if (!loading && user) {
-  //     navigate("/dashboard");
-  //   }
-  // }, [user, loading, navigate]);
-  const isLoggedInWithoutSub = !!user;
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  const isLoggedInWithoutSub = false; // Always false since access is free after login
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const scrollTo = (id: string) => {
@@ -108,7 +105,7 @@ export default function LandingPage() {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-500">
             <button onClick={() => scrollTo("features")} className="hover:text-[#FF6B00] transition-colors">Funcionalidades</button>
-            <button onClick={() => scrollTo("pricing")} className="hover:text-[#FF6B00] transition-colors">Planos</button>
+            <button onClick={() => scrollTo("features")} className="hover:text-[#FF6B00] transition-colors">Funcionalidades</button>
             <button onClick={() => scrollTo("benefits")} className="hover:text-[#FF6B00] transition-colors">Benefícios</button>
             <button onClick={() => scrollTo("contact")} className="hover:text-[#FF6B00] transition-colors">Contato</button>
           </div>
@@ -527,7 +524,7 @@ export default function LandingPage() {
               <h4 className="font-bold mb-4 text-white text-sm uppercase tracking-wider">Links</h4>
               <ul className="space-y-3 text-sm text-gray-500">
                 <li><button onClick={() => scrollTo("features")} className="hover:text-white transition-colors">Funcionalidades</button></li>
-                <li><button onClick={() => scrollTo("pricing")} className="hover:text-white transition-colors">Planos</button></li>
+                <li><button onClick={() => scrollTo("features")} className="hover:text-white transition-colors">Funcionalidades</button></li>
                 <li><button onClick={() => scrollTo("contact")} className="hover:text-white transition-colors">Contato</button></li>
                 <li><button onClick={() => navigate("/auth")} className="hover:text-white transition-colors">Sobre</button></li>
               </ul>
