@@ -863,6 +863,27 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          attempted_at: string | null
+          id: string
+          ip_address: string
+          success: boolean | null
+        }
+        Insert: {
+          attempted_at?: string | null
+          id?: string
+          ip_address: string
+          success?: boolean | null
+        }
+        Update: {
+          attempted_at?: string | null
+          id?: string
+          ip_address?: string
+          success?: boolean | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -1064,30 +1085,36 @@ export type Database = {
         Row: {
           coordinator_id: string | null
           created_at: string
+          current_uses: number | null
           expires_at: string | null
           id: string
           is_active: boolean | null
           leader_contact_id: string | null
+          max_uses: number | null
           slug: string
           tenant_id: string
         }
         Insert: {
           coordinator_id?: string | null
           created_at?: string
+          current_uses?: number | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
           leader_contact_id?: string | null
+          max_uses?: number | null
           slug: string
           tenant_id: string
         }
         Update: {
           coordinator_id?: string | null
           created_at?: string
+          current_uses?: number | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
           leader_contact_id?: string | null
+          max_uses?: number | null
           slug?: string
           tenant_id?: string
         }
