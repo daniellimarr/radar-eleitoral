@@ -55,8 +55,12 @@ Deno.serve(async (req) => {
     }
 
     const { user_id, new_password } = await req.json();
-    if (!user_id || !new_password) throw new Error("user_id and new_password required");
-    if (new_password.length < 6) throw new Error("Password must be at least 6 characters");
+    
+    // 3. Input Validation and Sanitization
+    if (!user_id || typeof user_id !== 'string') throw new Error("user_id is required");
+    if (!new_password || typeof new_password !== 'string' || new_password.length < 8) {
+      throw new Error("Password must be at least 8 characters and provide a strong entropy");
+    }
 
     const { error } = await adminClient.auth.admin.updateUser(user_id, {
       password: new_password,
