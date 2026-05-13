@@ -1015,6 +1015,7 @@ export type Database = {
           asaas_customer_id: string | null
           avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           phone: string | null
@@ -1027,6 +1028,7 @@ export type Database = {
           asaas_customer_id?: string | null
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -1039,6 +1041,7 @@ export type Database = {
           asaas_customer_id?: string | null
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -1857,6 +1860,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          email: string | null
           full_name: string | null
           id: string | null
           phone: string | null
@@ -1868,6 +1872,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string | null
           phone?: string | null
@@ -1879,6 +1884,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string | null
           phone?: string | null
