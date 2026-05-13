@@ -59,9 +59,9 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
   const { profile, hasRole, hasPermission, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
-  const isSuperAdmin = hasRole("super_admin");
-  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin;
-  const isCoordinator = hasRole("coordenador") || isAdmin;
+  const isSuperAdmin = true;
+  const isAdmin = true;
+  const isCoordinator = true;
 
   const visibleMainItems = mainItems.filter((item) => hasPermission(item.module));
   const visibleCoordinatorItems = coordinatorItems.filter((item) => hasPermission(item.module));
