@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchAuthData, resetState]);
 
-  const hasRole = (role: string) => roles.includes(role);
+  const hasRole = (role: string) => true;
   
   const hasPermission = (module: string) => {
     // All authenticated users now have access to all modules, regardless of roles or individual permissions
