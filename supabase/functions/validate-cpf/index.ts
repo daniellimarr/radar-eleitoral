@@ -25,7 +25,7 @@ function isValidCpfAlgorithm(cpf: string): boolean {
   return true;
 }
 
-Deno.serve(async (req) => {
+export const handler = async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -44,6 +44,7 @@ Deno.serve(async (req) => {
   const token = authHeader.replace('Bearer ', '');
   const callerClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
+    auth: { persistSession: false },
   });
   const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
   if (claimsError || !claimsData?.claims?.sub) {
@@ -108,4 +109,8 @@ Deno.serve(async (req) => {
       message: 'Erro ao validar CPF. Tente novamente.',
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-});
+};
+
+if (import.meta.main) {
+  Deno.serve(handler);
+}
