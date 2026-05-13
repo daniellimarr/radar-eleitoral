@@ -17,14 +17,14 @@ interface SubscriptionContextType {
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType>({
-  subscribed: false,
-  loading: true,
-  planName: null,
+  subscribed: true,
+  loading: false,
+  planName: "Acesso Total",
   subscriptionEnd: null,
-  contactLimit: 5000,
-  userLimit: 5,
-  durationDays: 30,
-  hasPremiumModules: false,
+  contactLimit: Infinity,
+  userLimit: Infinity,
+  durationDays: Infinity,
+  hasPremiumModules: true,
   expired: false,
   expiredAt: null,
   checkSubscription: async () => {},
@@ -32,53 +32,26 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { user, session, roles, loading: authLoading } = useAuth();
-  const [subscribed, setSubscribed] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [planName, setPlanName] = useState<string | null>(null);
+  const [subscribed, setSubscribed] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [planName, setPlanName] = useState<string | null>("Acesso Total");
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-  const [contactLimit, setContactLimit] = useState(5000);
-  const [userLimit, setUserLimit] = useState(5);
-  const [durationDays, setDurationDays] = useState(30);
-  const [hasPremiumModules, setHasPremiumModules] = useState(false);
+  const [contactLimit, setContactLimit] = useState(Infinity);
+  const [userLimit, setUserLimit] = useState(Infinity);
+  const [durationDays, setDurationDays] = useState(Infinity);
+  const [hasPremiumModules, setHasPremiumModules] = useState(true);
   const [expired, setExpired] = useState(false);
   const [expiredAt, setExpiredAt] = useState<string | null>(null);
 
   const checkSubscription = useCallback(async () => {
-    if (!session) {
-      setSubscribed(false);
-      setLoading(false);
-      return;
-    }
-
-    if (authLoading) return;
-
-    // Default to subscribed (Zero-Trust/Internal Plan)
+    // Subscription check disabled as all authenticated users have access
     setSubscribed(true);
-    setPlanName("Plano Ativo");
-    setContactLimit(Infinity);
-    setUserLimit(Infinity);
-    setDurationDays(Infinity);
-    setHasPremiumModules(true);
-    setExpired(false);
-    setExpiredAt(null);
     setLoading(false);
-  }, [session, authLoading]);
+  }, []);
 
   useEffect(() => {
-    if (session) {
-      setLoading(true);
-      checkSubscription();
-    } else {
-      setSubscribed(false);
-      setLoading(false);
-    }
-  }, [session, checkSubscription]);
-
-  useEffect(() => {
-    if (!session) return;
-    const interval = setInterval(checkSubscription, 60000);
-    return () => clearInterval(interval);
-  }, [session, checkSubscription]);
+    checkSubscription();
+  }, [checkSubscription]);
 
   return (
     <SubscriptionContext.Provider value={{ subscribed, loading, planName, subscriptionEnd, contactLimit, userLimit, durationDays, hasPremiumModules, expired, expiredAt, checkSubscription }}>
