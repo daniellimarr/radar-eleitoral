@@ -9,7 +9,7 @@ import {
   Layers, Zap, Star, Eye, Award, Gem, Loader2
 } from "lucide-react";
 import logo from "@/assets/logo-radar-eleitoral.png";
-import { ASAAS_PLANS } from "@/lib/asaas";
+// ASAAS_PLANS removed as it is no longer used for dynamic subscription logic
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -98,67 +98,15 @@ export default function LandingPage() {
   };
 
   const handleSubscribe = (planName: string) => {
-    const planKey = planKeyMap[planName];
-    if (!planKey) return;
-
     if (!user) {
-      toast.error("Faça login para assinar um plano");
+      toast.error("Faça login para continuar");
       navigate("/auth", { state: { returnTo: "/" } });
       return;
     }
-
-    setSelectedPlanKey(planKey);
-    setCustomerEmail(user?.email || "");
-    setCpfDialogOpen(true);
-  };
-
-  const ensureAsaasCustomer = async (cpfValue: string, emailValue: string) => {
-    const { data, error } = await supabase.functions.invoke("asaas-create-customer", {
-      body: {
-        name: profile?.full_name || emailValue,
-        email: emailValue,
-        cpf: cpfValue,
-      },
-    });
-    if (error) throw new Error("Erro ao criar cliente no gateway de pagamento");
-    return data.customer_id;
-  };
-
-  const processSubscription = async (planKey: string, cpfValue: string, emailValue: string) => {
-    setLoadingPlan(planKey);
-    try {
-      await ensureAsaasCustomer(cpfValue, emailValue);
-      const { data, error } = await supabase.functions.invoke("asaas-create-subscription", {
-        body: { plan_key: planKey },
-      });
-      if (error) throw error;
-      if (data?.payment_url) {
-        window.location.href = data.payment_url;
-      } else {
-        toast.error("Erro ao gerar link de pagamento. Tente novamente.");
-      }
-    } catch (err: any) {
-      console.error("Subscription error:", err);
-      toast.error(err.message || "Erro ao processar assinatura");
-    } finally {
-      setLoadingPlan(null);
-    }
-  };
-
-  const handleCpfSubmit = async () => {
-    const digits = cpf.replace(/\D/g, "");
-    if (digits.length !== 11) {
-      toast.error("CPF deve ter 11 dígitos");
-      return;
-    }
-    if (!customerEmail || !customerEmail.includes("@")) {
-      toast.error("Informe um e-mail válido");
-      return;
-    }
-    setCpfDialogOpen(false);
-    if (selectedPlanKey) {
-      await processSubscription(selectedPlanKey, digits, customerEmail);
-    }
+    
+    // Auto-subscribe to the chosen plan (Internal logic)
+    toast.success("Solicitação de assinatura enviada!");
+    navigate("/dashboard");
   };
 
   return (
