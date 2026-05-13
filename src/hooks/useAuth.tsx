@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthService } from "@/services/AuthService";
 
 interface AuthContextType {
   user: User | null;
@@ -32,126 +33,122 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissionsLoading, setPermissionsLoading] = useState(true);
   const [profileStatus, setProfileStatus] = useState<string | null>(null);
 
-  const fetchProfile = async (userId: string) => {
+  const resetState = useCallback(() => {
+    setProfile(null);
+    setRoles([]);
+    setTenantId(null);
+    setUserPermissions([]);
+    setProfileStatus(null);
+    setPermissionsLoading(false);
+    setLoading(false);
+  }, []);
+
+  const fetchAuthData = useCallback(async (userId: string) => {
     try {
       setPermissionsLoading(true);
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles_safe")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
+      const { data: profileData, error: profileError } = await AuthService.getProfile(userId);
       
       if (profileError) throw profileError;
 
       if (profileData) {
         setProfile(profileData);
         setTenantId(profileData.tenant_id);
-        setProfileStatus((profileData as any).status || 'pending');
+        setProfileStatus(profileData.status || 'pending');
 
-        // Fetch roles and permissions in parallel
         const [rolesRes, permsRes] = await Promise.all([
-          supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", userId),
-          supabase
-            .from("user_permissions")
-            .select("module")
-            .eq("user_id", userId)
-            .eq("tenant_id", profileData.tenant_id)
+          AuthService.getRoles(userId),
+          profileData.tenant_id ? AuthService.getPermissions(userId, profileData.tenant_id) : Promise.resolve({ data: [] })
         ]);
         
-        if (rolesRes.data) {
-          setRoles(rolesRes.data.map((r: any) => r.role));
-        }
-        
-        if (permsRes.data) {
-          setUserPermissions(permsRes.data.map((p: any) => p.module));
-        }
+        setRoles(rolesRes.data?.map((r: any) => r.role) || []);
+        setUserPermissions(permsRes.data?.map((p: any) => p.module) || []);
       } else {
-        // Clear if no profile found
-        setProfile(null);
-        setRoles([]);
-        setTenantId(null);
-        setUserPermissions([]);
-        setProfileStatus(null);
+        resetState();
       }
     } catch (error) {
       console.error("Error fetching auth data:", error);
+      resetState();
     } finally {
       setPermissionsLoading(false);
+      setLoading(false);
     }
-  };
+  }, [resetState]);
 
   useEffect(() => {
-    let initialSessionHandled = false;
+    let isSubscribed = true;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          if (initialSessionHandled) {
-            setLoading(true);
-            setPermissionsLoading(true);
-            fetchProfile(session.user.id).then(() => setLoading(false));
-          }
+      (_event, currentSession) => {
+        if (!isSubscribed) return;
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user) {
+          fetchAuthData(currentSession.user.id);
         } else {
-          setProfile(null);
-          setRoles([]);
-          setTenantId(null);
-          setUserPermissions([]);
-          setProfileStatus(null);
-          setPermissionsLoading(false);
-          setLoading(false);
+          resetState();
         }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      initialSessionHandled = true;
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id).then(() => setLoading(false));
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (!isSubscribed) return;
+      
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+      
+      if (initialSession?.user) {
+        fetchAuthData(initialSession.user.id);
       } else {
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const signIn = async (email: string, password: string) => {
-    return supabase.auth.signInWithPassword({ email, password });
-  };
-
-  const signUp = async (email: string, password: string, fullName: string) => {
-    return supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo: window.location.origin,
-      },
-    });
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
+    return () => {
+      isSubscribed = false;
+      subscription.unsubscribe();
+    };
+  }, [fetchAuthData, resetState]);
 
   const hasRole = (role: string) => roles.includes(role);
   
   const hasPermission = (module: string) => {
-    // Super admins and admin_gabinete always have access to everything
     if (roles.includes("super_admin") || roles.includes("admin_gabinete")) return true;
-    // Default-deny: only modules explicitly granted in user_permissions are accessible
     return userPermissions.includes(module);
   };
 
+  const signIn = async (email: string, password: string) => {
+    return AuthService.signIn(email, password);
+  };
+
+  const signUp = async (email: string, password: string, fullName: string) => {
+    return AuthService.signUp(email, password, fullName);
+  };
+
+  const signOut = async () => {
+    await AuthService.signOut();
+  };
+
+  const value = {
+    user,
+    session,
+    loading,
+    profile,
+    roles,
+    tenantId,
+    userPermissions,
+    permissionsLoading,
+    profileStatus,
+    signIn,
+    signUp,
+    signOut,
+    hasRole,
+    hasPermission
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, roles, tenantId, userPermissions, permissionsLoading, profileStatus, signIn, signUp, signOut, hasRole, hasPermission }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
