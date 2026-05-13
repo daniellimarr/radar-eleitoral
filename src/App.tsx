@@ -29,10 +29,7 @@ import Reports from "@/pages/Reports";
 import Chat from "@/pages/Chat";
 import TenantManagement from "@/pages/TenantManagement";
 import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
-import AdminSubscriptions from "@/pages/AdminSubscriptions";
 import PlanManagement from "@/pages/PlanManagement";
-import Planos from "@/pages/Planos";
-import Assinatura from "@/pages/Assinatura";
 
 import Demo from "@/pages/Demo";
 import NotFound from "@/pages/NotFound";
@@ -78,12 +75,10 @@ function App() {
             <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             <Route path="/admin/tenants" element={<ProtectedRoute><TenantManagement /></ProtectedRoute>} />
             <Route path="/admin/plans" element={<ProtectedRoute><PlanManagement /></ProtectedRoute>} />
-            <Route path="/admin/subscriptions" element={<ProtectedRoute><AdminSubscriptions /></ProtectedRoute>} />
             <Route path="/backup" element={<ProtectedRoute><Backup /></ProtectedRoute>} />
             <Route path="/campaign-files" element={<ProtectedRoute><CampaignFiles /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-            <Route path="/assinatura" element={<ProtectedRoute><Planos /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

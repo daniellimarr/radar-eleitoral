@@ -52,39 +52,17 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
     if (authLoading) return;
 
-    if (roles.includes("super_admin")) {
-      setSubscribed(true);
-      setPlanName("Super Admin");
-      setContactLimit(Infinity);
-      setUserLimit(Infinity);
-      setDurationDays(Infinity);
-      setHasPremiumModules(true);
-      setExpired(false);
-      setExpiredAt(null);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke("check-subscription");
-      if (error) throw error;
-
-      setSubscribed(data.subscribed || false);
-      setSubscriptionEnd(data.subscription_end || null);
-      setPlanName(data.plan_name || null);
-      setContactLimit(data.contact_limit ?? 5000);
-      setUserLimit(data.user_limit ?? 5);
-      setDurationDays(data.duration_days ?? 30);
-      setHasPremiumModules(data.has_premium_modules ?? false);
-      setExpired(data.expired || false);
-      setExpiredAt(data.expired_at || null);
-    } catch (err) {
-      console.error("Error checking subscription:", err);
-      setSubscribed(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [session, roles, authLoading]);
+    // Default to subscribed (Zero-Trust/Internal Plan)
+    setSubscribed(true);
+    setPlanName("Plano Ativo");
+    setContactLimit(Infinity);
+    setUserLimit(Infinity);
+    setDurationDays(Infinity);
+    setHasPremiumModules(true);
+    setExpired(false);
+    setExpiredAt(null);
+    setLoading(false);
+  }, [session, authLoading]);
 
   useEffect(() => {
     if (session) {
