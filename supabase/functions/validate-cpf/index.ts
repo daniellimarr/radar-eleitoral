@@ -108,7 +108,7 @@ export const handler = async (req: Request) => {
       message: 'Erro ao validar CPF. Tente novamente.',
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-});
+};
 
 if (import.meta.main) {
   Deno.serve(handler);
