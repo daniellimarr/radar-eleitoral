@@ -13,15 +13,7 @@ import logo from "@/assets/logo-radar-eleitoral.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+// Unused dialog components removed
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
@@ -74,10 +66,6 @@ export default function LandingPage() {
   // }, [user, loading, navigate]);
   const isLoggedInWithoutSub = !!user;
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
-  const [cpf, setCpf] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
