@@ -114,8 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasRole = (role: string) => roles.includes(role);
   
   const hasPermission = (module: string) => {
-    if (roles.includes("super_admin") || roles.includes("admin_gabinete")) return true;
-    return userPermissions.includes(module);
+    // All authenticated users now have access to all modules, regardless of roles or individual permissions
+    return true;
   };
 
   const signIn = async (email: string, password: string) => {
