@@ -928,7 +928,6 @@ export type Database = {
       payments: {
         Row: {
           amount: number
-          asaas_payment_id: string | null
           billing_type: string | null
           created_at: string
           due_date: string | null
@@ -942,7 +941,6 @@ export type Database = {
         }
         Insert: {
           amount?: number
-          asaas_payment_id?: string | null
           billing_type?: string | null
           created_at?: string
           due_date?: string | null
@@ -956,7 +954,6 @@ export type Database = {
         }
         Update: {
           amount?: number
-          asaas_payment_id?: string | null
           billing_type?: string | null
           created_at?: string
           due_date?: string | null
@@ -1033,7 +1030,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          asaas_customer_id: string | null
           avatar_url: string | null
           created_at: string
           email: string | null
@@ -1046,7 +1042,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          asaas_customer_id?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
@@ -1059,7 +1054,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          asaas_customer_id?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
@@ -1144,8 +1138,6 @@ export type Database = {
       }
       subscriptions: {
         Row: {
-          asaas_customer_id: string | null
-          asaas_subscription_id: string | null
           cancelled_at: string | null
           created_at: string
           expires_at: string | null
@@ -1159,8 +1151,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          asaas_customer_id?: string | null
-          asaas_subscription_id?: string | null
           cancelled_at?: string | null
           created_at?: string
           expires_at?: string | null
@@ -1174,8 +1164,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          asaas_customer_id?: string | null
-          asaas_subscription_id?: string | null
           cancelled_at?: string | null
           created_at?: string
           expires_at?: string | null
