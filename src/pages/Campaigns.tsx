@@ -53,8 +53,18 @@ export default function Campaigns() {
     const nome = (form.nome_campanha || "").toString().trim();
     if (!nome) { toast.error("Nome da campanha é obrigatório"); return; }
     if (!effectiveTenantId) {
-      toast.error("Aguarde o carregamento do seu acesso antes de salvar a campanha");
-      return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", profile?.user_id)
+        .maybeSingle();
+      
+      if (data?.tenant_id) {
+        // Fallback successful
+      } else {
+        toast.error("Aguarde o carregamento do seu acesso ou verifique se seu perfil está vinculado a um gabinete.");
+        return;
+      }
     }
     setLoading(true);
     try {
