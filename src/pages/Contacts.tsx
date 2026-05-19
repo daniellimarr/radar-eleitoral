@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Plus, Search, Trash2, Edit, Loader2 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 
 // Otimização: Memoização de linhas da tabela para evitar re-renders desnecessários
 const ContactRow = memo(({ contact, onEdit, onDelete }: { contact: any, onEdit: (c: any) => void, onDelete: (id: string) => void }) => (
