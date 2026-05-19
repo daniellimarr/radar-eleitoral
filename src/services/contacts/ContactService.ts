@@ -35,11 +35,26 @@ export class ContactService {
       .order("name");
   }
 
+  static sanitizePayload(payload: any) {
+    const sanitized = { ...payload };
+    // Converter campos que não podem ser strings vazias para null
+    const fieldsToNull = ['leader_id', 'birth_date', 'gender', 'phone', 'cep', 'cpf', 'email', 'voting_zone', 'voting_section', 'voting_location'];
+    
+    fieldsToNull.forEach(field => {
+      if (sanitized[field] === "" || sanitized[field] === undefined) {
+        sanitized[field] = null;
+      }
+    });
+
+    return sanitized;
+  }
+
   static async saveContact(payload: any, editingId?: string | null) {
+    const sanitized = this.sanitizePayload(payload);
     if (editingId) {
-      return supabase.from("contacts").update(payload).eq("id", editingId);
+      return supabase.from("contacts").update(sanitized).eq("id", editingId);
     } else {
-      return supabase.from("contacts").insert(payload).select("id").single();
+      return supabase.from("contacts").insert(sanitized).select("id").single();
     }
   }
 

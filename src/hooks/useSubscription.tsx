@@ -31,7 +31,7 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
 });
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { user, session, roles, loading: authLoading } = useAuth();
+  const { user, roles, loading: authLoading } = useAuth();
   const [subscribed, setSubscribed] = useState(true);
   const [loading, setLoading] = useState(false);
   const [planName, setPlanName] = useState<string | null>("Acesso Total");
@@ -44,17 +44,83 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [expiredAt, setExpiredAt] = useState<string | null>(null);
 
   const checkSubscription = useCallback(async () => {
-    // Subscription check disabled as all authenticated users have access
-    setSubscribed(true);
-    setLoading(false);
-  }, []);
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      // Obter tenant_id do usuário
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (profileData?.tenant_id) {
+        // Obter detalhes do plano via tenant
+        const { data: tenantData } = await supabase
+          .from("tenants")
+          .select("*, plans(*)")
+          .eq("id", profileData.tenant_id)
+          .maybeSingle();
+
+        if (tenantData) {
+          const plan = (tenantData as any).plans;
+          if (plan) {
+            setPlanName(plan.name);
+            setContactLimit(plan.contact_limit || (tenantData as any).contact_limit || Infinity);
+            setUserLimit(plan.user_limit || Infinity);
+            setHasPremiumModules(plan.has_premium_modules || false);
+            setDurationDays(plan.duration_days || Infinity);
+          }
+          
+          // Verificar status da assinatura real
+          const { data: subData } = await supabase
+            .from("subscriptions")
+            .select("*")
+            .eq("tenant_id", profileData.tenant_id)
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (subData) {
+            setSubscriptionEnd(subData.expires_at);
+            setSubscribed(true);
+            setExpired(subData.expires_at ? new Date(subData.expires_at) < new Date() : false);
+            setExpiredAt(subData.expires_at);
+          } else {
+            // Fallback se não houver registro na tabela subscriptions mas o tenant estiver ativo
+            setSubscribed((tenantData as any).status === 'ativo');
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao verificar assinatura:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
-    checkSubscription();
-  }, [checkSubscription]);
+    if (user && !authLoading) {
+      checkSubscription();
+    }
+  }, [user, authLoading, checkSubscription]);
 
   return (
-    <SubscriptionContext.Provider value={{ subscribed, loading, planName, subscriptionEnd, contactLimit, userLimit, durationDays, hasPremiumModules, expired, expiredAt, checkSubscription }}>
+    <SubscriptionContext.Provider value={{ 
+      subscribed, 
+      loading, 
+      planName, 
+      subscriptionEnd, 
+      contactLimit, 
+      userLimit, 
+      durationDays, 
+      hasPremiumModules, 
+      expired, 
+      expiredAt, 
+      checkSubscription 
+    }}>
       {children}
     </SubscriptionContext.Provider>
   );

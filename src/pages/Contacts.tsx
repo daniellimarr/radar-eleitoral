@@ -109,17 +109,9 @@ export default function Contacts() {
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
 
-    let effectiveTenantId = tenantId || profile?.tenant_id || null;
-    if (!effectiveTenantId && user?.id) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("tenant_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      effectiveTenantId = data?.tenant_id || null;
-    }
+    const effectiveTenantId = tenantId || profile?.tenant_id;
     if (!effectiveTenantId) { toast.error("Não foi possível identificar seu gabinete. Faça logout e entre novamente."); return; }
-
+    
     if (!editingId && contactLimit !== Infinity && totalContacts >= contactLimit) {
       toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido.`);
       return;
@@ -127,21 +119,15 @@ export default function Contacts() {
 
     setLoading(true);
     try {
-      // Sanitização: Converter campos vazios para null para evitar erros de tipo no Postgres (UUID, Date, etc)
-      const sanitizedPayload = {
+      const payload = {
         ...form,
         tenant_id: effectiveTenantId,
         registered_by: user?.id,
         latitude: geoCoords.latitude,
         longitude: geoCoords.longitude,
-        leader_id: form.leader_id && form.leader_id !== "" ? form.leader_id : null,
-        birth_date: form.birth_date && form.birth_date !== "" ? form.birth_date : null,
-        gender: form.gender || null,
-        phone: form.phone || null,
-        cep: form.cep || null,
       };
 
-      const { error } = await ContactService.saveContact(sanitizedPayload, editingId);
+      const { error } = await ContactService.saveContact(payload, editingId);
       
       if (error) {
         console.error("Erro ao salvar contato:", error);
