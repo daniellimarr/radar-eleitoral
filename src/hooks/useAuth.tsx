@@ -116,9 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasRole = useCallback((role: string) => roles.includes(role), [roles]);
   
   const hasPermission = useCallback((module: string) => {
-    if (hasRole("super_admin") || hasRole("admin_gabinete")) return true;
+    // Super admins e admins de gabinete têm acesso total
+    if (roles.includes("super_admin") || roles.includes("admin_gabinete")) return true;
     return userPermissions.includes(module);
-  }, [hasRole, userPermissions]);
+  }, [roles, userPermissions]);
 
   const signIn = async (email: string, password: string) => {
     return AuthService.signIn(email, password);
