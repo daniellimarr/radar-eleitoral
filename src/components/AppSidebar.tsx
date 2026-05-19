@@ -113,7 +113,7 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
         {/* Coordinator Menu */}
         {visibleCoordinatorItems.length > 0 && (
           <SidebarGroup>
-            <Collapsible defaultOpen>
+            <Collapsible defaultOpen className="group/collapsible">
               <CollapsibleTrigger className="w-full">
                 <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:text-foreground transition-colors group">
                   Gestão e Logística
