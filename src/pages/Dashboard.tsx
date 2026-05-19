@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, memo, Suspense, lazy } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, MessageSquare, Gift, Megaphone, Calendar as CalendarIcon, Target, TrendingUp, DollarSign, MapPin, Crown, ArrowUpRight } from "lucide-react";
@@ -13,8 +13,11 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import OperatorDashboard from "@/components/OperatorDashboard";
-import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
+
+// Otimização: Lazy load de dashboards secundários
+const OperatorDashboard = lazy(() => import("@/components/OperatorDashboard"));
+const SuperAdminDashboard = lazy(() => import("@/pages/SuperAdminDashboard"));
+
 const engagementLabels: Record<string, string> = {
   nao_trabalhado: "Não trabalhado",
   em_prospeccao: "Em prospecção",
@@ -66,6 +69,7 @@ export default function Dashboard() {
   const [financialSummary, setFinancialSummary] = useState({ donations: 0, expenses: 0 });
   const [neighborhoodData, setNeighborhoodData] = useState<any[]>([]);
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
+
   useEffect(() => {
     if (!tenantId || isOperador) return;
 
@@ -74,6 +78,7 @@ export default function Dashboard() {
       const todayStart = format(now, "yyyy-MM-dd") + "T00:00:00";
       const todayEnd = format(now, "yyyy-MM-dd") + "T23:59:59";
 
+      // Otimização: Promise.all para chamadas paralelas
       const [contactRes, appointmentsRes, birthdayRes, engagementRes, allContactsRes, campaignRes, donationsRes, expensesRes] = await Promise.all([
         supabase.from("contacts_decrypted").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).is("deleted_at", null),
         supabase.from("appointments").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
@@ -146,11 +151,19 @@ export default function Dashboard() {
   }
 
   if (isSuperAdmin) {
-    return <SuperAdminDashboard />;
+    return (
+      <Suspense fallback={<div className="flex h-64 items-center justify-center text-muted-foreground">Carregando Painel Super Admin...</div>}>
+        <SuperAdminDashboard />
+      </Suspense>
+    );
   }
 
   if (isOperador) {
-    return <OperatorDashboard />;
+    return (
+      <Suspense fallback={<div className="flex h-64 items-center justify-center text-muted-foreground">Carregando Painel Operador...</div>}>
+        <OperatorDashboard />
+      </Suspense>
+    );
   }
 
   const totalEngagement = Object.values(engagementData).reduce((a, b) => a + b, 0) || 1;
@@ -174,9 +187,6 @@ export default function Dashboard() {
           {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
         </div>
       </div>
-
-      {/* Plan Banner removed (Asaas removed) */}
-
 
       {/* Stat Cards */}
       <Card>

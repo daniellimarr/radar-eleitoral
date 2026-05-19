@@ -1,3 +1,4 @@
+import React, { memo } from "react";
 import {
   Home, Users, FileText, Calendar, Car, Package, MapPin, Settings,
   BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield,
@@ -50,9 +51,7 @@ const configItems = [
   { title: "Configurações", url: "/settings", icon: Settings },
 ];
 
-import React from "react";
-
-export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_props, ref) {
+export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSidebar(_props, ref) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
@@ -196,4 +195,4 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
       </SidebarFooter>
     </Sidebar>
   );
-});
+}));

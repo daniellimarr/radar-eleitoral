@@ -113,12 +113,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchAuthData, resetState]);
 
-  const hasRole = (role: string) => roles.includes(role);
+  const hasRole = useCallback((role: string) => roles.includes(role), [roles]);
   
-  const hasPermission = (module: string) => {
-    if (hasRole("super_admin") || hasRole("admin_gabinete")) return true;
+  const hasPermission = useCallback((module: string) => {
+    // Super admins e admins de gabinete têm acesso total
+    if (roles.includes("super_admin") || roles.includes("admin_gabinete")) return true;
     return userPermissions.includes(module);
-  };
+  }, [roles, userPermissions]);
 
   const signIn = async (email: string, password: string) => {
     return AuthService.signIn(email, password);

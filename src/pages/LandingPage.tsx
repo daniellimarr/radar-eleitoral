@@ -9,6 +9,7 @@ import {
   Layers, Zap, Star, Eye, Award, Gem, Loader2
 } from "lucide-react";
 import logo from "@/assets/logo-radar-eleitoral.png";
+import heroImg from "@/assets/hero-landing.png";
 // ASAAS_PLANS removed as it is no longer used for dynamic subscription logic
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -165,44 +166,18 @@ export default function LandingPage() {
               </motion.div>
             </div>
 
-            {/* Dashboard Mockup */}
+            {/* Dashboard Mockup - Otimização: Substituído por imagem real com lazy loading */}
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4}
-              className="hidden lg:block">
-              <div className="bg-[#1e1e1e] border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 bg-[#2a2a2a] border-b border-gray-700/50">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
-                  <span className="ml-3 text-xs text-gray-500">Radar Eleitoral — Painel</span>
-                </div>
-                <div className="p-6 space-y-4">
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { label: "Total de Contatos", val: "12.847", color: "#FF6B00" },
-                      { label: "Lideranças Ativas", val: "342", color: "#FFC107" },
-                      { label: "Demandas Abertas", val: "89", color: "#4ade80" },
-                    ].map((s) => (
-                      <div key={s.label} className="bg-[#2a2a2a] rounded-xl p-4 border border-gray-700/30">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">{s.label}</p>
-                        <p className="text-xl font-bold mt-1" style={{ color: s.color }}>{s.val}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="bg-[#2a2a2a] rounded-xl p-4 border border-gray-700/30 h-32 flex items-end gap-1.5">
-                    {[40, 65, 45, 80, 55, 90, 70, 85, 60, 95, 75, 88].map((h, i) => (
-                      <div key={i} className="flex-1 rounded-t" style={{ height: `${h}%`, background: i % 2 === 0 ? '#FF6B00' : '#FF6B0060' }} />
-                    ))}
-                  </div>
-                  <div className="space-y-2">
-                    {["Maria S. – Bairro Centro", "João P. – Vila Nova", "Ana L. – Jardim"].map((r, i) => (
-                      <div key={i} className="flex items-center justify-between bg-[#2a2a2a] rounded-lg p-3 border border-gray-700/30">
-                        <span className="text-xs text-gray-400">{r}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FF6B00]/20 text-[#FF6B00] font-medium">Líder</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              className="hidden lg:block relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-[#FF6B00] to-[#FFC107] rounded-2xl blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200" />
+              <img 
+                src={heroImg} 
+                alt="Painel Radar Eleitoral" 
+                className="relative rounded-2xl shadow-2xl border border-white/10 w-full object-cover aspect-[4/3]"
+                loading="eager" // Prioridade no hero
+                width={800}
+                height={600}
+              />
             </motion.div>
           </div>
         </div>

@@ -1,53 +1,43 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { ContactService } from "@/services/contacts/ContactService";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useContacts(tenantId: string | null, search: string) {
-  const [contacts, setContacts] = useState<any[]>([]);
-  const [totalContacts, setTotalContacts] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchContacts = useCallback(async () => {
-    if (!tenantId) return;
-    setLoading(true);
-    try {
+  // Otimização: Uso de React Query para Cache e Gerenciamento de Estado Assíncrono
+  const { data: contactsData, isLoading: loading, refetch } = useQuery({
+    queryKey: ['contacts', tenantId, search],
+    queryFn: async () => {
+      if (!tenantId) return { contacts: [], total: 0 };
       const [{ data, error }, { count }] = await Promise.all([
         ContactService.fetchContacts(tenantId, search),
         ContactService.fetchTotalCount(tenantId)
       ]);
-
       if (error) throw error;
-      setContacts(data || []);
-      setTotalContacts(count || 0);
-    } catch (err: any) {
-      toast.error("Erro ao carregar contatos: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, search]);
+      return { contacts: data || [], total: count || 0 };
+    },
+    enabled: !!tenantId,
+    staleTime: 1000 * 60 * 5, // 5 minutos de cache
+  });
 
-  useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
-
-  const deleteContact = async (id: string) => {
-    try {
-      const { error } = await ContactService.deleteContact(id);
-      if (error) throw error;
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => ContactService.deleteContact(id),
+    onSuccess: () => {
       toast.success("Contato removido");
-      fetchContacts();
-      return true;
-    } catch (err: any) {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+    },
+    onError: (err: any) => {
       toast.error("Erro ao excluir contato: " + err.message);
-      return false;
     }
-  };
+  });
 
   return {
-    contacts,
-    totalContacts,
+    contacts: contactsData?.contacts || [],
+    totalContacts: contactsData?.total || 0,
     loading,
-    refresh: fetchContacts,
-    deleteContact
+    refresh: refetch,
+    deleteContact: deleteMutation.mutateAsync
   };
 }

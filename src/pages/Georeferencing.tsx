@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, Suspense, lazy } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -10,6 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapPin, Search, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
+// Fix default marker icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
 
 
 // Fix default marker icons
@@ -393,7 +401,8 @@ export default function Georeferencing() {
             <p className="text-muted-foreground">Carregando mapa...</p>
           </div>
         )}
-        <MapContainer
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center bg-muted/20">Carregando mapa interativo...</div>}>
+          <MapContainer
           center={[-15.78, -47.93]}
           zoom={5}
           className="h-full w-full"
@@ -449,7 +458,8 @@ export default function Georeferencing() {
               </Marker>
             );
           })}
-        </MapContainer>
+          </MapContainer>
+        </Suspense>
       </div>
     </div>
   );

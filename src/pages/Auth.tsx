@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,28 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Users, Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import logoRadar from "@/assets/logo-radar-eleitoral.png";
 
+// Otimização: Memoização de componentes estáticos
+const AuthBrand = memo(() => (
+  <div className="hidden lg:flex flex-1 bg-primary items-center justify-center p-12">
+    <div className="text-primary-foreground space-y-8 max-w-lg text-center flex flex-col items-center">
+      <img src={logoRadar} alt="Radar Eleitoral" className="h-40 w-40 rounded-2xl shadow-2xl" loading="lazy" />
+      <h1 className="text-5xl font-black leading-tight">
+        RADAR<br />
+        <span className="text-warning">ELEITORAL</span>
+      </h1>
+      <p className="text-xl font-semibold">
+        Gestão inteligente de gabinete.<br />
+        Contatos, demandas e campanhas<br />
+        em um só lugar.
+      </p>
+      <p className="text-sm opacity-75">Tecnologia a serviço da política</p>
+    </div>
+  </div>
+));
+AuthBrand.displayName = "AuthBrand";
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const [loginEmail, setLoginEmail] = useState("");
@@ -228,21 +247,7 @@ export default function Auth() {
         </div>
       </div>
 
-      <div className="hidden lg:flex flex-1 bg-primary items-center justify-center p-12">
-        <div className="text-primary-foreground space-y-8 max-w-lg text-center flex flex-col items-center">
-          <img src={logoRadar} alt="Radar Eleitoral" className="h-40 w-40 rounded-2xl shadow-2xl" />
-          <h1 className="text-5xl font-black leading-tight">
-            RADAR<br />
-            <span className="text-warning">ELEITORAL</span>
-          </h1>
-          <p className="text-xl font-semibold">
-            Gestão inteligente de gabinete.<br />
-            Contatos, demandas e campanhas<br />
-            em um só lugar.
-          </p>
-          <p className="text-sm opacity-75">Tecnologia a serviço da política</p>
-        </div>
-      </div>
+      <AuthBrand />
     </div>
   );
 }
