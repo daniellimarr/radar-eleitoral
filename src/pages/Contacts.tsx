@@ -116,9 +116,6 @@ export default function Contacts() {
         .select("tenant_id")
         .eq("user_id", user.id)
         .maybeSingle();
-        .select("tenant_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
       effectiveTenantId = data?.tenant_id || null;
     }
     if (!effectiveTenantId) { toast.error("Não foi possível identificar seu gabinete. Faça logout e entre novamente."); return; }
