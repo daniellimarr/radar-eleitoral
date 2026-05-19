@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Plus, Search, Trash2, Edit, Loader2 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 
 // Otimização: Memoização de linhas da tabela para evitar re-renders desnecessários
 const ContactRow = memo(({ contact, onEdit, onDelete }: { contact: any, onEdit: (c: any) => void, onDelete: (id: string) => void }) => (
@@ -107,8 +108,18 @@ export default function Contacts() {
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
-    if (!tenantId) { toast.error("Carregando dados do gabinete, aguarde um instante e tente novamente."); return; }
-    
+
+    let effectiveTenantId = tenantId || profile?.tenant_id || null;
+    if (!effectiveTenantId && user?.id) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      effectiveTenantId = data?.tenant_id || null;
+    }
+    if (!effectiveTenantId) { toast.error("Não foi possível identificar seu gabinete. Faça logout e entre novamente."); return; }
+
     if (!editingId && contactLimit !== Infinity && totalContacts >= contactLimit) {
       toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido.`);
       return;
@@ -117,7 +128,7 @@ export default function Contacts() {
     setLoading(true);
     const payload = {
       ...form,
-      tenant_id: tenantId,
+      tenant_id: effectiveTenantId,
       registered_by: user?.id,
       latitude: geoCoords.latitude,
       longitude: geoCoords.longitude,
