@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -25,29 +25,37 @@ const defaultForm = {
 };
 
 export default function Campaigns() {
-  const { tenantId } = useAuth();
+  const { tenantId, profile, loading: authLoading, permissionsLoading } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState(defaultForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const effectiveTenantId = useMemo(
+    () => tenantId ?? profile?.tenant_id ?? null,
+    [tenantId, profile?.tenant_id]
+  );
+
   const fetch = async () => {
-    if (!tenantId) return;
+    if (!effectiveTenantId) return;
     const { data } = await supabase
       .from("campaigns")
       .select("*")
-      .eq("tenant_id", tenantId)
+      .eq("tenant_id", effectiveTenantId)
       .order("created_at", { ascending: false });
     setItems(data || []);
   };
 
-  useEffect(() => { fetch(); }, [tenantId]);
+  useEffect(() => { fetch(); }, [effectiveTenantId]);
 
   const handleSave = async () => {
     const nome = (form.nome_campanha || "").toString().trim();
     if (!nome) { toast.error("Nome da campanha é obrigatório"); return; }
-    const effectiveTenantId = tenantId || "a0000000-0000-0000-0000-000000000001";
+    if (!effectiveTenantId) {
+      toast.error("Aguarde o carregamento do seu acesso antes de salvar a campanha");
+      return;
+    }
     setLoading(true);
     const payload = {
       ...form,
@@ -105,7 +113,7 @@ export default function Campaigns() {
             </div>
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
-              <Button onClick={handleSave} disabled={loading}>{loading ? "Salvando..." : editingId ? "Atualizar" : "Criar"}</Button>
+              <Button onClick={handleSave} disabled={loading || (!effectiveTenantId && !editingId) || authLoading || permissionsLoading}>{loading ? "Salvando..." : editingId ? "Atualizar" : "Criar"}</Button>
             </div>
           </DialogContent>
         </Dialog>
