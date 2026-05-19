@@ -107,8 +107,18 @@ export default function Contacts() {
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
-    if (!tenantId) { toast.error("Carregando dados do gabinete, aguarde um instante e tente novamente."); return; }
-    
+
+    let effectiveTenantId = tenantId || profile?.tenant_id || null;
+    if (!effectiveTenantId && user?.id) {
+      const { data } = await (await import("@/integrations/supabase/client")).supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      effectiveTenantId = data?.tenant_id || null;
+    }
+    if (!effectiveTenantId) { toast.error("Não foi possível identificar seu gabinete. Faça logout e entre novamente."); return; }
+
     if (!editingId && contactLimit !== Infinity && totalContacts >= contactLimit) {
       toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido.`);
       return;
@@ -117,7 +127,7 @@ export default function Contacts() {
     setLoading(true);
     const payload = {
       ...form,
-      tenant_id: tenantId,
+      tenant_id: effectiveTenantId,
       registered_by: user?.id,
       latitude: geoCoords.latitude,
       longitude: geoCoords.longitude,
