@@ -106,7 +106,8 @@ export default function Contacts() {
   };
 
   const handleSave = async () => {
-    if (!tenantId || !form.name.trim()) { toast.error("Nome é obrigatório"); return; }
+    if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
+    if (!tenantId) { toast.error("Carregando dados do gabinete, aguarde um instante e tente novamente."); return; }
     
     if (!editingId && contactLimit !== Infinity && totalContacts >= contactLimit) {
       toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido.`);
