@@ -45,9 +45,17 @@ export default function Campaigns() {
   useEffect(() => { fetch(); }, [tenantId]);
 
   const handleSave = async () => {
-    if (!tenantId || !form.nome_campanha || form.nome_campanha.toString().trim() === "") { toast.error("Nome da campanha é obrigatório"); return; }
+    const nome = (form.nome_campanha || "").toString().trim();
+    if (!nome) { toast.error("Nome da campanha é obrigatório"); return; }
+    const effectiveTenantId = tenantId || "a0000000-0000-0000-0000-000000000001";
     setLoading(true);
-    const payload = { ...form, meta_votos: Number(form.meta_votos), limite_gastos: Number(form.limite_gastos), tenant_id: tenantId };
+    const payload = {
+      ...form,
+      nome_campanha: nome,
+      meta_votos: Number(form.meta_votos) || 0,
+      limite_gastos: Number(form.limite_gastos) || 0,
+      tenant_id: effectiveTenantId,
+    };
     if (editingId) {
       const { error } = await supabase.from("campaigns").update(payload).eq("id", editingId);
       if (error) toast.error(error.message); else toast.success("Campanha atualizada!");
