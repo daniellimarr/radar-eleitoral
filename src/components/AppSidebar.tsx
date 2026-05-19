@@ -143,11 +143,11 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
         {/* Admin Menu - Super Admin only */}
         {isSuperAdmin && (
           <SidebarGroup>
-            <Collapsible defaultOpen>
-              <CollapsibleTrigger className="w-full">
+            <Collapsible defaultOpen className="group/collapsible">
+              <CollapsibleTrigger asChild>
                 <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:text-foreground transition-colors group">
                   Painel Master
-                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
                 </SidebarGroupLabel>
               </CollapsibleTrigger>
               <CollapsibleContent>
