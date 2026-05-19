@@ -57,21 +57,51 @@ export default function Campaigns() {
       return;
     }
     setLoading(true);
-    const payload = {
-      ...form,
-      nome_campanha: nome,
-      meta_votos: Number(form.meta_votos) || 0,
-      limite_gastos: Number(form.limite_gastos) || 0,
-      tenant_id: effectiveTenantId,
-    };
-    if (editingId) {
-      const { error } = await supabase.from("campaigns").update(payload).eq("id", editingId);
-      if (error) toast.error(error.message); else toast.success("Campanha atualizada!");
-    } else {
-      const { error } = await supabase.from("campaigns").insert(payload);
-      if (error) toast.error(error.message); else toast.success("Campanha criada!");
+    try {
+      const payload = {
+        ...form,
+        nome_campanha: nome,
+        meta_votos: Number(form.meta_votos) || 0,
+        limite_gastos: Number(form.limite_gastos) || 0,
+        tenant_id: effectiveTenantId,
+        // Sanitização básica
+        cidade: form.cidade || null,
+        estado: form.estado || null,
+        partido: form.partido || null,
+        numero: form.numero || null,
+      };
+
+      if (editingId) {
+        const { error } = await supabase.from("campaigns").update(payload).eq("id", editingId);
+        if (error) {
+          console.error("Erro ao atualizar campanha:", error);
+          toast.error(error.message);
+        } else {
+          toast.success("Campanha atualizada!");
+          setIsOpen(false);
+          setForm(defaultForm);
+          setEditingId(null);
+          fetch();
+        }
+      } else {
+        const { error } = await supabase.from("campaigns").insert(payload);
+        if (error) {
+          console.error("Erro ao criar campanha:", error);
+          toast.error(error.message);
+        } else {
+          toast.success("Campanha criada!");
+          setIsOpen(false);
+          setForm(defaultForm);
+          setEditingId(null);
+          fetch();
+        }
+      }
+    } catch (err: any) {
+      console.error("Exceção ao salvar campanha:", err);
+      toast.error("Ocorreu um erro inesperado.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false); setIsOpen(false); setForm(defaultForm); setEditingId(null); fetch();
   };
 
   const handleEdit = (item: any) => {
