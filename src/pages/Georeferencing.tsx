@@ -1,4 +1,7 @@
 import { useState, useEffect, useMemo, useRef, Suspense, lazy } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
@@ -8,15 +11,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapPin, Search, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-// Otimização: Lazy load de componentes pesados (Leaflet)
-const MapContainer = lazy(() => import("react-leaflet").then(mod => ({ default: mod.MapContainer })));
-const TileLayer = lazy(() => import("react-leaflet").then(mod => ({ default: mod.TileLayer })));
-const Marker = lazy(() => import("react-leaflet").then(mod => ({ default: mod.Marker })));
-const Popup = lazy(() => import("react-leaflet").then(mod => ({ default: mod.Popup })));
-const useMap = lazy(() => import("react-leaflet").then(mod => ({ default: mod.useMap })));
-
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+// Fix default marker icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
 
 
 // Fix default marker icons
