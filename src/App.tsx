@@ -33,6 +33,8 @@ const Chat = lazy(() => import("@/pages/Chat"));
 const TenantManagement = lazy(() => import("@/pages/TenantManagement"));
 const SuperAdminDashboard = lazy(() => import("@/pages/SuperAdminDashboard"));
 const PlanManagement = lazy(() => import("@/pages/PlanManagement"));
+const Financial = lazy(() => import("@/pages/Financial"));
+const WhatsApp = lazy(() => import("@/pages/WhatsApp"));
 const Demo = lazy(() => import("@/pages/Demo"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -88,6 +90,8 @@ function App() {
                 <Route path="/campaign-files" element={<ProtectedRoute><CampaignFiles /></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                 <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+                <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
+                <Route path="/whatsapp" element={<ProtectedRoute><WhatsApp /></ProtectedRoute>} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>

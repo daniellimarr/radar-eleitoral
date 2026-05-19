@@ -1,8 +1,8 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import {
   Home, Users, FileText, Calendar, Car, Package, MapPin, Settings,
   BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield,
-  Flag, Megaphone, Database, FolderDown, Building2
+  Flag, Megaphone, Database, FolderDown, Building2, DollarSign, MessageCircle, Layers
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -20,21 +20,23 @@ import logoRadar from "@/assets/logo-radar-eleitoral.png";
 const mainItems = [
   { title: "Início", url: "/dashboard", icon: Home, module: "dashboard" },
   { title: "Campanhas", url: "/campaigns", icon: Flag, module: "campaigns" },
-  { title: "Cadastro de Contato", url: "/contacts", icon: Users, module: "contacts" },
+  { title: "Contatos", url: "/contacts", icon: Users, module: "contacts" },
   { title: "Demandas", url: "/demands", icon: ClipboardList, module: "demands" },
   { title: "Agenda", url: "/appointments", icon: Calendar, module: "appointments" },
   { title: "Lideranças", url: "/leaders", icon: BarChart3, module: "leaders" },
+  { title: "Financeiro", url: "/financial", icon: DollarSign, module: "financial" },
+  { title: "WhatsApp", url: "/whatsapp", icon: MessageCircle, module: "whatsapp" },
   { title: "Marketing", url: "/marketing", icon: Megaphone, module: "marketing" },
-  { title: "Arquivos da Campanha", url: "/campaign-files", icon: FolderDown, module: "campaign_files" },
+  { title: "Arquivos", url: "/campaign-files", icon: FolderDown, module: "campaign_files" },
   { title: "Mapa", url: "/map", icon: MapPin, module: "map" },
   { title: "Chat Interno", url: "/chat", icon: MessageSquare, module: "chat" },
 ];
 
 const coordinatorItems = [
-  { title: "Gestão de Usuários", url: "/admin/users", icon: Users, module: "user_management" },
+  { title: "Usuários", url: "/admin/users", icon: Users, module: "user_management" },
   { title: "Veículos", url: "/vehicles", icon: Car, module: "vehicles" },
-  { title: "Material de Campanha", url: "/materials", icon: Package, module: "materials" },
-  { title: "Solicitações de Visita", url: "/visit-requests", icon: MessageSquare, module: "visit_requests" },
+  { title: "Materiais", url: "/materials", icon: Package, module: "materials" },
+  { title: "Solicitações", url: "/visit-requests", icon: MessageSquare, module: "visit_requests" },
   { title: "Links de Cadastro", url: "/registration-links", icon: Link2, module: "registration_links" },
 ];
 
@@ -42,7 +44,6 @@ const adminItems = [
   { title: "Painel da Plataforma", url: "/admin", icon: Shield },
   { title: "Gestão de Gabinetes", url: "/admin/tenants", icon: Building2 },
   { title: "Gestão de Planos", url: "/admin/plans", icon: Package },
-  { title: "Gestão de Usuários", url: "/admin/users", icon: Users },
   { title: "Relatórios e Auditoria", url: "/reports", icon: BarChart3 },
 ];
 
@@ -58,12 +59,13 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
   const { profile, hasRole, hasPermission, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
-  const isSuperAdmin = hasRole("super_admin");
-  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin;
-  const isCoordinator = hasRole("coordenador") || isAdmin;
+  
+  const isSuperAdmin = useMemo(() => hasRole("super_admin"), [hasRole]);
+  const isAdminGabinete = useMemo(() => hasRole("admin_gabinete"), [hasRole]);
+  const isCoordinator = useMemo(() => hasRole("coordenador") || isAdminGabinete || isSuperAdmin, [hasRole, isAdminGabinete, isSuperAdmin]);
 
-  const visibleMainItems = mainItems.filter((item) => hasPermission(item.module));
-  const visibleCoordinatorItems = coordinatorItems.filter((item) => hasPermission(item.module));
+  const visibleMainItems = useMemo(() => mainItems.filter((item) => hasPermission(item.module)), [hasPermission]);
+  const visibleCoordinatorItems = useMemo(() => coordinatorItems.filter((item) => hasPermission(item.module)), [hasPermission]);
 
   return (
     <Sidebar ref={ref} collapsible="icon">
@@ -71,20 +73,20 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
         {/* Logo */}
         <div className="p-4 flex items-center gap-2">
           <img src={logoRadar} alt="Radar Eleitoral" className="h-8 w-8 shrink-0 rounded" />
-          {!collapsed && <span className="font-bold text-lg text-foreground">RADAR ELEITORAL</span>}
+          {!collapsed && <span className="font-bold text-lg text-foreground tracking-tight">RADAR ELEITORAL</span>}
         </div>
 
         {/* User Info */}
         {!collapsed && (
           <div className="px-4 pb-4 flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+            <Avatar className="h-10 w-10 border border-primary/20">
+              <AvatarFallback className="bg-primary text-primary-foreground text-sm font-bold">
                 {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{profile?.full_name || "Usuário"}</p>
-              <p className="text-xs text-muted-foreground truncate">Online</p>
+              <p className="text-sm font-semibold truncate">{profile?.full_name || "Usuário"}</p>
+              <p className="text-xs text-muted-foreground truncate">{isAdminGabinete ? "Administrador" : isSuperAdmin ? "Super Admin" : "Operador"}</p>
             </div>
           </div>
         )}
@@ -97,7 +99,7 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
               {visibleMainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                    <NavLink to={item.url} end className="hover:bg-accent transition-colors" activeClassName="bg-primary/10 text-primary font-semibold">
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
@@ -113,9 +115,9 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
           <SidebarGroup>
             <Collapsible defaultOpen>
               <CollapsibleTrigger className="w-full">
-                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer">
-                  Coordenador
-                  <ChevronDown className="h-4 w-4" />
+                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:text-foreground transition-colors group">
+                  Gestão e Logística
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
                 </SidebarGroupLabel>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -124,7 +126,7 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
                     {visibleCoordinatorItems.map((item) => (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                          <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                          <NavLink to={item.url} end className="hover:bg-accent transition-colors" activeClassName="bg-primary/10 text-primary font-semibold">
                             <item.icon className="h-4 w-4" />
                             {!collapsed && <span>{item.title}</span>}
                           </NavLink>
@@ -143,9 +145,9 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
           <SidebarGroup>
             <Collapsible defaultOpen>
               <CollapsibleTrigger className="w-full">
-                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer">
-                  Administração
-                  <ChevronDown className="h-4 w-4" />
+                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:text-foreground transition-colors group">
+                  Painel Master
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
                 </SidebarGroupLabel>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -154,7 +156,7 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
                     {adminItems.map((item) => (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                          <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                          <NavLink to={item.url} end className="hover:bg-accent transition-colors" activeClassName="bg-primary/10 text-primary font-semibold">
                             <item.icon className="h-4 w-4" />
                             {!collapsed && <span>{item.title}</span>}
                           </NavLink>
@@ -170,12 +172,13 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
 
         {/* Config */}
         <SidebarGroup>
+          <SidebarGroupLabel>Sistema</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {configItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                    <NavLink to={item.url} end className="hover:bg-accent transition-colors" activeClassName="bg-primary/10 text-primary font-semibold">
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
@@ -187,10 +190,10 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
-        <Button variant="ghost" className="w-full justify-start gap-2" onClick={signOut}>
+      <SidebarFooter className="p-4">
+        <Button variant="ghost" className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={signOut}>
           <LogOut className="h-4 w-4" />
-          {!collapsed && "Sair"}
+          {!collapsed && "Sair do Sistema"}
         </Button>
       </SidebarFooter>
     </Sidebar>
