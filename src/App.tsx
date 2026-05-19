@@ -24,7 +24,7 @@ const RegistrationLinks = lazy(() => import("@/pages/RegistrationLinks"));
 const PublicRegistration = lazy(() => import("@/pages/PublicRegistration"));
 const Georeferencing = lazy(() => import("@/pages/Georeferencing"));
 const UserManagement = lazy(() => import("@/pages/UserManagement"));
-// const Campaigns = lazy(() => import("@/pages/Campaigns"));
+
 const Marketing = lazy(() => import("@/pages/Marketing"));
 const Backup = lazy(() => import("@/pages/Backup"));
 const CampaignFiles = lazy(() => import("@/pages/CampaignFiles"));
@@ -67,7 +67,7 @@ function App() {
                 
                 <Route path="/dashboard" element={<ProtectedRoute module="dashboard"><Dashboard /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute role="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
-                {/* <Route path="/campaigns" element={<ProtectedRoute module="campaigns"><Campaigns /></ProtectedRoute>} /> */}
+                
                 <Route path="/contacts" element={<ProtectedRoute module="contacts"><Contacts /></ProtectedRoute>} />
                 <Route path="/demands" element={<ProtectedRoute module="demands"><Demands /></ProtectedRoute>} />
                 <Route path="/appointments" element={<ProtectedRoute module="appointments"><Appointments /></ProtectedRoute>} />
