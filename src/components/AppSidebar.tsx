@@ -117,7 +117,7 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
               <CollapsibleTrigger className="w-full">
                 <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:text-foreground transition-colors group">
                   Gestão e Logística
-                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
                 </SidebarGroupLabel>
               </CollapsibleTrigger>
               <CollapsibleContent>
