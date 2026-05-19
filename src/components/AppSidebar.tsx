@@ -19,7 +19,7 @@ import logoRadar from "@/assets/logo-radar-eleitoral.png";
 
 const mainItems = [
   { title: "Início", url: "/dashboard", icon: Home, module: "dashboard" },
-  { title: "Campanhas", url: "/campaigns", icon: Flag, module: "campaigns" },
+  // { title: "Campanhas", url: "/campaigns", icon: Flag, module: "campaigns" },
   { title: "Contatos", url: "/contacts", icon: Users, module: "contacts" },
   { title: "Demandas", url: "/demands", icon: ClipboardList, module: "demands" },
   { title: "Agenda", url: "/appointments", icon: Calendar, module: "appointments" },
