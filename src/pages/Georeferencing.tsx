@@ -1,7 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useState, useEffect, useMemo, useRef, Suspense, lazy } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
@@ -10,6 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapPin, Search, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
+// Otimização: Lazy load de componentes pesados (Leaflet)
+const MapContainer = lazy(() => import("react-leaflet").then(mod => ({ default: mod.MapContainer })));
+const TileLayer = lazy(() => import("react-leaflet").then(mod => ({ default: mod.TileLayer })));
+const Marker = lazy(() => import("react-leaflet").then(mod => ({ default: mod.Marker })));
+const Popup = lazy(() => import("react-leaflet").then(mod => ({ default: mod.Popup })));
+const useMap = lazy(() => import("react-leaflet").then(mod => ({ default: mod.useMap })));
+
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 
 // Fix default marker icons
