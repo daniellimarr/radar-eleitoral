@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback, memo, Suspense, lazy } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useContacts } from "@/hooks/contacts/useContacts";
@@ -16,6 +16,23 @@ import { toast } from "sonner";
 import { Plus, Search, Trash2, Edit, Loader2 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Otimização: Memoização de linhas da tabela para evitar re-renders desnecessários
+const ContactRow = memo(({ contact, onEdit, onDelete }: { contact: any, onEdit: (c: any) => void, onDelete: (id: string) => void }) => (
+  <TableRow>
+    <TableCell className="font-medium">{contact.name}</TableCell>
+    <TableCell>{contact.phone}</TableCell>
+    <TableCell>{contact.neighborhood}</TableCell>
+    <TableCell className="capitalize">{contact.engagement}</TableCell>
+    <TableCell>
+      <div className="flex gap-1">
+        <Button variant="ghost" size="icon" onClick={() => onEdit(contact)} aria-label="Editar"><Edit className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => onDelete(contact.id)} aria-label="Excluir"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+      </div>
+    </TableCell>
+  </TableRow>
+));
+ContactRow.displayName = "ContactRow";
 
 const engagementOptions = [
   { value: "nao_trabalhado", label: "Não trabalhado" },
@@ -248,18 +265,12 @@ export default function Contacts() {
               {contacts.length === 0 ? (
                 <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum contato</TableCell></TableRow>
               ) : contacts.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell>{c.phone}</TableCell>
-                  <TableCell>{c.neighborhood}</TableCell>
-                  <TableCell className="capitalize">{c.engagement}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}><Edit className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteContact(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <ContactRow 
+                  key={c.id} 
+                  contact={c} 
+                  onEdit={handleEdit} 
+                  onDelete={deleteContact} 
+                />
               ))}
             </TableBody>
           </Table>
