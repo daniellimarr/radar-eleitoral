@@ -137,7 +137,7 @@ export default function Campaigns() {
           <DialogContent className="max-w-2xl">
             <DialogHeader><DialogTitle>{editingId ? "Editar Campanha" : "Nova Campanha"}</DialogTitle></DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Nome da Campanha *</Label><Input value={form.nome_campanha} onChange={e => u("nome_campanha", e.target.value)} /></div>
+              <div className="space-y-2"><Label>Nome da Campanha *</Label><Input autoComplete="off" name="nome_campanha_radar" value={form.nome_campanha} onChange={e => u("nome_campanha", e.target.value)} onInput={e => u("nome_campanha", (e.target as HTMLInputElement).value)} /></div>
               <div className="space-y-2"><Label>Cargo</Label>
                 <Select value={form.cargo} onValueChange={v => u("cargo", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{cargoOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
               </div>
