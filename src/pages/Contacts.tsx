@@ -45,6 +45,7 @@ export default function Contacts() {
   const { tenantId, user, hasRole, profile } = useAuth();
   const { contactLimit } = useSubscription();
   const [contacts, setContacts] = useState<any[]>([]);
+  const [totalContacts, setTotalContacts] = useState(0);
   const [leaders, setLeaders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -117,6 +118,16 @@ export default function Contacts() {
 
   const fetchContacts = async () => {
     if (!tenantId) return;
+    
+    // Fetch total count for limit checking
+    const { count } = await supabase
+      .from("contacts_decrypted")
+      .select("*", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .is("deleted_at", null);
+    
+    setTotalContacts(count || 0);
+
     let query = supabase
       .from("contacts_decrypted")
       .select("*")
@@ -212,7 +223,7 @@ export default function Contacts() {
       }
     } else {
       // Check contact limit before inserting
-      if (contactLimit !== Infinity && contacts.length >= contactLimit) {
+      if (contactLimit !== Infinity && totalContacts >= contactLimit) {
         toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido. Faça upgrade do seu plano.`);
         setLoading(false);
         return;
