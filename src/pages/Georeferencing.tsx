@@ -401,7 +401,8 @@ export default function Georeferencing() {
             <p className="text-muted-foreground">Carregando mapa...</p>
           </div>
         )}
-        <MapContainer
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center bg-muted/20">Carregando mapa interativo...</div>}>
+          <MapContainer
           center={[-15.78, -47.93]}
           zoom={5}
           className="h-full w-full"
@@ -457,7 +458,8 @@ export default function Georeferencing() {
               </Marker>
             );
           })}
-        </MapContainer>
+          </MapContainer>
+        </Suspense>
       </div>
     </div>
   );
