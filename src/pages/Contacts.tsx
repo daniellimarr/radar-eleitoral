@@ -126,24 +126,39 @@ export default function Contacts() {
     }
 
     setLoading(true);
-    const payload = {
-      ...form,
-      tenant_id: effectiveTenantId,
-      registered_by: user?.id,
-      latitude: geoCoords.latitude,
-      longitude: geoCoords.longitude,
-    };
+    try {
+      // Sanitização: Converter campos vazios para null para evitar erros de tipo no Postgres (UUID, Date, etc)
+      const sanitizedPayload = {
+        ...form,
+        tenant_id: effectiveTenantId,
+        registered_by: user?.id,
+        latitude: geoCoords.latitude,
+        longitude: geoCoords.longitude,
+        leader_id: form.leader_id && form.leader_id !== "" ? form.leader_id : null,
+        birth_date: form.birth_date && form.birth_date !== "" ? form.birth_date : null,
+        gender: form.gender || null,
+        phone: form.phone || null,
+        cep: form.cep || null,
+      };
 
-    const { error } = await ContactService.saveContact(payload, editingId);
-    if (error) toast.error(error.message);
-    else {
-      toast.success(editingId ? "Contato atualizado!" : "Contato cadastrado!");
-      setIsOpen(false);
-      setForm(defaultContact);
-      setEditingId(null);
-      refresh();
+      const { error } = await ContactService.saveContact(sanitizedPayload, editingId);
+      
+      if (error) {
+        console.error("Erro ao salvar contato:", error);
+        toast.error(`Erro ao salvar: ${error.message}`);
+      } else {
+        toast.success(editingId ? "Contato atualizado!" : "Contato cadastrado!");
+        setIsOpen(false);
+        setForm(defaultContact);
+        setEditingId(null);
+        refresh();
+      }
+    } catch (err: any) {
+      console.error("Exceção ao salvar contato:", err);
+      toast.error("Ocorreu um erro inesperado ao salvar.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleEdit = (contact: any) => {
