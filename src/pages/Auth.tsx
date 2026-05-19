@@ -29,6 +29,7 @@ const AuthBrand = memo(() => (
   </div>
 ));
 AuthBrand.displayName = "AuthBrand";
+export default function Auth() {
   const [searchParams] = useSearchParams();
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
