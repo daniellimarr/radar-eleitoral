@@ -142,10 +142,10 @@ export default function Dashboard() {
   }, [tenantId, isOperador]);
 
   // Wait for auth/roles to load before deciding which dashboard to show
-  if (loading || (roles.length === 0 && !tenantId)) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Carregando...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
