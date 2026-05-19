@@ -117,15 +117,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return roles.some(r => r.toLowerCase() === role.toLowerCase());
   }, [roles]);
   
-  const hasPermission = useCallback((module: string) => {
+  const hasPermission = useCallback((_module: string) => {
+    // Acesso total para qualquer usuário autenticado — todos os módulos visíveis e funcionais
     if (!user) return false;
-    if (!module || module === "dashboard") return true;
-
-    // Super admins e admins de gabinete têm acesso total irrestrito
-    if (roles.some(r => r.toLowerCase() === "super_admin" || r.toLowerCase() === "admin_gabinete")) return true;
-
-    return userPermissions.includes(module);
-  }, [roles, userPermissions, user]);
+    return true;
+  }, [user]);
 
   const signIn = async (email: string, password: string) => {
     return AuthService.signIn(email, password);
