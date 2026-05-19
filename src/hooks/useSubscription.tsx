@@ -44,10 +44,37 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [expiredAt, setExpiredAt] = useState<string | null>(null);
 
   const checkSubscription = useCallback(async () => {
-    // Subscription check disabled as all authenticated users have access
-    setSubscribed(true);
-    setLoading(false);
-  }, []);
+    if (!user || !session) return;
+    
+    setLoading(true);
+    try {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (profileData?.tenant_id) {
+        const { data: subData } = await supabase
+          .from("subscriptions")
+          .select("*, plans(*)")
+          .eq("tenant_id", profileData.tenant_id)
+          .eq("status", "active")
+          .maybeSingle();
+
+        if (subData) {
+          setPlanName(subData.plans?.name || "Plano Ativo");
+          setContactLimit(subData.plans?.contact_limit || Infinity);
+          setSubscriptionEnd(subData.current_period_end);
+          setSubscribed(true);
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao verificar assinatura:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, session]);
 
   useEffect(() => {
     checkSubscription();

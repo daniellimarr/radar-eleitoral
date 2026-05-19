@@ -114,14 +114,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchAuthData, resetState]);
 
   const hasRole = useCallback((role: string) => {
+    if (!roles) return false;
     return roles.some(r => r.toLowerCase() === role.toLowerCase());
   }, [roles]);
   
-  const hasPermission = useCallback((_module: string) => {
-    // Acesso total para qualquer usuário autenticado — todos os módulos visíveis e funcionais
-    if (!user) return false;
-    return true;
-  }, [user]);
+  const hasPermission = useCallback((module: string) => {
+    // Super admin sempre tem acesso total
+    if (hasRole("super_admin")) return true;
+    
+    // Admin de gabinete tem acesso a tudo no seu tenant por padrão
+    if (hasRole("admin_gabinete")) return true;
+
+    // Acesso baseado em permissões cadastradas
+    if (!userPermissions) return false;
+    return userPermissions.includes(module.toLowerCase());
+  }, [hasRole, userPermissions]);
 
   const signIn = async (email: string, password: string) => {
     return AuthService.signIn(email, password);

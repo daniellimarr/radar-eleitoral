@@ -64,11 +64,11 @@ export default function Campaigns() {
         meta_votos: Number(form.meta_votos) || 0,
         limite_gastos: Number(form.limite_gastos) || 0,
         tenant_id: effectiveTenantId,
-        // Sanitização básica
-        cidade: form.cidade || null,
-        estado: form.estado || null,
-        partido: form.partido || null,
-        numero: form.numero || null,
+        // Sanitização básica: Strings vazias para null
+        cidade: form.cidade?.trim() || null,
+        estado: form.estado?.trim() || null,
+        partido: form.partido?.trim() || null,
+        numero: form.numero?.trim() || null,
       };
 
       if (editingId) {
