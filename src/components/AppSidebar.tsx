@@ -111,7 +111,7 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
         </SidebarGroup>
 
         {/* Coordinator Menu */}
-        {isCoordinator && visibleCoordinatorItems.length > 0 && (
+        {visibleCoordinatorItems.length > 0 && (
           <SidebarGroup>
             <Collapsible defaultOpen>
               <CollapsibleTrigger className="w-full">
