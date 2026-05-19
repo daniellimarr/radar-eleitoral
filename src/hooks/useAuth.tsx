@@ -113,11 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchAuthData, resetState]);
 
-  const hasRole = (role: string) => true;
+  const hasRole = (role: string) => roles.includes(role);
   
   const hasPermission = (module: string) => {
-    // All authenticated users now have access to all modules, regardless of roles or individual permissions
-    return true;
+    if (hasRole("super_admin") || hasRole("admin_gabinete")) return true;
+    return userPermissions.includes(module);
   };
 
   const signIn = async (email: string, password: string) => {
