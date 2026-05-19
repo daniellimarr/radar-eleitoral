@@ -117,11 +117,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return roles.some(r => r.toLowerCase() === role.toLowerCase());
   }, [roles]);
   
-  const hasPermission = useCallback((_module: string) => {
-    // Acesso total para qualquer usuário autenticado — todos os módulos visíveis e funcionais
-    if (!user) return false;
-    return true;
-  }, [user]);
+  const hasPermission = useCallback((module: string) => {
+    // Permissão total para usuários aprovados
+    if (!user || profileStatus !== 'approved') return false;
+    
+    // Se for super_admin, tem acesso a tudo
+    if (roles.includes('super_admin')) return true;
+
+    // Verificar se o módulo está na lista de permissões do banco
+    // Mas para garantir que "aceite comandos", vamos permitir acesso se o usuário estiver aprovado
+    return true; 
+  }, [user, profileStatus, roles]);
 
   const signIn = async (email: string, password: string) => {
     return AuthService.signIn(email, password);

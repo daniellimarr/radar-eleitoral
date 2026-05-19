@@ -110,15 +110,24 @@ export default function Contacts() {
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
 
     let effectiveTenantId = tenantId || profile?.tenant_id || null;
+    
     if (!effectiveTenantId && user?.id) {
-      const { data } = await supabase
+      const { data, error: tenantError } = await supabase
         .from("profiles")
         .select("tenant_id")
         .eq("user_id", user.id)
         .maybeSingle();
+      
+      if (tenantError) {
+        console.error("Erro ao buscar tenant_id:", tenantError);
+      }
       effectiveTenantId = data?.tenant_id || null;
     }
-    if (!effectiveTenantId) { toast.error("Não foi possível identificar seu gabinete. Faça logout e entre novamente."); return; }
+
+    if (!effectiveTenantId) { 
+      toast.error("Erro de identificação: Seu perfil não está vinculado a um gabinete ativo."); 
+      return; 
+    }
 
     if (!editingId && contactLimit !== Infinity && totalContacts >= contactLimit) {
       toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido.`);
