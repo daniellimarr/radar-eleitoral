@@ -45,8 +45,11 @@ test("deve sincronizar o valor do campo Nome da Campanha mesmo com preenchimento
     fireEvent.click(btnNova);
   });
 
-  // Procurar o input diretamente pelo placeholder ou name se o label não estiver vinculado
-  const inputNome = screen.getByRole("textbox", { name: "" }); // O input tem name="nome_campanha_radar" no código agora
+  // Usar getByTestId ou o name direto
+  const inputs = screen.getAllByRole("textbox");
+  const inputNome = inputs.find(i => (i as HTMLInputElement).name === "nome_campanha_radar") as HTMLInputElement;
+
+  expect(inputNome).toBeDefined();
 
   await act(async () => {
     fireEvent.input(inputNome, { target: { value: "Campanha Teste Autofill" } });
