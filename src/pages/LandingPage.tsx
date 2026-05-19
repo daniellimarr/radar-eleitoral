@@ -59,9 +59,11 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
 
-    if (!loading && user) {
-      navigate("/dashboard");
-    }
+    useEffect(() => {
+      if (!loading && user) {
+        navigate("/dashboard");
+      }
+    }, [user, loading, navigate]);
   const isLoggedInWithoutSub = false; // Always false since access is free after login
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
