@@ -45,7 +45,7 @@ export default function Campaigns() {
   useEffect(() => { fetch(); }, [tenantId]);
 
   const handleSave = async () => {
-    if (!tenantId || !form.nome_campanha.trim()) { toast.error("Nome da campanha é obrigatório"); return; }
+    if (!tenantId || !form.nome_campanha || form.nome_campanha.toString().trim() === "") { toast.error("Nome da campanha é obrigatório"); return; }
     setLoading(true);
     const payload = { ...form, meta_votos: Number(form.meta_votos), limite_gastos: Number(form.limite_gastos), tenant_id: tenantId };
     if (editingId) {
