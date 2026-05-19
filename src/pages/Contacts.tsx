@@ -111,8 +111,11 @@ export default function Contacts() {
 
     let effectiveTenantId = tenantId || profile?.tenant_id || null;
     if (!effectiveTenantId && user?.id) {
-      const { data } = await (await import("@/integrations/supabase/client")).supabase
+      const { data } = await supabase
         .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
         .select("tenant_id")
         .eq("user_id", user.id)
         .maybeSingle();
