@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, MessageSquare, Gift, Megaphone, Calendar as CalendarIcon, Target, TrendingUp, DollarSign, MapPin, Crown, ArrowUpRight } from "lucide-react";
@@ -13,8 +13,10 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import OperatorDashboard from "@/components/OperatorDashboard";
-import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
+
+// Deferred components for better performance
+const OperatorDashboard = memo(() => import("@/components/OperatorDashboard"));
+const SuperAdminDashboard = memo(() => import("@/pages/SuperAdminDashboard"));
 const engagementLabels: Record<string, string> = {
   nao_trabalhado: "Não trabalhado",
   em_prospeccao: "Em prospecção",
@@ -146,11 +148,19 @@ export default function Dashboard() {
   }
 
   if (isSuperAdmin) {
-    return <SuperAdminDashboard />;
+    return (
+      <Suspense fallback={<div className="flex h-64 items-center justify-center">Carregando Painel Administrativo...</div>}>
+        <SuperAdminDashboard />
+      </Suspense>
+    );
   }
 
   if (isOperador) {
-    return <OperatorDashboard />;
+    return (
+      <Suspense fallback={<div className="flex h-64 items-center justify-center">Carregando seu Painel...</div>}>
+        <OperatorDashboard />
+      </Suspense>
+    );
   }
 
   const totalEngagement = Object.values(engagementData).reduce((a, b) => a + b, 0) || 1;
