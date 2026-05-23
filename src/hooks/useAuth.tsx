@@ -125,9 +125,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (roles.includes('super_admin')) return true;
 
     // Verificar se o módulo está na lista de permissões do banco
-    // Mas para garantir que "aceite comandos", vamos permitir acesso se o usuário estiver aprovado
+    if (userPermissions.length > 0) {
+      return userPermissions.includes(module);
+    }
+
+    // Fallback para garantir acesso básico enquanto carrega ou se não configurado
     return true; 
-  }, [user, profileStatus, roles]);
+  }, [user, profileStatus, roles, userPermissions]);
 
   const signIn = async (email: string, password: string) => {
     return AuthService.signIn(email, password);
