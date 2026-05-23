@@ -38,7 +38,7 @@ export default function Marketing() {
   const handleSave = async () => {
     if (!tenantId || !form.titulo.trim()) { toast.error("Título é obrigatório"); return; }
     setLoading(true);
-    const payload = { ...form, custo_impulsionamento: Number(form.custo_impulsionamento), data_publicacao: form.data_publicacao || null, tenant_id: tenantId };
+    const payload = { ...form, custo_impulsionamento: Number(form.custo_impulsionamento || 0), data_publicacao: form.data_publicacao || null, tenant_id: tenantId };
     
     const { error } = await MarketingService.saveContentPlan(payload, editingId);
     if (error) toast.error(error.message);

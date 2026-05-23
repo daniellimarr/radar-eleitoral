@@ -126,7 +126,10 @@ export default function RegistrationLinks() {
               {slug && (
                 <div className="space-y-2">
                   <Label>Link gerado</Label>
-                  <p className="text-sm font-mono bg-muted p-2 rounded">{getBaseUrl()}/cadastro/{slug}</p>
+                  <div className="flex gap-2 items-center">
+                    <p className="text-sm font-mono bg-muted p-2 rounded flex-1 truncate">{getBaseUrl()}/cadastro/{slug}</p>
+                    <Button size="icon" variant="outline" onClick={() => copyLink(slug)}><Copy className="h-4 w-4" /></Button>
+                  </div>
                 </div>
               )}
               <Button onClick={handleCreate} disabled={loading} className="w-full">{loading ? "Criando..." : "Criar Link"}</Button>
