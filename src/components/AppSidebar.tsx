@@ -64,8 +64,8 @@ export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSide
   const isAdminGabinete = useMemo(() => hasRole("admin_gabinete"), [hasRole]);
   const isCoordinator = useMemo(() => hasRole("coordenador") || isAdminGabinete || isSuperAdmin, [hasRole, isAdminGabinete, isSuperAdmin]);
 
-  const visibleMainItems = useMemo(() => mainItems.filter((item) => item.module !== "campaigns" && hasPermission(item.module)), [hasPermission]);
-  const visibleCoordinatorItems = useMemo(() => coordinatorItems.filter((item) => item.module !== "campaigns" && hasPermission(item.module)), [hasPermission]);
+  const visibleMainItems = useMemo(() => mainItems.filter((item) => hasPermission(item.module)), [hasPermission]);
+  const visibleCoordinatorItems = useMemo(() => coordinatorItems.filter((item) => hasPermission(item.module)), [hasPermission]);
 
   return (
     <Sidebar ref={ref} collapsible="icon">
