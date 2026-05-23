@@ -19,11 +19,13 @@ export function ProtectedRoute({ children, module, role }: ProtectedRouteProps) 
     if (!loading && !permissionsLoading && user) {
       if (module && !hasPermission(module)) {
         toast.error("Você não tem permissão para acessar este módulo.");
+        console.warn(`Acesso negado ao módulo: ${module}`);
       } else if (role) {
-        const roles = Array.isArray(role) ? role : [role];
-        const hasRequiredRole = roles.some(r => hasRole(r));
+        const rolesArray = Array.isArray(role) ? role : [role];
+        const hasRequiredRole = rolesArray.some(r => hasRole(r));
         if (!hasRequiredRole) {
           toast.error("Seu nível de acesso não permite visualizar esta página.");
+          console.warn(`Acesso negado pelas roles: ${rolesArray.join(", ")}`);
         }
       }
     }

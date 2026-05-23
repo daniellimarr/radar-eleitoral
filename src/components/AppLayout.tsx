@@ -124,12 +124,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </div>
             <div className="flex items-center gap-3">
               <NotificationBell />
-              <div className="flex flex-col items-end hidden sm:flex">
-                <span className="text-sm font-medium leading-none">
+              <div className="flex flex-col items-end hidden md:flex">
+                <span className="text-sm font-semibold leading-none text-foreground">
                   {profile?.full_name || "Usuário"}
                 </span>
-                <span className="text-xs text-muted-foreground mt-1">
-                  Radar Eleitoral
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1 font-bold">
+                  {isAdminRole ? (isSuperAdmin ? "Super Admin" : "Administrador") : "Operador"}
                 </span>
               </div>
               <Avatar className="h-9 w-9 border border-border">
