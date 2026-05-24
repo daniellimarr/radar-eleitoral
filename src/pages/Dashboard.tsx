@@ -66,8 +66,11 @@ export default function Dashboard() {
   const [financialSummary, setFinancialSummary] = useState({ donations: 0, expenses: 0 });
   const [neighborhoodData, setNeighborhoodData] = useState<any[]>([]);
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
+  const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
+  const effectiveTenantId = tenantId || MAIN_TENANT;
+
   useEffect(() => {
-    if (!tenantId || isOperador) return;
+    if (isOperador) return;
 
     const fetchStats = async () => {
       const now = new Date();
@@ -75,14 +78,14 @@ export default function Dashboard() {
       const todayEnd = format(now, "yyyy-MM-dd") + "T23:59:59";
 
       const [contactRes, appointmentsRes, birthdayRes, engagementRes, allContactsRes, campaignRes, donationsRes, expensesRes] = await Promise.all([
-        supabase.from("contacts_decrypted").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).is("deleted_at", null),
-        supabase.from("appointments").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
-        supabase.from("contacts_decrypted").select("birth_date").eq("tenant_id", tenantId).is("deleted_at", null).not("birth_date", "is", null),
-        supabase.from("contacts_decrypted").select("engagement, neighborhood").eq("tenant_id", tenantId).is("deleted_at", null),
-        supabase.from("contacts_decrypted").select("created_at").eq("tenant_id", tenantId).is("deleted_at", null),
-        supabase.from("campaigns").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(1),
-        supabase.from("donations").select("valor").eq("tenant_id", tenantId),
-        supabase.from("expenses").select("valor").eq("tenant_id", tenantId),
+        supabase.from("contacts_decrypted").select("*", { count: "exact", head: true }).eq("tenant_id", effectiveTenantId).is("deleted_at", null),
+        supabase.from("appointments").select("*", { count: "exact", head: true }).eq("tenant_id", effectiveTenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
+        supabase.from("contacts_decrypted").select("birth_date").eq("tenant_id", effectiveTenantId).is("deleted_at", null).not("birth_date", "is", null),
+        supabase.from("contacts_decrypted").select("engagement, neighborhood").eq("tenant_id", effectiveTenantId).is("deleted_at", null),
+        supabase.from("contacts_decrypted").select("created_at").eq("tenant_id", effectiveTenantId).is("deleted_at", null),
+        supabase.from("campaigns").select("*").eq("tenant_id", effectiveTenantId).order("created_at", { ascending: false }).limit(1),
+        supabase.from("donations").select("valor").eq("tenant_id", effectiveTenantId),
+        supabase.from("expenses").select("valor").eq("tenant_id", effectiveTenantId),
       ]);
 
       // Birthdays
@@ -134,10 +137,10 @@ export default function Dashboard() {
     };
 
     fetchStats();
-  }, [tenantId, isOperador]);
+  }, [effectiveTenantId, isOperador]);
 
   // Wait for auth/roles to load before deciding which dashboard to show
-  if (loading || (roles.length === 0 && !tenantId)) {
+  if (loading || (roles.length === 0 && !effectiveTenantId)) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Carregando...</p>
