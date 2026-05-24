@@ -127,7 +127,6 @@ export default function LandingPage() {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-500">
             <button onClick={() => scrollTo("features")} className="hover:text-[#FF6B00] transition-colors">Funcionalidades</button>
-            <button onClick={() => scrollTo("features")} className="hover:text-[#FF6B00] transition-colors">Funcionalidades</button>
             <button onClick={() => scrollTo("benefits")} className="hover:text-[#FF6B00] transition-colors">Benefícios</button>
             <button onClick={() => scrollTo("contact")} className="hover:text-[#FF6B00] transition-colors">Contato</button>
           </div>
@@ -141,15 +140,17 @@ export default function LandingPage() {
                 <Button variant="ghost" onClick={() => navigate("/auth")} className="text-sm font-medium text-gray-600">
                   Entrar
                 </Button>
-                <Button onClick={() => navigate("/auth")}
+                <Button onClick={handleDemoLogin} disabled={isDemoLoading}
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-sm font-semibold px-5 rounded-lg shadow-md shadow-[#FF6B00]/20">
-                  Começar Agora
+                  {isDemoLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Testar Sistema
                 </Button>
               </>
             )}
           </div>
         </div>
       </nav>
+
 
       {/* ── Hero ── */}
       <section className="relative pt-28 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
