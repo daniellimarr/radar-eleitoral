@@ -244,7 +244,11 @@ export default function Dashboard() {
               const count = engagementData[key] || 0;
               const pct = Math.max((count / totalEngagement) * 100, 2);
               return (
-                <div key={key} className="flex items-center gap-4">
+                <div 
+                  key={key} 
+                  className="flex items-center gap-4 cursor-pointer hover:bg-muted/50 p-1 rounded transition-colors"
+                  onClick={() => navigate(`/contacts?engagement=${key}`)}
+                >
                   <span className="text-sm font-medium w-44 shrink-0">{label}</span>
                   <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
                     <div className={`h-full rounded-full ${engagementBarColors[key]}`} style={{ width: `${pct}%` }} />

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,10 +45,19 @@ const defaultContact = {
 export default function Contacts() {
   const { tenantId, user, hasRole, profile } = useAuth();
   const { contactLimit } = useSubscription();
+  const location = useLocation();
   const [contacts, setContacts] = useState<any[]>([]);
   const [leaders, setLeaders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [engagementFilter, setEngagementFilter] = useState<string>("all");
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const engagement = params.get("engagement");
+    if (engagement && engagementOptions.some(o => o.value === engagement)) {
+      setEngagementFilter(engagement);
+    }
+  }, [location.search]);
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState(defaultContact);
   const [editingId, setEditingId] = useState<string | null>(null);
