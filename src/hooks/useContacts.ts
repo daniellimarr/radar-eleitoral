@@ -55,6 +55,7 @@ export function useContacts() {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["leaders"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["operator-stats"] });
     },
     onError: (error: any) => {
       toast.error(error.message);
