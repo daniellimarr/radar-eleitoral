@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { DemandService } from "@/services/demands/DemandService";
+import { DemandStatus } from "@/types/demands";
 import { toast } from "sonner";
 
 export function useDemands(tenantId: string | null, search: string) {
@@ -24,7 +25,7 @@ export function useDemands(tenantId: string | null, search: string) {
     fetchDemands();
   }, [fetchDemands]);
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: DemandStatus) => {
     try {
       const { error } = await DemandService.updateStatus(id, status);
       if (error) throw error;

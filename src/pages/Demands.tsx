@@ -25,7 +25,21 @@ export default function Demands() {
   const { demands, loading: demandsLoading, refresh, updateStatus } = useDemands(tenantId, search);
   
   const [isOpen, setIsOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", status: "aberta", priority: "normal", contact_id: "", leader_id: "" });
+  const [form, setForm] = useState<{
+    title: string;
+    description: string;
+    status: DemandStatus;
+    priority: string;
+    contact_id: string;
+    leader_id: string;
+  }>({ 
+    title: "", 
+    description: "", 
+    status: "aberta", 
+    priority: "normal", 
+    contact_id: "", 
+    leader_id: "" 
+  });
   const [loading, setLoading] = useState(false);
   const tableRef = useRef<HTMLTableElement>(null);
 
@@ -74,8 +88,11 @@ export default function Demands() {
     if (!tenantId || !form.title) { toast.error("Título é obrigatório"); return; }
     setLoading(true);
     const { error } = await DemandService.saveDemand({
-      title: form.title, description: form.description, priority: form.priority,
-      tenant_id: tenantId, responsible_id: user?.id,
+      title: form.title, 
+      description: form.description, 
+      priority: form.priority,
+      tenant_id: tenantId, 
+      responsible_id: user?.id,
       status: form.status,
       contact_id: form.contact_id || null,
     });
@@ -83,7 +100,14 @@ export default function Demands() {
     else {
       toast.success("Demanda cadastrada!");
       setIsOpen(false);
-      setForm({ title: "", description: "", status: "aberta", priority: "normal", contact_id: "", leader_id: "" });
+      setForm({ 
+        title: "", 
+        description: "", 
+        status: "aberta", 
+        priority: "normal", 
+        contact_id: "", 
+        leader_id: "" 
+      });
       setContactSearch("");
       refresh();
     }
