@@ -58,18 +58,33 @@ const landingPlans = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
 
-    useEffect(() => {
-      if (!loading && user) {
-        navigate("/dashboard");
-      }
-    }, [user, loading, navigate]);
-  const isLoggedInWithoutSub = false; // Always false since access is free after login
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
+
+  const handleDemoLogin = async () => {
+    setIsDemoLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("setup-demo");
+      if (error) throw error;
+      if (!data?.actionLink) throw new Error("Link de acesso não retornado");
+
+      toast.success("Entrando no modo teste...");
+      window.location.href = data.actionLink;
+    } catch (err: any) {
+      toast.error("Erro ao configurar demo: " + (err.message || "Tente novamente"));
+      setIsDemoLoading(false);
+    }
+  };
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
 
   const formatCpf = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
