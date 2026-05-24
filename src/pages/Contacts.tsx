@@ -48,8 +48,11 @@ export default function Contacts() {
   const location = useLocation();
   const [contacts, setContacts] = useState<any[]>([]);
   const [leaders, setLeaders] = useState<any[]>([]);
+  const [registrationLinks, setRegistrationLinks] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
   const [engagementFilter, setEngagementFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
