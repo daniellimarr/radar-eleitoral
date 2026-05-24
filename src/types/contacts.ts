@@ -1,3 +1,7 @@
+import { Database } from "@/integrations/supabase/client";
+
+export type EngagementLevel = Database["public"]["Enums"]["engagement_level"];
+
 export interface Contact {
   id: string;
   tenant_id: string;
@@ -17,7 +21,7 @@ export interface Contact {
   voting_zone: string | null;
   voting_section: string | null;
   voting_location: string | null;
-  engagement: 'nao_trabalhado' | 'apoiador' | 'militante' | 'oposicao' | 'indeciso';
+  engagement: EngagementLevel;
   is_leader: boolean;
   leader_id: string | null;
   registered_by: string | null;

@@ -1,5 +1,6 @@
 import { BaseService } from "../BaseService";
 import { Contact } from "@/types/contacts";
+import { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export class ContactService extends BaseService {
   static async fetchContacts(tenantId: string, search?: string, limit = 100) {
@@ -67,12 +68,12 @@ export class ContactService extends BaseService {
       .order("name");
   }
 
-  static async saveContact(payload: Partial<Contact>, editingId?: string | null) {
+  static async saveContact(payload: TablesInsert<"contacts"> | TablesUpdate<"contacts">, editingId?: string | null) {
     const client = this.getClient();
     if (editingId) {
-      return client.from("contacts").update(payload).eq("id", editingId);
+      return client.from("contacts").update(payload as TablesUpdate<"contacts">).eq("id", editingId);
     } else {
-      return client.from("contacts").insert(payload).select("id").single();
+      return client.from("contacts").insert(payload as TablesInsert<"contacts">).select("id").single();
     }
   }
 
