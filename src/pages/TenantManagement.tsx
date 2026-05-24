@@ -40,7 +40,7 @@ interface TenantAdmin {
 }
 
 export default function TenantManagement() {
-  const { hasRole } = useAuth();
+  const { hasRole, user } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [tenantAdmins, setTenantAdmins] = useState<TenantAdmin[]>([]);
@@ -292,9 +292,10 @@ export default function TenantManagement() {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + days);
 
-      // Get admin user for this tenant
+      // Get admin user for this tenant - fallback to current super_admin if none
       const admin = getAdmin(grantAccessTarget.id);
-      if (!admin) { toast.error("Administrador não encontrado para este gabinete"); setGrantingAccess(false); return; }
+      const subscriptionUserId = admin?.user_id || user?.id;
+      if (!subscriptionUserId) { toast.error("Não foi possível identificar um usuário responsável"); setGrantingAccess(false); return; }
 
       // Deactivate any existing active subscriptions
       await supabase
@@ -309,7 +310,7 @@ export default function TenantManagement() {
       // Create free subscription
       const { error: subError } = await supabase.from("subscriptions").insert({
         tenant_id: grantAccessTarget.id,
-        user_id: admin.user_id,
+        user_id: subscriptionUserId,
         plan_name: planName,
         status: "active",
         started_at: new Date().toISOString(),

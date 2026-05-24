@@ -168,7 +168,12 @@ export default function Contacts() {
   const handleSave = async () => {
     const trimmedName = form.name?.trim();
     if (!trimmedName) { toast.error("Nome é obrigatório"); return; }
-    if (!tenantId) { toast.error("Gabinete não identificado. Recarregue a página."); return; }
+    let tid = tenantId;
+    if (!tid && user?.id) {
+      const { data: prof } = await supabase.from("profiles").select("tenant_id").eq("user_id", user.id).maybeSingle();
+      tid = prof?.tenant_id || null;
+    }
+    if (!tid) { toast.error("Gabinete não identificado. Recarregue a página."); return; }
     setLoading(true);
 
 
@@ -192,7 +197,7 @@ export default function Contacts() {
       engagement: form.engagement as "nao_trabalhado" | "em_prospeccao" | "conquistado" | "criando_envolvimento" | "falta_trabalhar" | "envolvimento_perdido",
       is_leader: form.is_leader,
       leader_id: form.leader_id || null,
-      tenant_id: tenantId,
+      tenant_id: tid,
       registered_by: user?.id,
       latitude: geoCoords.latitude,
       longitude: geoCoords.longitude,

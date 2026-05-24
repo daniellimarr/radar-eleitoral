@@ -25,7 +25,7 @@ const defaultForm = {
 };
 
 export default function Campaigns() {
-  const { tenantId } = useAuth();
+  const { tenantId, user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState(defaultForm);
@@ -46,9 +46,14 @@ export default function Campaigns() {
 
   const handleSave = async () => {
     if (!form.nome_campanha.trim()) { toast.error("Nome da campanha é obrigatório"); return; }
-    if (!tenantId) { toast.error("Gabinete não identificado. Recarregue a página."); return; }
+    let tid = tenantId;
+    if (!tid && user?.id) {
+      const { data: prof } = await supabase.from("profiles").select("tenant_id").eq("user_id", user.id).maybeSingle();
+      tid = prof?.tenant_id || null;
+    }
+    if (!tid) { toast.error("Gabinete não identificado. Recarregue a página."); return; }
     setLoading(true);
-    const payload = { ...form, meta_votos: Number(form.meta_votos) || 0, limite_gastos: Number(form.limite_gastos) || 0, tenant_id: tenantId };
+    const payload = { ...form, meta_votos: Number(form.meta_votos) || 0, limite_gastos: Number(form.limite_gastos) || 0, tenant_id: tid };
     if (editingId) {
       const { error } = await supabase.from("campaigns").update(payload).eq("id", editingId);
       if (error) { toast.error(error.message); setLoading(false); return; }
