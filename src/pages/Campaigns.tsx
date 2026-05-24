@@ -25,7 +25,7 @@ const defaultForm = {
 };
 
 export default function Campaigns() {
-  const { tenantId } = useAuth();
+  const { tenantId, user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState(defaultForm);
