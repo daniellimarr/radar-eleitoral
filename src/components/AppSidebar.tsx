@@ -38,10 +38,7 @@ const coordinatorItems = [
 ];
 
 const adminItems = [
-  { title: "Painel da Plataforma", url: "/admin", icon: Shield },
-  { title: "Gestão de Gabinetes", url: "/admin/tenants", icon: Building2 },
   { title: "Gestão de Usuários", url: "/admin/users", icon: Users },
-
   { title: "Relatórios e Auditoria", url: "/reports", icon: BarChart3 },
 ];
 
