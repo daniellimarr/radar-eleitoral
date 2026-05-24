@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -131,7 +131,7 @@ export default function Contacts() {
 
   useEffect(() => { fetchLeaders(); }, [tenantId, profile?.full_name]);
 
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     if (!tenantId) return;
     let query = supabase
       .from("contacts_decrypted")
@@ -157,7 +157,7 @@ export default function Contacts() {
 
     const { data } = await query;
     setContacts(data || []);
-  };
+  }, [tenantId, search, engagementFilter, typeFilter]);
 
   const fetchRegistrationLinks = async () => {
     if (!tenantId) return;
@@ -173,7 +173,17 @@ export default function Contacts() {
     setRegistrationLinks(map);
   };
 
-  useEffect(() => { fetchContacts(); }, [tenantId, search, engagementFilter, typeFilter]);
+  useEffect(() => { fetchContacts(); }, [fetchContacts]);
+
+  useEffect(() => {
+    const refreshContacts = () => {
+      fetchContacts();
+      fetchRegistrationLinks();
+    };
+
+    window.addEventListener("contact-added", refreshContacts);
+    return () => window.removeEventListener("contact-added", refreshContacts);
+  }, [fetchContacts, tenantId]);
   useEffect(() => { fetchRegistrationLinks(); }, [tenantId]);
 
 
