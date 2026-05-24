@@ -118,19 +118,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [roles]);
   
   const hasPermission = useCallback((module: string) => {
-    // Permissão total para usuários aprovados
-    if (!user || profileStatus !== 'approved') return false;
-    
-    // Se for super_admin ou admin_gabinete, tem acesso a tudo
+    if (!user) return false;
+
+    // Super admin e admin de gabinete sempre têm acesso total,
+    // independentemente do status do perfil
     if (roles.includes('super_admin') || roles.includes('admin_gabinete')) return true;
+
+    // Demais usuários precisam estar aprovados
+    if (profileStatus !== 'approved') return false;
 
     // Verificar se o módulo está na lista de permissões do banco
     if (userPermissions && userPermissions.length > 0) {
       return userPermissions.includes(module);
     }
 
-    // Se não tiver permissões específicas no banco mas estiver aprovado, 
-    // permitimos acesso básico aos módulos comuns
+    // Acesso básico a módulos comuns quando não há permissões específicas
     const defaultModules = ['dashboard', 'contacts', 'demands', 'appointments'];
     return defaultModules.includes(module);
   }, [user, profileStatus, roles, userPermissions]);
