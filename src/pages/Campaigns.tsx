@@ -46,7 +46,7 @@ export default function Campaigns() {
 
   const handleSave = async () => {
     if (!form.nome_campanha.trim()) { toast.error("Nome da campanha é obrigatório"); return; }
-    if (!tenantId) { toast.error("Não foi possível identificar seu gabinete. Faça logout e entre novamente."); return; }
+    if (!tenantId) { toast.error("Gabinete não identificado. Recarregue a página."); return; }
     setLoading(true);
     const payload = { ...form, meta_votos: Number(form.meta_votos) || 0, limite_gastos: Number(form.limite_gastos) || 0, tenant_id: tenantId };
     if (editingId) {

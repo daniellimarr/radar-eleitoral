@@ -168,7 +168,7 @@ export default function Contacts() {
   const handleSave = async () => {
     const trimmedName = form.name?.trim();
     if (!trimmedName) { toast.error("Nome é obrigatório"); return; }
-    if (!tenantId) { toast.error("Não foi possível identificar seu gabinete. Faça logout e entre novamente."); return; }
+    if (!tenantId) { toast.error("Gabinete não identificado. Recarregue a página."); return; }
     setLoading(true);
 
 
