@@ -1,61 +1,32 @@
-import { useEffect, useState, useRef, useCallback, memo, Suspense, lazy } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useContacts } from "@/hooks/contacts/useContacts";
 import { ContactService } from "@/services/contacts/ContactService";
-import { geocodeByCep } from "@/lib/geocoding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Search, Trash2, Edit, Loader2 } from "lucide-react";
+import { Plus, Search, Loader2, Users, UserPlus, Filter, FileDown } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { geocodeByCep } from "@/lib/geocoding";
 
-// Otimização: Memoização de linhas da tabela para evitar re-renders desnecessários
-const ContactRow = memo(({ contact, onEdit, onDelete }: { contact: any, onEdit: (c: any) => void, onDelete: (id: string) => void }) => (
-  <TableRow>
-    <TableCell className="font-medium">{contact.name}</TableCell>
-    <TableCell>{contact.phone}</TableCell>
-    <TableCell>{contact.neighborhood}</TableCell>
-    <TableCell className="capitalize">{contact.engagement}</TableCell>
-    <TableCell>
-      <div className="flex gap-1">
-        <Button variant="ghost" size="icon" onClick={() => onEdit(contact)} aria-label="Editar"><Edit className="h-4 w-4" /></Button>
-        <Button variant="ghost" size="icon" onClick={() => onDelete(contact.id)} aria-label="Excluir"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-      </div>
-    </TableCell>
-  </TableRow>
-));
-ContactRow.displayName = "ContactRow";
-
-const engagementOptions = [
-  { value: "nao_trabalhado", label: "Não trabalhado" },
-  { value: "em_prospeccao", label: "Em prospecção" },
-  { value: "conquistado", label: "Conquistado" },
-  { value: "criando_envolvimento", label: "Criando envolvimento" },
-  { value: "falta_trabalhar", label: "Falta trabalhar" },
-  { value: "envolvimento_perdido", label: "Envolvimento perdido" },
-];
-
-const genderOptions = [
-  { value: "masculino", label: "Masculino" },
-  { value: "feminino", label: "Feminino" },
-  { value: "outro", label: "Outro" },
-];
+// Refactored sub-components
+import { ContactRow } from "@/components/contacts/ContactRow";
+import { StepGeneralData } from "@/components/contacts/StepGeneralData";
+import { StepAddress } from "@/components/contacts/StepAddress";
+import { StepPoliticalData } from "@/components/contacts/StepPoliticalData";
 
 const defaultContact = {
-  name: "", nickname: "", gender: "", birth_date: "",
+  name: "", nickname: "", gender: "", birth_date: "", cpf: "",
   phone: "", has_whatsapp: false, cep: "", address: "",
   address_number: "", neighborhood: "", city: "Boa Vista", state: "RR",
   voting_zone: "", voting_section: "", voting_location: "",
-  engagement: "nao_trabalhado" as const, is_leader: false,
+  engagement: "nao_trabalhado" as any, is_leader: false,
   leader_id: "",
 };
 
@@ -67,6 +38,7 @@ export default function Contacts() {
 
   const [leaders, setLeaders] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [activeFormTab, setActiveFormTab] = useState("dados");
   const [form, setForm] = useState(defaultContact);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -107,36 +79,21 @@ export default function Contacts() {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
+    if (!form.name.trim()) { toast.error("O nome é obrigatório para o cadastro."); return; }
 
     let effectiveTenantId = tenantId || profile?.tenant_id || null;
-    
-    if (!effectiveTenantId && user?.id) {
-      const { data, error: tenantError } = await supabase
-        .from("profiles")
-        .select("tenant_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      
-      if (tenantError) {
-        console.error("Erro ao buscar tenant_id:", tenantError);
-      }
-      effectiveTenantId = data?.tenant_id || null;
-    }
-
     if (!effectiveTenantId) { 
-      toast.error("Erro de identificação: Seu perfil não está vinculado a um gabinete ativo."); 
+      toast.error("Vínculo com gabinete não localizado."); 
       return; 
     }
 
     if (!editingId && contactLimit !== Infinity && totalContacts >= contactLimit) {
-      toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido.`);
+      toast.error(`Limite do seu plano atingido (${contactLimit.toLocaleString()} contatos).`);
       return;
     }
 
     setLoading(true);
     try {
-      // Sanitização: Converter campos vazios para null para evitar erros de tipo no Postgres (UUID, Date, etc)
       const sanitizedPayload = {
         ...form,
         tenant_id: effectiveTenantId,
@@ -153,18 +110,17 @@ export default function Contacts() {
       const { error } = await ContactService.saveContact(sanitizedPayload, editingId);
       
       if (error) {
-        console.error("Erro ao salvar contato:", error);
-        toast.error(`Erro ao salvar: ${error.message}`);
+        toast.error(`Erro: ${error.message}`);
       } else {
-        toast.success(editingId ? "Contato atualizado!" : "Contato cadastrado!");
+        toast.success(editingId ? "Contato atualizado com sucesso!" : "Novo contato registrado!");
         setIsOpen(false);
         setForm(defaultContact);
         setEditingId(null);
+        setActiveFormTab("dados");
         refresh();
       }
     } catch (err: any) {
-      console.error("Exceção ao salvar contato:", err);
-      toast.error("Ocorreu um erro inesperado ao salvar.");
+      toast.error("Ocorreu um erro inesperado.");
     } finally {
       setLoading(false);
     }
@@ -172,13 +128,21 @@ export default function Contacts() {
 
   const handleEdit = (contact: any) => {
     setForm({
-      name: contact.name || "", nickname: contact.nickname || "",
-      gender: contact.gender || "", birth_date: contact.birth_date || "",
-      phone: contact.phone || "", has_whatsapp: contact.has_whatsapp || false,
-      cep: contact.cep || "", address: contact.address || "",
-      address_number: contact.address_number || "", neighborhood: contact.neighborhood || "",
-      city: contact.city || "Boa Vista", state: contact.state || "RR",
-      voting_zone: contact.voting_zone || "", voting_section: contact.voting_section || "",
+      name: contact.name || "", 
+      nickname: contact.nickname || "",
+      gender: contact.gender || "", 
+      birth_date: contact.birth_date || "",
+      cpf: contact.cpf || "",
+      phone: contact.phone || "", 
+      has_whatsapp: contact.has_whatsapp || false,
+      cep: contact.cep || "", 
+      address: contact.address || "",
+      address_number: contact.address_number || "", 
+      neighborhood: contact.neighborhood || "",
+      city: contact.city || "Boa Vista", 
+      state: contact.state || "RR",
+      voting_zone: contact.voting_zone || "", 
+      voting_section: contact.voting_section || "",
       voting_location: contact.voting_location || "",
       engagement: contact.engagement || "nao_trabalhado",
       is_leader: contact.is_leader || false,
@@ -186,132 +150,183 @@ export default function Contacts() {
     });
     setEditingId(contact.id);
     setIsOpen(true);
+    setActiveFormTab("dados");
   };
 
-  const updateField = (field: string, value: any) => setForm((prev) => ({ ...prev, [field]: value }));
+  const updateField = useCallback((field: string, value: any) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Cadastro &gt; Contato</h1>
-        <div className="flex gap-2">
-          <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { setForm(defaultContact); setEditingId(null); setIsOpen(true); }}>
-                <Plus className="h-4 w-4 mr-2" /> NOVO CADASTRO
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingId ? "Editar Contato" : "Novo Cadastro"}</DialogTitle>
-              </DialogHeader>
-              <Tabs defaultValue="dados" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="dados">Dados gerais</TabsTrigger>
-                  <TabsTrigger value="endereco">Endereço</TabsTrigger>
-                </TabsList>
-                <TabsContent value="dados" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <Label>Nome *</Label>
-                      <Input value={form.name} onChange={(e) => updateField("name", e.target.value)} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Apelido</Label>
-                      <Input value={form.nickname} onChange={(e) => updateField("nickname", e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Liderança</Label>
-                      <Select value={form.leader_id} onValueChange={(v) => updateField("leader_id", v === "none" ? "" : v)}>
-                        <SelectTrigger><SelectValue placeholder="SELECIONE" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Nenhuma</SelectItem>
-                          {leaders.map((l) => (
-                            <SelectItem key={l.id} value={l.id}>{l.nickname || l.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>Sexo</Label>
-                      <Select value={form.gender} onValueChange={(v) => updateField("gender", v)}>
-                        <SelectTrigger><SelectValue placeholder="SELECIONE" /></SelectTrigger>
-                        <SelectContent>
-                          {genderOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Celular</Label>
-                      <Input value={form.phone} onChange={(e) => updateField("phone", e.target.value)} />
-                    </div>
-                    <div className="flex items-center gap-2 pt-6">
-                      <Checkbox checked={form.has_whatsapp} onCheckedChange={(c) => updateField("has_whatsapp", c)} id="whats" />
-                      <Label htmlFor="whats">Whats?</Label>
-                    </div>
-                  </div>
-                </TabsContent>
-                <TabsContent value="endereco" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <Label>CEP {geocoding && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}</Label>
-                      <Input value={form.cep} onChange={(e) => updateField("cep", e.target.value)} onBlur={handleCepBlur} placeholder="00000-000" />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label>Logradouro</Label>
-                      <Input value={form.address} onChange={(e) => updateField("address", e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Número</Label>
-                      <Input value={form.address_number} onChange={(e) => updateField("address_number", e.target.value)} />
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
-                <Button onClick={handleSave} disabled={loading}>{loading ? "Salvando..." : "Salvar"}</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-primary/10 p-3 rounded-2xl">
+            <Users className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900">Base Eleitoral</h1>
+            <p className="text-slate-500 font-medium">Gestão centralizada de apoiadores e contatos</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:block">
+            <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
+          </div>
+          <Button 
+            onClick={() => { setForm(defaultContact); setEditingId(null); setIsOpen(true); }}
+            className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-6 rounded-xl shadow-lg shadow-primary/20"
+          >
+            <UserPlus className="h-5 w-5 mr-2" />
+            NOVO CADASTRO
+          </Button>
         </div>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-10" placeholder="Buscar contato..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      {/* Stats Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <Card className="border-none shadow-sm bg-white overflow-hidden relative">
+          <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+          <CardContent className="p-6 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center">
+              <Users className="h-6 w-6 text-slate-400" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total na Base</p>
+              <p className="text-3xl font-black text-slate-900">{totalContacts.toLocaleString()}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table ref={tableRef}>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Celular</TableHead>
-                <TableHead>Bairro</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-24">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {contacts.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum contato</TableCell></TableRow>
-              ) : contacts.map((c) => (
-                <ContactRow 
-                  key={c.id} 
-                  contact={c} 
-                  onEdit={handleEdit} 
-                  onDelete={deleteContact} 
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Main Content Area */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+          <div className="relative flex-1 w-full sm:max-w-md">
+            <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
+            <Input 
+              className="pl-11 h-11 bg-slate-50 border-none rounded-xl focus-visible:ring-primary focus-visible:bg-white transition-all font-medium" 
+              placeholder="Buscar por nome, apelido ou telefone..." 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+            />
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+             <Button variant="outline" className="h-11 rounded-xl font-bold text-slate-600 gap-2 flex-1 sm:flex-none">
+                <Filter className="h-4 w-4" /> Filtros
+             </Button>
+          </div>
+        </div>
+
+        <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
+          <CardContent className="p-0">
+            <Table ref={tableRef}>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow className="hover:bg-transparent border-slate-100">
+                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] tracking-widest h-12">Nome / Apelido</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] tracking-widest h-12">Contato</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] tracking-widest h-12">Bairro</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] tracking-widest h-12">Liderança</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] tracking-widest h-12">Status</TableHead>
+                  <TableHead className="w-24 text-right h-12"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {contactsLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-20">
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-slate-400 font-medium text-sm">Carregando base de contatos...</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : contacts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-20">
+                      <div className="flex flex-col items-center gap-3">
+                        <Users className="h-12 w-12 text-slate-200" />
+                        <p className="text-slate-400 font-medium">Nenhum contato encontrado.</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : contacts.map((c) => (
+                  <ContactRow 
+                    key={c.id} 
+                    contact={c} 
+                    onEdit={handleEdit} 
+                    onDelete={deleteContact} 
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Registration Dialog */}
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) {
+          setEditingId(null);
+          setForm(defaultContact);
+          setActiveFormTab("dados");
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto p-0 border-none shadow-2xl rounded-3xl overflow-hidden">
+          <div className="bg-[#0f172a] p-8 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
+                <div className="bg-primary p-2 rounded-xl">
+                  {editingId ? <Users className="h-6 w-6" /> : <UserPlus className="h-6 w-6" />}
+                </div>
+                {editingId ? "Atualizar Ficha de Contato" : "Novo Registro na Base"}
+              </DialogTitle>
+            </DialogHeader>
+          </div>
+          
+          <div className="p-8">
+            <Tabs value={activeFormTab} onValueChange={setActiveFormTab} className="w-full">
+              <TabsList className="flex w-full bg-slate-100 p-1 rounded-xl mb-8">
+                <TabsTrigger value="dados" className="flex-1 py-2 font-bold rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary transition-all">Dados Gerais</TabsTrigger>
+                <TabsTrigger value="endereco" className="flex-1 py-2 font-bold rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary transition-all">Localização</TabsTrigger>
+                <TabsTrigger value="politico" className="flex-1 py-2 font-bold rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary transition-all">Dados Políticos</TabsTrigger>
+              </TabsList>
+              
+              <div className="min-h-[400px]">
+                <TabsContent value="dados">
+                  <StepGeneralData form={form} updateField={updateField} leaders={leaders} />
+                </TabsContent>
+                <TabsContent value="endereco">
+                  <StepAddress form={form} updateField={updateField} geocoding={geocoding} handleCepBlur={handleCepBlur} />
+                </TabsContent>
+                <TabsContent value="politico">
+                  <StepPoliticalData form={form} updateField={updateField} />
+                </TabsContent>
+              </div>
+            </Tabs>
+            
+            <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-100 mt-6">
+              <Button variant="ghost" onClick={() => setIsOpen(false)} className="h-12 px-8 font-bold text-slate-500 hover:text-slate-900">
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSave} 
+                disabled={loading}
+                className="h-12 px-12 font-black bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 rounded-xl"
+              >
+                {loading ? (
+                  <><Loader2 className="h-5 w-5 animate-spin mr-2" /> SALVANDO...</>
+                ) : (
+                  editingId ? "ATUALIZAR CADASTRO" : "FINALIZAR REGISTRO"
+                )}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
