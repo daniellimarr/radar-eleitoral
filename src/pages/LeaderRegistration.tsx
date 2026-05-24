@@ -149,9 +149,10 @@ export default function LeaderRegistration() {
 
   const handleSave = async () => {
     if (!tenantId) {
-      toast({ title: "Erro: usuário sem vínculo a um gabinete. Faça login novamente.", variant: "destructive" });
+      toast({ title: "Erro: usuário sem vínculo a um gabinete ativo.", description: "Entre em contato com o administrador para vincular seu perfil.", variant: "destructive" });
       return;
     }
+
     if (!form.name.trim()) {
       toast({ title: "Nome é obrigatório", variant: "destructive" });
       return;

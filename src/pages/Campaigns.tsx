@@ -42,9 +42,10 @@ export default function Campaigns() {
     if (!form.nome_campanha.trim()) { toast.error("Nome da campanha é obrigatório"); return; }
     
     if (!tenantId) { 
-      toast.error("Gabinete não identificado. Recarregue a página."); 
+      toast.error("Você ainda não está vinculado a um gabinete ativo. Entre em contato com o administrador."); 
       return; 
     }
+
     
     setLoading(true);
     try {

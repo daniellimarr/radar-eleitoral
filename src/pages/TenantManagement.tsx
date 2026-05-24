@@ -352,7 +352,11 @@ export default function TenantManagement() {
           <Building2 className="h-7 w-7 text-primary" />
           <h1 className="text-2xl font-bold">Gestão de Gabinetes</h1>
         </div>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Novo Gabinete</Button>
+        {/* Hidden temporarily as only one cabinet is used for now */}
+        {tenants.filter(t => t.status === "ativo").length === 0 && (
+          <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Novo Gabinete</Button>
+        )}
+
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
