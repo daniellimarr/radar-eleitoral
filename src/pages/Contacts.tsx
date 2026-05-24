@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,9 +45,21 @@ const defaultContact = {
 export default function Contacts() {
   const { tenantId, user, hasRole, profile } = useAuth();
   const { contactLimit } = useSubscription();
+  const location = useLocation();
   const [contacts, setContacts] = useState<any[]>([]);
   const [leaders, setLeaders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [engagementFilter, setEngagementFilter] = useState<string>("all");
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const engagement = params.get("engagement");
+    if (engagement && engagementOptions.some(o => o.value === engagement)) {
+      setEngagementFilter(engagement);
+    } else {
+      setEngagementFilter("all");
+    }
+  }, [location.search]);
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState(defaultContact);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -129,11 +142,15 @@ export default function Contacts() {
       query = query.ilike("name", `%${search}%`);
     }
 
+    if (engagementFilter !== "all") {
+      query = query.eq("engagement", engagementFilter as any);
+    }
+
     const { data } = await query;
     setContacts(data || []);
   };
 
-  useEffect(() => { fetchContacts(); }, [tenantId, search]);
+  useEffect(() => { fetchContacts(); }, [tenantId, search, engagementFilter]);
 
   const generateSlug = (name: string) =>
     name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -407,11 +424,28 @@ export default function Contacts() {
         </Dialog>
       </div>
 
-      {/* Search */}
-      <div className="flex gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-10" placeholder="Pesquisar contato..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      {/* Search & Filter */}
+      <div className="flex flex-col md:flex-row gap-4 items-end">
+        <div className="flex-1 w-full space-y-2">
+          <Label>Buscar por nome</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Pesquisar..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+        </div>
+        <div className="w-full md:w-64 space-y-2">
+          <Label>Filtrar por Envolvimento</Label>
+          <Select value={engagementFilter} onValueChange={setEngagementFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todos os envolvimentos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os envolvimentos</SelectItem>
+              {engagementOptions.map(o => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
       </div>
