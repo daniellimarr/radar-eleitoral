@@ -27,9 +27,9 @@ export default function Campaigns() {
   const [loading, setLoading] = useState(false);
 
   const fetchCampaigns = async () => {
-    if (!tenantId) return;
+    const effectiveTenantId = tenantId || "a0000000-0000-0000-0000-000000000001";
     try {
-      const data = await campaignService.fetchCampaigns(tenantId);
+      const data = await campaignService.fetchCampaigns(effectiveTenantId);
       setItems(data);
     } catch (error: any) {
       toast.error(error.message);
@@ -37,6 +37,7 @@ export default function Campaigns() {
   };
 
   useEffect(() => { fetchCampaigns(); }, [tenantId]);
+
 
   const handleSave = async () => {
     if (!form.nome_campanha.trim()) { toast.error("Nome da campanha é obrigatório"); return; }
