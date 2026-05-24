@@ -1,7 +1,10 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, ReactNode, useCallback } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthService } from "@/services/AuthService";
+import { useSession } from "./auth/useSession";
+import { useProfile } from "./auth/useProfile";
+import { usePermissions } from "./auth/usePermissions";
 
 interface AuthContextType {
   user: User | null;
@@ -25,93 +28,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any>(null);
-  const [roles, setRoles] = useState<string[]>([]);
-  const [tenantId, setTenantId] = useState<string | null>(null);
-  const [userPermissions, setUserPermissions] = useState<string[]>([]);
-  const [permissionsLoading, setPermissionsLoading] = useState(true);
-  const [profileStatus, setProfileStatus] = useState<string | null>(null);
-
-  const resetState = useCallback(() => {
-    setProfile(null);
-    setRoles([]);
-    setTenantId(null);
-    setUserPermissions([]);
-    setProfileStatus(null);
-    setPermissionsLoading(false);
-    setLoading(false);
-  }, []);
-
-  const fetchAuthData = useCallback(async (userId: string) => {
-    try {
-      setPermissionsLoading(true);
-      const { data: profileData, error: profileError } = await AuthService.getProfile(userId);
-      
-      if (profileError) throw profileError;
-
-      if (profileData) {
-        setProfile(profileData);
-        setTenantId(profileData.tenant_id);
-        setProfileStatus(profileData.status || 'pending');
-
-        const [rolesRes, permsRes] = await Promise.all([
-          AuthService.getRoles(userId),
-          profileData.tenant_id ? AuthService.getPermissions(userId, profileData.tenant_id) : Promise.resolve({ data: [] })
-        ]);
-        
-        setRoles(rolesRes.data?.map((r: any) => r.role) || []);
-        setUserPermissions(permsRes.data?.map((p: any) => p.module) || []);
-      } else {
-        resetState();
-      }
-    } catch (error) {
-      console.error("Error fetching auth data:", error);
-      resetState();
-    } finally {
-      setPermissionsLoading(false);
-      setLoading(false);
-    }
-  }, [resetState]);
+  const { user, session, loading: sessionLoading } = useSession();
+  const { profile, tenantId, profileStatus, loading: profileLoading, fetchProfile, clearProfile } = useProfile();
+  const { roles, userPermissions, loading: permissionsLoading, fetchPermissions, clearPermissions } = usePermissions();
 
   useEffect(() => {
-    let isSubscribed = true;
+    if (user) {
+      fetchProfile(user.id);
+    } else {
+      clearProfile();
+      clearPermissions();
+    }
+  }, [user, fetchProfile, clearProfile, clearPermissions]);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, currentSession) => {
-        if (!isSubscribed) return;
-        
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          fetchAuthData(currentSession.user.id);
-        } else {
-          resetState();
-        }
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      if (!isSubscribed) return;
-      
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      
-      if (initialSession?.user) {
-        fetchAuthData(initialSession.user.id);
-      } else {
-        resetState();
-      }
-    });
-
-    return () => {
-      isSubscribed = false;
-      subscription.unsubscribe();
-    };
-  }, [fetchAuthData, resetState]);
+  useEffect(() => {
+    if (user && profile) {
+      fetchPermissions(user.id, tenantId);
+    }
+  }, [user, profile, tenantId, fetchPermissions]);
 
   const hasRole = useCallback((role: string) => {
     return roles.some(r => r.toLowerCase() === role.toLowerCase());
@@ -119,33 +53,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const hasPermission = useCallback((module: string) => {
     if (!user) return false;
-
-    // Super admin e admin de gabinete sempre têm acesso total,
-    // independentemente do status do perfil
     if (roles.includes('super_admin') || roles.includes('admin_gabinete')) return true;
-
-    // Demais usuários precisam estar aprovados
     if (profileStatus !== 'approved') return false;
-
-    // Verificar se o módulo está na lista de permissões do banco
     if (userPermissions && userPermissions.length > 0) {
       return userPermissions.includes(module);
     }
-
-    // Acesso básico a módulos comuns quando não há permissões específicas
     const defaultModules = ['dashboard', 'contacts', 'demands', 'appointments'];
     return defaultModules.includes(module);
   }, [user, profileStatus, roles, userPermissions]);
 
   const signIn = async (email: string, password: string) => {
+    AuthService.clearCache();
     return AuthService.signIn(email, password);
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    AuthService.clearCache();
     return AuthService.signUp(email, password, fullName);
   };
 
   const signOut = async () => {
+    AuthService.clearCache();
     await AuthService.signOut();
   };
 
@@ -160,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     user,
     session,
-    loading,
+    loading: sessionLoading || profileLoading,
     profile,
     roles,
     tenantId,
