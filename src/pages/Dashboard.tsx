@@ -13,6 +13,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 // Otimização: Lazy load de dashboards secundários
 const OperatorDashboard = lazy(() => import("@/components/OperatorDashboard"));
