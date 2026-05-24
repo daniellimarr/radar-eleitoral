@@ -1,8 +1,8 @@
-import { supabase } from "@/integrations/supabase/client";
+import { BaseService } from "../BaseService";
 
-export class LeaderService {
+export class LeaderService extends BaseService {
   static async fetchLeaders(tenantId: string) {
-    return supabase
+    return this.getClient()
       .from("contacts_decrypted")
       .select("*")
       .eq("tenant_id", tenantId)
@@ -12,7 +12,7 @@ export class LeaderService {
   }
 
   static async fetchVoterCounts(leaderIds: string[]) {
-    return supabase
+    return this.getClient()
       .from("contacts_decrypted")
       .select("leader_id")
       .in("leader_id", leaderIds)
@@ -20,7 +20,7 @@ export class LeaderService {
   }
 
   static async fetchVoters(leaderId: string) {
-    return supabase
+    return this.getClient()
       .from("contacts_decrypted")
       .select("id, name, phone, city, engagement")
       .eq("leader_id", leaderId)
@@ -29,14 +29,15 @@ export class LeaderService {
   }
 
   static async deleteLeader(contactId: string) {
-    const { error: contactError } = await supabase
+    const client = this.getClient();
+    const { error: contactError } = await client
       .from("contacts")
       .update({ deleted_at: new Date().toISOString(), is_leader: false })
       .eq("id", contactId);
     
     if (contactError) return { error: contactError };
 
-    return supabase
+    return client
       .from("leaders")
       .delete()
       .eq("contact_id", contactId);
