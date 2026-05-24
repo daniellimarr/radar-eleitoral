@@ -48,8 +48,11 @@ export default function Contacts() {
   const location = useLocation();
   const [contacts, setContacts] = useState<any[]>([]);
   const [leaders, setLeaders] = useState<any[]>([]);
+  const [registrationLinks, setRegistrationLinks] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
   const [engagementFilter, setEngagementFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -136,7 +139,7 @@ export default function Contacts() {
       .eq("tenant_id", tenantId)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(200);
 
     if (search) {
       query = query.ilike("name", `%${search}%`);
@@ -146,11 +149,33 @@ export default function Contacts() {
       query = query.eq("engagement", engagementFilter as any);
     }
 
+    if (typeFilter === "leaders") {
+      query = query.eq("is_leader", true);
+    } else if (typeFilter === "contacts") {
+      query = query.eq("is_leader", false);
+    }
+
     const { data } = await query;
     setContacts(data || []);
   };
 
-  useEffect(() => { fetchContacts(); }, [tenantId, search, engagementFilter]);
+  const fetchRegistrationLinks = async () => {
+    if (!tenantId) return;
+    const { data } = await supabase
+      .from("registration_links")
+      .select("slug, leader_contact_id")
+      .eq("tenant_id", tenantId)
+      .eq("is_active", true);
+    const map: Record<string, string> = {};
+    (data || []).forEach((l: any) => {
+      if (l.leader_contact_id) map[l.leader_contact_id] = l.slug;
+    });
+    setRegistrationLinks(map);
+  };
+
+  useEffect(() => { fetchContacts(); }, [tenantId, search, engagementFilter, typeFilter]);
+  useEffect(() => { fetchRegistrationLinks(); }, [tenantId]);
+
 
   const generateSlug = (name: string) =>
     name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -246,6 +271,8 @@ export default function Contacts() {
     setEditingId(null);
     fetchContacts();
     fetchLeaders(); // Ensure leaders are refreshed as well
+    fetchRegistrationLinks();
+
     
     // Dispatch a custom event to notify other components (like Dashboard) to refresh
     window.dispatchEvent(new CustomEvent("contact-added"));
@@ -433,6 +460,19 @@ export default function Contacts() {
             <Input placeholder="Pesquisar..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
         </div>
+        <div className="w-full md:w-48 space-y-2">
+          <Label>Tipo</Label>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="contacts">Apenas contatos</SelectItem>
+              <SelectItem value="leaders">Apenas lideranças</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="w-full md:w-64 space-y-2">
           <Label>Filtrar por Envolvimento</Label>
           <Select value={engagementFilter} onValueChange={setEngagementFilter}>
@@ -450,6 +490,7 @@ export default function Contacts() {
         <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
       </div>
 
+
       {/* Table */}
       <Card>
         <CardContent className="p-0">
@@ -457,9 +498,11 @@ export default function Contacts() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
+                <TableHead>Tipo</TableHead>
                 <TableHead>Celular</TableHead>
                 <TableHead>Cidade</TableHead>
                 <TableHead>Envolvimento</TableHead>
+                <TableHead>Link de cadastro</TableHead>
                 <TableHead>Cadastrado em</TableHead>
                 <TableHead className="w-24">Ações</TableHead>
               </TableRow>
@@ -467,20 +510,41 @@ export default function Contacts() {
             <TableBody>
               {contacts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     Nenhum contato encontrado
                   </TableCell>
                 </TableRow>
               ) : (
-                contacts.map((c) => (
+                contacts.map((c) => {
+                  const slug = c.is_leader ? registrationLinks[c.id] : null;
+                  const linkUrl = slug ? `${window.location.origin}/cadastro/${slug}` : null;
+                  return (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell>
+                      <span className={`text-xs px-2 py-1 rounded ${c.is_leader ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                        {c.is_leader ? 'Liderança' : 'Contato'}
+                      </span>
+                    </TableCell>
                     <TableCell>{c.phone}</TableCell>
                     <TableCell>{c.city}</TableCell>
                     <TableCell>
                       <span className="text-xs px-2 py-1 rounded bg-accent text-accent-foreground">
                         {engagementOptions.find(e => e.value === c.engagement)?.label || c.engagement}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      {linkUrl ? (
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(linkUrl); toast.success("Link copiado!"); }}
+                          className="text-xs text-primary hover:underline truncate max-w-[200px] block text-left"
+                          title={linkUrl}
+                        >
+                          /cadastro/{slug}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>{new Date(c.created_at).toLocaleDateString("pt-BR")}</TableCell>
                     <TableCell>
@@ -498,10 +562,12 @@ export default function Contacts() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )}
             </TableBody>
           </Table>
+
         </CardContent>
       </Card>
     </div>
