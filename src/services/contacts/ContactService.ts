@@ -74,6 +74,20 @@ export class ContactService {
   }
 
   static async deleteContact(id: string) {
-    return supabase.from("contacts").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+    const { error: contactError } = await supabase
+      .from("contacts")
+      .update({ 
+        deleted_at: new Date().toISOString(),
+        is_leader: false 
+      })
+      .eq("id", id);
+    
+    if (contactError) return { error: contactError };
+
+    // Se o contato era uma liderança, remover da tabela de leaders também
+    return supabase
+      .from("leaders")
+      .delete()
+      .eq("contact_id", id);
   }
 }
