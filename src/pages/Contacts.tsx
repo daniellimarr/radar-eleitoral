@@ -131,7 +131,7 @@ export default function Contacts() {
     }
 
     if (engagementFilter !== "all") {
-      query = query.eq("engagement", engagementFilter);
+      query = query.eq("engagement", engagementFilter as any);
     }
 
     const { data } = await query;
@@ -412,11 +412,28 @@ export default function Contacts() {
         </Dialog>
       </div>
 
-      {/* Search */}
-      <div className="flex gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-10" placeholder="Pesquisar contato..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      {/* Search & Filter */}
+      <div className="flex flex-col md:flex-row gap-4 items-end">
+        <div className="flex-1 w-full space-y-2">
+          <Label>Buscar por nome</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Pesquisar..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+        </div>
+        <div className="w-full md:w-64 space-y-2">
+          <Label>Filtrar por Envolvimento</Label>
+          <Select value={engagementFilter} onValueChange={setEngagementFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todos os envolvimentos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os envolvimentos</SelectItem>
+              {engagementOptions.map(o => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
       </div>
