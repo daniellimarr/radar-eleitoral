@@ -6,8 +6,13 @@ const corsHeaders = {
 };
 
 const DEMO_EMAIL = "demo@radareleitoral.com.br";
-const DEMO_PASSWORD = "demo123456";
 const DEMO_TENANT_NAME = "Gabinete Demonstração";
+
+function generateDemoPassword(): string {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -21,14 +26,17 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
+    const demoPassword = generateDemoPassword();
+
     // Check if demo user already exists
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
     const demoUser = existingUsers?.users?.find((u) => u.email === DEMO_EMAIL);
 
     if (demoUser) {
-      // Demo user exists - just return credentials
+      // Rotate the password so previously-leaked credentials stop working
+      await supabaseAdmin.auth.admin.updateUserById(demoUser.id, { password: demoPassword });
       return new Response(
-        JSON.stringify({ email: DEMO_EMAIL, password: DEMO_PASSWORD, message: "Demo já configurado" }),
+        JSON.stringify({ email: DEMO_EMAIL, password: demoPassword, message: "Demo pronto" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -36,7 +44,7 @@ Deno.serve(async (req) => {
     // Create demo user
     const { data: newUser, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email: DEMO_EMAIL,
-      password: DEMO_PASSWORD,
+      password: demoPassword,
       email_confirm: true,
       user_metadata: { full_name: "Usuário Demo" },
     });
@@ -167,7 +175,7 @@ Deno.serve(async (req) => {
     ]);
 
     return new Response(
-      JSON.stringify({ email: DEMO_EMAIL, password: DEMO_PASSWORD, message: "Demo configurado com sucesso!" }),
+      JSON.stringify({ email: DEMO_EMAIL, password: demoPassword, message: "Demo configurado com sucesso!" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
