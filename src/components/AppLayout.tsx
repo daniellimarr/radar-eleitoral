@@ -87,10 +87,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return <ExpiredSubscriptionScreen planName={planName} expiredAt={expiredAt} />;
   }
 
-  // Not subscribed at all - redirect to landing
-  if (!subscribed && !isSuperAdmin && location.pathname !== "/assinatura") {
-    return <Navigate to="/" replace />;
-  }
+  // Sem assinatura ativa: usuário continua acessando o sistema normalmente.
+  // O bloqueio/aviso de plano fica a cargo de telas específicas (ex: /assinatura).
 
   return (
     <SidebarProvider>
