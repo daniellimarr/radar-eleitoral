@@ -15,25 +15,26 @@ export function useContacts() {
 
   const isOperador = hasRole("operador");
 
+  const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
+  const effectiveTenantId = tenantId || MAIN_TENANT;
+
   const fetchContacts = useCallback(async () => {
-    if (!tenantId) return;
     try {
-      const data = await contactService.fetchContacts(tenantId, search);
+      const data = await contactService.fetchContacts(effectiveTenantId, search);
       setContacts(data as Contact[]);
     } catch (error: any) {
       toast.error(error.message);
     }
-  }, [tenantId, search]);
+  }, [effectiveTenantId, search]);
 
   const fetchLeaders = useCallback(async () => {
-    if (!tenantId) return;
     try {
-      const data = await contactService.fetchLeaders(tenantId, isOperador, profile?.full_name);
+      const data = await contactService.fetchLeaders(effectiveTenantId, isOperador, profile?.full_name);
       setLeaders(data);
     } catch (error: any) {
       console.error("Error fetching leaders:", error);
     }
-  }, [tenantId, isOperador, profile?.full_name]);
+  }, [effectiveTenantId, isOperador, profile?.full_name]);
 
   useEffect(() => {
     fetchContacts();
@@ -44,8 +45,8 @@ export function useContacts() {
   }, [fetchLeaders]);
 
   const saveContact = async (form: any, editingId: string | null) => {
-    if (!tenantId || !user) {
-      toast.error("Sessão inválida. Recarregue a página.");
+    if (!user) {
+      toast.error("Faça login para cadastrar contatos.");
       return;
     }
 
@@ -56,11 +57,11 @@ export function useContacts() {
 
     setLoading(true);
     try {
-      const payload = { ...form, tenant_id: tenantId, registered_by: user.id };
+      const payload = { ...form, tenant_id: effectiveTenantId, registered_by: user.id };
       const saved = await contactService.saveContact(payload, editingId);
       
       if (form.is_leader && saved) {
-        await contactService.ensureLeaderAndLink(saved.id, tenantId, user.id);
+        await contactService.ensureLeaderAndLink(saved.id, effectiveTenantId, user.id);
       }
       
       toast.success(editingId ? "Contato atualizado!" : "Contato cadastrado!");
