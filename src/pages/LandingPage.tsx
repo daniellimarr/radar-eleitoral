@@ -66,6 +66,12 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const isLoggedInWithoutSub = !!user;
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, navigate]);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
   const [cpf, setCpf] = useState("");
