@@ -16,12 +16,6 @@ const genderOptions = [
   { value: "outro", label: "Outro" },
 ];
 
-const engagementOptions = [
-  { value: "nao_trabalhado", label: "Não trabalhado" },
-  { value: "em_contato", label: "Em contato" },
-  { value: "engajado", label: "Engajado" },
-  { value: "voto_confirmado", label: "Voto confirmado" },
-];
 
 export const StepGeneralData = memo(({ form, updateField, leaders }: ContactFormProps) => {
   return (
