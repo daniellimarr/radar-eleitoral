@@ -275,29 +275,37 @@ export default function Contacts() {
           setActiveFormTab("dados");
         }
       }}>
-        <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto p-6 bg-slate-50 border-none shadow-2xl rounded-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white border-none shadow-2xl rounded-2xl">
+          <DialogHeader className="p-6 pb-2">
             <DialogTitle className="text-xl font-bold text-slate-900">
-              {editingId ? "Editar Cadastro" : "Novo Cadastro"}
+              {editingId ? "Editar Contato" : "Novo Cadastro"}
             </DialogTitle>
           </DialogHeader>
 
-          <Tabs value={activeFormTab} onValueChange={setActiveFormTab} className="w-full mt-2">
-            <TabsList className="grid grid-cols-2 w-full bg-slate-300/60 p-1 rounded-full h-12">
-              <TabsTrigger value="dados" className="rounded-full font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
-                Dados gerais
-              </TabsTrigger>
-              <TabsTrigger value="endereco" className="rounded-full font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
-                Endereço
-              </TabsTrigger>
-            </TabsList>
+          <Tabs value={activeFormTab} onValueChange={setActiveFormTab} className="w-full">
+            <div className="px-6">
+              <TabsList className="grid grid-cols-3 w-full bg-slate-100 p-1 rounded-xl h-11">
+                <TabsTrigger value="dados" className="rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                  Dados gerais
+                </TabsTrigger>
+                <TabsTrigger value="endereco" className="rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                  Endereço
+                </TabsTrigger>
+                <TabsTrigger value="politico" className="rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                  Dados políticos
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <div className="mt-6">
-              <TabsContent value="dados">
+            <div className="px-6 py-4">
+              <TabsContent value="dados" className="mt-0">
                 <StepGeneralData form={form} updateField={updateField} leaders={leaders} />
               </TabsContent>
-              <TabsContent value="endereco">
+              <TabsContent value="endereco" className="mt-0">
                 <StepAddress form={form} updateField={updateField} geocoding={geocoding} handleCepBlur={handleCepBlur} />
+              </TabsContent>
+              <TabsContent value="politico" className="mt-0">
+                <StepPoliticalData form={form} updateField={updateField} />
               </TabsContent>
             </div>
           </Tabs>
