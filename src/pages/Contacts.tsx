@@ -460,6 +460,19 @@ export default function Contacts() {
             <Input placeholder="Pesquisar..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
         </div>
+        <div className="w-full md:w-48 space-y-2">
+          <Label>Tipo</Label>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="contacts">Apenas contatos</SelectItem>
+              <SelectItem value="leaders">Apenas lideranças</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="w-full md:w-64 space-y-2">
           <Label>Filtrar por Envolvimento</Label>
           <Select value={engagementFilter} onValueChange={setEngagementFilter}>
@@ -476,6 +489,7 @@ export default function Contacts() {
         </div>
         <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
       </div>
+
 
       {/* Table */}
       <Card>
