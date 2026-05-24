@@ -19,22 +19,22 @@ import logoRadar from "@/assets/logo-radar-eleitoral.png";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home, module: "dashboard" },
-  { title: "Gestão Eleitoral", group: true, items: [
-    { title: "Contatos", url: "/contacts", icon: Users, module: "contacts" },
-    { title: "Lideranças", url: "/leaders", icon: BarChart3, module: "leaders" },
-    { title: "Mapa Territorial", url: "/map", icon: MapPin, module: "map" },
-    { title: "Links de Captação", url: "/registration-links", icon: Link2, module: "registration_links" },
+  { title: "Inteligência de Campo", group: true, items: [
+    { title: "Minha Base", url: "/contacts", icon: Users, module: "contacts" },
+    { title: "Rede de Lideranças", url: "/leaders", icon: BarChart3, module: "leaders" },
+    { title: "Mapeamento de Votos", url: "/map", icon: MapPin, module: "map" },
+    { title: "Captação Digital", url: "/registration-links", icon: Link2, module: "registration_links" },
   ]},
   { title: "Operação Gabinete", group: true, items: [
     { title: "Demandas", url: "/demands", icon: ClipboardList, module: "demands" },
     { title: "Agenda Social", url: "/appointments", icon: Calendar, module: "appointments" },
     { title: "Solicitações", url: "/visit-requests", icon: MessageSquare, module: "visit_requests" },
   ]},
-  { title: "Comunicação", group: true, items: [
-    { title: "Marketing Digital", url: "/marketing", icon: Megaphone, module: "marketing" },
-    { title: "Central de Arquivos", url: "/campaign-files", icon: FolderDown, module: "campaign_files" },
-    { title: "WhatsApp Auto", url: "/whatsapp", icon: MessageCircle, module: "whatsapp" },
-    { title: "Chat Interno", url: "/chat", icon: MessageSquare, module: "chat" },
+  { title: "Expansão e Impacto", group: true, items: [
+    { title: "Marketing e Mobilização", url: "/marketing", icon: Megaphone, module: "marketing" },
+    { title: "Arquivos Estratégicos", url: "/campaign-files", icon: FolderDown, module: "campaign_files" },
+    { title: "WhatsApp Inteligente", url: "/whatsapp", icon: MessageCircle, module: "whatsapp" },
+    { title: "Comunicação Interna", url: "/chat", icon: MessageSquare, module: "chat" },
   ]},
   { title: "Logística e Finanças", group: true, items: [
     { title: "Financeiro", url: "/financial", icon: DollarSign, module: "financial" },

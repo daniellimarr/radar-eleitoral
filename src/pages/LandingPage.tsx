@@ -25,34 +25,34 @@ const fadeUp = {
 };
 
 const features = [
-  { icon: Users, title: "Gestão de Contatos", desc: "Armazene e organize toda a sua base de eleitores e apoiadores." },
-  { icon: ClipboardList, title: "Acompanhamento de Demandas", desc: "Registre e acompanhe solicitações e problemas dos cidadãos." },
-  { icon: Crown, title: "Gestão de Lideranças", desc: "Organize líderes por bairro, região ou comunidade." },
-  { icon: Rocket, title: "Planejamento de Campanha", desc: "Planeje ações e mobilize apoiadores com eficiência." },
-  { icon: BarChart3, title: "Relatórios Estratégicos", desc: "Analise dados e acompanhe o crescimento eleitoral." },
-  { icon: ShieldCheck, title: "Plataforma Segura", desc: "Sistema privado com login e permissões de usuário." },
+  { icon: Users, title: "Base de Dados Estratégica", desc: "Sua inteligência eleitoral centralizada: organize eleitores, influenciadores e aliados com precisão cirúrgica." },
+  { icon: ClipboardList, title: "Gestão de Demandas (CRM)", desc: "Converta solicitações em fidelidade política. Nunca mais perca um pedido de um cidadão ou liderança." },
+  { icon: Crown, title: "Comando de Lideranças", desc: "Mapeie e coordene sua capilaridade política por bairros, regiões ou grupos de influência." },
+  { icon: Rocket, title: "Mobilização em Massa", desc: "Execute ações coordenadas e mobilize seus apoiadores no momento certo para o impacto máximo." },
+  { icon: BarChart3, title: "Inteligência de Dados", desc: "Transforme dados brutos em decisões vencedoras. Visualize seu crescimento e áreas de oportunidade." },
+  { icon: ShieldCheck, title: "Blindagem de Dados", desc: "Segurança de nível bancário para suas informações mais valiosas. Total privacidade e controle." },
 ];
 
 const targetUsers = [
-  { icon: Building2, label: "Vereadores" },
-  { icon: Vote, label: "Deputados Estaduais" },
-  { icon: UserCheck, label: "Pré-candidatos" },
-  { icon: Briefcase, label: "Assessores Políticos" },
-  { icon: UsersRound, label: "Equipes de Campanha" },
+  { icon: Building2, label: "Gabinete Legislativo" },
+  { icon: Vote, label: "Candidatos e Executivos" },
+  { icon: UserCheck, label: "Lideranças Comunitárias" },
+  { icon: Briefcase, label: "Estrategistas Políticos" },
+  { icon: UsersRound, label: "Equipes de Campo" },
 ];
 
 const benefits = [
-  "Centralize seus contatos políticos",
-  "Construa relacionamentos mais fortes com eleitores",
-  "Organize a estrutura da sua campanha",
-  "Acompanhe demandas da população",
-  "Cresça sua base eleitoral com estratégia",
+  "Centralização absoluta de inteligência política",
+  "Fortalecimento de vínculos reais com a base",
+  "Coordenação impecável de equipes e lideranças",
+  "Resposta rápida e eficiente às demandas sociais",
+  "Crescimento acelerado e orgânico da base eleitoral",
 ];
 
 const landingPlans = [
-  { name: "Plano Mensal", tag: "Ideal para começar", price: "97", period: "/mês", icon: Award, popular: false },
-  { name: "Plano Trimestral", tag: "Melhor economia", price: "247", period: "/trimestre", icon: Star, popular: true },
-  { name: "Plano Anual", tag: "Melhor custo-benefício", price: "697", period: "/ano", icon: Gem, popular: false },
+  { name: "Semente", tag: "Essencial para começar", price: "97", period: "/mês", icon: Award, popular: false },
+  { name: "Crescimento", tag: "O mais escolhido", price: "247", period: "/trimestre", icon: Star, popular: true },
+  { name: "Liderança", tag: "Domínio total", price: "697", period: "/ano", icon: Gem, popular: false },
 ];
 
 export default function LandingPage() {
@@ -124,7 +124,7 @@ export default function LandingPage() {
                 </Button>
                 <Button onClick={() => navigate("/auth")}
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-sm font-semibold px-5 rounded-lg shadow-md shadow-[#FF6B00]/20">
-                  Começar Agora
+                  Acessar Plataforma
                 </Button>
               </>
             )}
@@ -143,23 +143,23 @@ export default function LandingPage() {
             <div>
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
                 <span className="inline-flex items-center gap-2 bg-[#FF6B00]/10 text-[#FF6B00] text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full border border-[#FF6B00]/20">
-                  <Zap className="h-3.5 w-3.5" /> Plataforma de Inteligência Política
+                  <Zap className="h-3.5 w-3.5" /> A Única Plataforma de Inteligência Política de que você precisa
                 </span>
               </motion.div>
               <motion.h1 initial="hidden" animate="visible" variants={fadeUp} custom={1}
                 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] tracking-tight">
                 Radar Eleitoral –{" "}
-                <span className="text-[#FFC107]">Gestão Política Inteligente</span>
+                <span className="text-[#FFC107]">Sua Vitória Começa Aqui</span>
               </motion.h1>
               <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2}
                 className="mt-6 text-lg text-gray-400 max-w-xl leading-relaxed">
-                Contatos, demandas e estratégia de campanha em um só lugar. Organize sua base eleitoral, gerencie lideranças políticas, acompanhe demandas dos cidadãos e fortaleça sua estratégia de campanha com uma plataforma poderosa de gestão política.
+                Organize sua base, coordene lideranças e converta demandas em votos. O Radar Eleitoral centraliza toda a estratégia do seu gabinete em uma interface poderosa, moderna e intuitiva. Pare de improvisar e comece a governar com dados.
               </motion.p>
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}
                 className="mt-10 flex flex-col sm:flex-row items-start gap-4">
                 <Button onClick={() => navigate("/auth")} size="lg"
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-base font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#FF6B00]/30 hover:shadow-[#FF6B00]/50 transition-all">
-                  Começar Agora <ArrowRight className="ml-2 h-5 w-5" />
+                  Profissionalizar minha Campanha <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button variant="outline" size="lg" onClick={() => navigate("/demo")}
                   className="border-gray-600 text-gray-300 hover:bg-white/5 text-base px-8 py-6 rounded-xl bg-transparent">
@@ -215,16 +215,16 @@ export default function LandingPage() {
                 <AlertTriangle className="h-4 w-4" /> O Problema
               </motion.div>
               <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">
-                Campanhas desorganizadas{" "}
-                <span className="text-red-500">perdem oportunidades</span>
+                Planilhas não ganham eleição.{" "}
+                <span className="text-red-500">Dados sim.</span>
               </motion.h2>
               <motion.p variants={fadeUp} custom={2} className="mt-6 text-gray-500 text-lg leading-relaxed">
-                Muitas equipes políticas ainda gerenciam contatos e apoiadores usando planilhas, cadernos ou aplicativos de mensagens. Isso gera confusão, perda de informações e coordenação fraca de campanha.
+                Gerenciar uma base eleitoral em cadernos ou grupos de WhatsApp é um convite ao erro. A desorganização custa votos, gera perda de lideranças e torna sua equipe ineficiente frente aos desafios da política moderna.
               </motion.p>
               <motion.div variants={fadeUp} custom={3} className="mt-8">
-                <p className="text-gray-600 font-medium mb-4">Sem um sistema, fica difícil:</p>
+                <p className="text-gray-600 font-medium mb-4">Sem o Radar Eleitoral, você corre o risco de:</p>
                 <ul className="space-y-3">
-                  {["Organizar apoiadores", "Acompanhar demandas dos cidadãos", "Gerenciar lideranças comunitárias", "Crescer a base eleitoral"].map((item, i) => (
+                  {["Perder o histórico de atendimentos", "Esquecer demandas críticas da população", "Ter lideranças atuando sem coordenação", "Ver sua base eleitoral estagnar"].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-gray-500">
                       <span className="w-1.5 h-1.5 bg-red-400 rounded-full flex-shrink-0" />
                       {item}
@@ -267,11 +267,11 @@ export default function LandingPage() {
               <div className="bg-gradient-to-br from-[#FF6B00] to-[#e55f00] rounded-3xl p-8 lg:p-10 text-white shadow-xl">
                 <div className="space-y-5">
                   {[
-                    { icon: Users, title: "Gerencie toda a sua base eleitoral", desc: "Todos os contatos em uma plataforma segura" },
-                    { icon: Crown, title: "Cadastre apoiadores e lideranças", desc: "Organização hierárquica por região" },
-                    { icon: ClipboardList, title: "Acompanhe solicitações dos cidadãos", desc: "Nunca mais perca uma demanda" },
-                    { icon: Rocket, title: "Organize estratégias de campanha", desc: "Planeje e execute com precisão" },
-                    { icon: BarChart3, title: "Analise o crescimento da sua base", desc: "Decisões políticas baseadas em dados" },
+                    { icon: Users, title: "Controle Total da Base Eleitoral", desc: "Segurança e organização para cada eleitor" },
+                    { icon: Crown, title: "Geolocalização de Lideranças", desc: "Saiba exatamente quem lidera em cada rua" },
+                    { icon: ClipboardList, title: "Monitoramento de Demandas", desc: "Gestão eficiente do protocolo ao resultado" },
+                    { icon: Rocket, title: "Estratégia de Mobilização Digital", desc: "Comunicação assertiva com sua base" },
+                    { icon: BarChart3, title: "Métricas de Performance Política", desc: "Sua campanha guiada por resultados" },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                       <item.icon className="h-6 w-6 flex-shrink-0" />
@@ -291,16 +291,16 @@ export default function LandingPage() {
                 <Layers className="h-4 w-4" /> A Solução
               </motion.div>
               <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">
-                Radar Eleitoral{" "}
-                <span className="text-[#FF6B00]">centraliza tudo</span>
+                Domine o Jogo Político{" "}
+                <span className="text-[#FF6B00]">com Inteligência</span>
               </motion.h2>
               <motion.p variants={fadeUp} custom={2} className="mt-6 text-gray-500 text-lg leading-relaxed">
-                O Radar Eleitoral traz a organização política para uma plataforma moderna. Com o sistema você pode gerenciar contatos, acompanhar demandas, coordenar lideranças e planejar campanhas — tudo em um único painel.
+                O Radar Eleitoral é o sistema definitivo para gabinetes que buscam alta performance. Centralize informações, automatize processos e tenha uma visão clara de todo o seu território eleitoral em tempo real.
               </motion.p>
               <motion.div variants={fadeUp} custom={3} className="mt-8">
                 <Button onClick={() => navigate("/auth")} size="lg"
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#FF6B00]/25">
-                  Comece Gratuitamente <ArrowRight className="ml-2 h-5 w-5" />
+                  Garantir meu Acesso Agora <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </motion.div>
             </motion.div>
@@ -315,7 +315,7 @@ export default function LandingPage() {
             className="text-center max-w-3xl mx-auto mb-16">
             <span className="text-[#FF6B00] font-semibold text-sm uppercase tracking-wider">Funcionalidades</span>
             <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold">
-              Tudo que sua equipe precisa
+              O Arsenal para sua Equipe Campeã
             </h2>
             <p className="mt-4 text-gray-500 text-lg">
               Uma plataforma completa para organizar, acompanhar e expandir sua atuação política.

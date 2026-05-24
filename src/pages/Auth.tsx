@@ -32,7 +32,7 @@ const AuthBrand = memo(() => (
 
       <div className="space-y-6 pt-4">
         <p className="text-xl font-medium text-slate-300 leading-relaxed">
-          A inteligência que seu gabinete precisa para <span className="text-white font-bold">conquistar e gerir</span> sua base eleitoral com precisão.
+          O centro de comando definitivo para <span className="text-white font-bold">conquistar territórios</span> e governar com inteligência de dados.
         </p>
         
         <div className="grid grid-cols-2 gap-4 text-left pt-4">
@@ -160,12 +160,12 @@ export default function Auth() {
 
           <div className="space-y-2 text-center lg:text-left">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              {view === "auth" ? (activeTab === "login" ? "Acesse sua conta" : "Comece agora") : 
-               view === "forgot-password" ? "Recupere sua conta" : "Defina sua senha"}
+              {view === "auth" ? (activeTab === "login" ? "Acesse seu Centro de Comando" : "Profissionalize seu Gabinete") : 
+               view === "forgot-password" ? "Recupere seu Acesso" : "Defina sua nova Senha"}
             </h1>
             <p className="text-slate-500 text-sm">
-              {view === "auth" ? (activeTab === "login" ? "Insira suas credenciais para gerir seu gabinete." : "Crie sua conta para profissionalizar sua campanha.") : 
-               "Siga as instruções para garantir seu acesso."}
+              {view === "auth" ? (activeTab === "login" ? "Insira suas credenciais para gerir sua base com autoridade." : "Crie sua conta para elevar o nível da sua estratégia política.") : 
+               "Siga os passos abaixo para reestabelecer seu acesso estratégico."}
             </p>
           </div>
 
