@@ -271,6 +271,8 @@ export default function Contacts() {
     setEditingId(null);
     fetchContacts();
     fetchLeaders(); // Ensure leaders are refreshed as well
+    fetchRegistrationLinks();
+
     
     // Dispatch a custom event to notify other components (like Dashboard) to refresh
     window.dispatchEvent(new CustomEvent("contact-added"));
