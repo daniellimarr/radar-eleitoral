@@ -275,56 +275,49 @@ export default function Contacts() {
           setActiveFormTab("dados");
         }
       }}>
-        <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto p-0 border-none shadow-2xl rounded-3xl overflow-hidden">
-          <div className="bg-[#0f172a] p-8 text-white">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-                <div className="bg-primary p-2 rounded-xl">
-                  {editingId ? <Users className="h-6 w-6" /> : <UserPlus className="h-6 w-6" />}
-                </div>
-                {editingId ? "Atualizar Ficha de Contato" : "Novo Registro na Base"}
-              </DialogTitle>
-            </DialogHeader>
-          </div>
-          
-          <div className="p-8">
-            <Tabs value={activeFormTab} onValueChange={setActiveFormTab} className="w-full">
-              <TabsList className="flex w-full bg-slate-100 p-1 rounded-xl mb-8">
-                <TabsTrigger value="dados" className="flex-1 py-2 font-bold rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary transition-all">Dados Gerais</TabsTrigger>
-                <TabsTrigger value="endereco" className="flex-1 py-2 font-bold rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary transition-all">Localização</TabsTrigger>
-                <TabsTrigger value="politico" className="flex-1 py-2 font-bold rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary transition-all">Dados Políticos</TabsTrigger>
-              </TabsList>
-              
-              <div className="min-h-[400px]">
-                <TabsContent value="dados">
-                  <StepGeneralData form={form} updateField={updateField} leaders={leaders} />
-                </TabsContent>
-                <TabsContent value="endereco">
-                  <StepAddress form={form} updateField={updateField} geocoding={geocoding} handleCepBlur={handleCepBlur} />
-                </TabsContent>
-                <TabsContent value="politico">
-                  <StepPoliticalData form={form} updateField={updateField} />
-                </TabsContent>
-              </div>
-            </Tabs>
-            
-            <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-100 mt-6">
-              <Button variant="ghost" onClick={() => setIsOpen(false)} className="h-12 px-8 font-bold text-slate-500 hover:text-slate-900">
-                Cancelar
-              </Button>
-              <Button 
-                onClick={handleSave} 
-                disabled={loading}
-                className="h-12 px-12 font-black bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 rounded-xl"
-              >
-                {loading ? (
-                  <><Loader2 className="h-5 w-5 animate-spin mr-2" /> SALVANDO...</>
-                ) : (
-                  editingId ? "ATUALIZAR CADASTRO" : "FINALIZAR REGISTRO"
-                )}
-              </Button>
-            </DialogFooter>
-          </div>
+        <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto p-6 bg-slate-50 border-none shadow-2xl rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900">
+              {editingId ? "Editar Cadastro" : "Novo Cadastro"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <Tabs value={activeFormTab} onValueChange={setActiveFormTab} className="w-full mt-2">
+            <TabsList className="grid grid-cols-2 w-full bg-slate-300/60 p-1 rounded-full h-12">
+              <TabsTrigger value="dados" className="rounded-full font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
+                Dados gerais
+              </TabsTrigger>
+              <TabsTrigger value="endereco" className="rounded-full font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
+                Endereço
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="mt-6">
+              <TabsContent value="dados">
+                <StepGeneralData form={form} updateField={updateField} leaders={leaders} />
+              </TabsContent>
+              <TabsContent value="endereco">
+                <StepAddress form={form} updateField={updateField} geocoding={geocoding} handleCepBlur={handleCepBlur} />
+              </TabsContent>
+            </div>
+          </Tabs>
+
+          <DialogFooter className="flex flex-row justify-end gap-3 pt-4 mt-2">
+            <Button variant="outline" onClick={() => setIsOpen(false)} className="h-11 px-6 rounded-lg font-semibold">
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={loading}
+              className="h-11 px-8 font-bold bg-primary hover:bg-primary/90 text-white rounded-lg"
+            >
+              {loading ? (
+                <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Salvando...</>
+              ) : (
+                editingId ? "Atualizar" : "Cadastrar"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
