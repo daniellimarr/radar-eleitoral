@@ -320,11 +320,13 @@ export default function LandingPage() {
                 O Radar Eleitoral traz a organização política para uma plataforma moderna. Com o sistema você pode gerenciar contatos, acompanhar demandas, coordenar lideranças e planejar campanhas — tudo em um único painel.
               </motion.p>
               <motion.div variants={fadeUp} custom={3} className="mt-8">
-                <Button onClick={() => navigate("/auth")} size="lg"
+                <Button onClick={handleDemoLogin} disabled={isDemoLoading} size="lg"
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#FF6B00]/25">
-                  Comece Gratuitamente <ArrowRight className="ml-2 h-5 w-5" />
+                  {isDemoLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <ArrowRight className="mr-2 h-5 w-5" />}
+                  Testar Gratuitamente
                 </Button>
               </motion.div>
+
             </motion.div>
           </div>
         </div>
