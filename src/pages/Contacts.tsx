@@ -228,6 +228,10 @@ export default function Contacts() {
     setForm(defaultContact);
     setEditingId(null);
     fetchContacts();
+    fetchLeaders(); // Ensure leaders are refreshed as well
+    
+    // Dispatch a custom event to notify other components (like Dashboard) to refresh
+    window.dispatchEvent(new CustomEvent("contact-added"));
   };
 
   const handleEdit = (contact: any) => {
