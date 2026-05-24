@@ -22,6 +22,8 @@ const expenseCategories = ["Propaganda", "Transporte", "Alimentação", "Materia
 
 export default function Financial() {
   const { tenantId } = useAuth();
+  const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
+  const effectiveTenantId = tenantId || MAIN_TENANT;
   const [donations, setDonations] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
@@ -39,17 +41,16 @@ export default function Financial() {
   const suppliersTableRef = useRef<HTMLTableElement>(null);
 
   const fetchAll = async () => {
-    if (!tenantId) return;
     const [d, e, s, c] = await Promise.all([
-      supabase.from("donations").select("*").eq("tenant_id", tenantId).order("data", { ascending: false }),
-      supabase.from("expenses").select("*, suppliers(nome)").eq("tenant_id", tenantId).order("data", { ascending: false }),
-      supabase.from("suppliers").select("*").eq("tenant_id", tenantId).order("nome"),
-      supabase.from("campaigns").select("id, nome_campanha, limite_gastos").eq("tenant_id", tenantId),
+      supabase.from("donations").select("*").eq("tenant_id", effectiveTenantId).order("data", { ascending: false }),
+      supabase.from("expenses").select("*, suppliers(nome)").eq("tenant_id", effectiveTenantId).order("data", { ascending: false }),
+      supabase.from("suppliers").select("*").eq("tenant_id", effectiveTenantId).order("nome"),
+      supabase.from("campaigns").select("id, nome_campanha, limite_gastos").eq("tenant_id", effectiveTenantId),
     ]);
     setDonations(d.data || []); setExpenses(e.data || []); setSuppliers(s.data || []); setCampaigns(c.data || []);
   };
-
-  useEffect(() => { fetchAll(); }, [tenantId]);
+  
+  useEffect(() => { fetchAll(); }, [effectiveTenantId]);
 
   const totalDonations = donations.reduce((s, d) => s + Number(d.valor), 0);
   const totalExpenses = expenses.reduce((s, e) => s + Number(e.valor), 0);
@@ -57,9 +58,9 @@ export default function Financial() {
   const limiteGastos = campaigns.reduce((s, c) => s + Number(c.limite_gastos || 0), 0);
 
   const saveDonation = async () => {
-    if (!tenantId || !donationForm.nome_doador.trim()) { toast.error("Nome do doador é obrigatório"); return; }
+    if (!donationForm.nome_doador.trim()) { toast.error("Nome do doador é obrigatório"); return; }
     setLoading(true);
-    const payload = { ...donationForm, valor: Number(donationForm.valor), tenant_id: tenantId };
+    const payload = { ...donationForm, valor: Number(donationForm.valor), tenant_id: effectiveTenantId };
     if (editingId) {
       const { error } = await supabase.from("donations").update(payload).eq("id", editingId);
       if (error) toast.error(error.message); else toast.success("Doação atualizada!");
@@ -69,11 +70,18 @@ export default function Financial() {
     }
     setLoading(false); setDonationOpen(false); setDonationForm(defaultDonation); setEditingId(null); fetchAll();
   };
-
+  
   const saveExpense = async () => {
-    if (!tenantId || !expenseForm.descricao.trim()) { toast.error("Descrição é obrigatória"); return; }
+    if (!expenseForm.descricao.trim()) { toast.error("Descrição é obrigatória"); return; }
     setLoading(true);
-    const payload = { descricao: expenseForm.descricao, categoria: expenseForm.categoria || null, valor: Number(expenseForm.valor), data: expenseForm.data, supplier_id: expenseForm.supplier_id || null, tenant_id: tenantId };
+    const payload = { 
+      descricao: expenseForm.descricao, 
+      categoria: expenseForm.categoria || null, 
+      valor: Number(expenseForm.valor), 
+      data: expenseForm.data, 
+      supplier_id: expenseForm.supplier_id || null, 
+      tenant_id: effectiveTenantId 
+    };
     if (editingId) {
       const { error } = await supabase.from("expenses").update(payload).eq("id", editingId);
       if (error) toast.error(error.message); else toast.success("Despesa atualizada!");
@@ -85,9 +93,9 @@ export default function Financial() {
   };
 
   const saveSupplier = async () => {
-    if (!tenantId || !supplierForm.nome.trim()) { toast.error("Nome é obrigatório"); return; }
+    if (!supplierForm.nome.trim()) { toast.error("Nome é obrigatório"); return; }
     setLoading(true);
-    const payload = { ...supplierForm, tenant_id: tenantId };
+    const payload = { ...supplierForm, tenant_id: effectiveTenantId };
     if (editingId) {
       const { error } = await supabase.from("suppliers").update(payload).eq("id", editingId);
       if (error) toast.error(error.message); else toast.success("Fornecedor atualizado!");
