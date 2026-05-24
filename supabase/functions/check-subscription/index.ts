@@ -27,7 +27,7 @@ serve(async (req) => {
     const user = userData.user;
     if (!user) throw new Error("User not authenticated");
 
-    // Get user's profile to identify tenant
+    // Get user's tenant
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("tenant_id")
@@ -40,29 +40,73 @@ serve(async (req) => {
       });
     }
 
-    // After removing Asaas, we default all active tenants to a "Subscribed" state 
-    // using the limits defined in their linked plan or defaults.
+    // Get tenant with plan
     const { data: tenant } = await supabaseClient
       .from("tenants")
-      .select("status, plan_id, contact_limit, plans(name, contact_limit, user_limit, duration_days, has_premium_modules)")
+      .select("plan_id, contact_limit, status, plans(name, contact_limit, user_limit, duration_days, has_premium_modules)")
       .eq("id", profile.tenant_id)
       .single();
 
+    // Check active subscription
+    const { data: subscription } = await supabaseClient
+      .from("subscriptions")
+      .select("*")
+      .eq("tenant_id", profile.tenant_id)
+      .in("status", ["active", "past_due"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!subscription) {
+      return new Response(JSON.stringify({ 
+        subscribed: false,
+        expired: false,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check if expired
+    if (subscription.expires_at && new Date(subscription.expires_at) < new Date()) {
+      // Mark subscription as expired
+      await supabaseClient
+        .from("subscriptions")
+        .update({ status: "expired" })
+        .eq("id", subscription.id);
+
+      // Suspend tenant
+      await supabaseClient
+        .from("tenants")
+        .update({ status: "suspenso" })
+        .eq("id", profile.tenant_id);
+
+      return new Response(JSON.stringify({ 
+        subscribed: false, 
+        expired: true,
+        plan_name: subscription.plan_name,
+        expired_at: subscription.expires_at,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Get limits from plan (DB) or fallback
     const plan = tenant?.plans as any;
     const contactLimit = plan?.contact_limit ?? tenant?.contact_limit ?? 5000;
     const userLimit = plan?.user_limit ?? 5;
     const durationDays = plan?.duration_days ?? 30;
-    const hasPremiumModules = plan?.has_premium_modules ?? true; // Default to true after removal of external gates
+    const hasPremiumModules = plan?.has_premium_modules ?? false;
 
     return new Response(JSON.stringify({
-      subscribed: tenant?.status === 'ativo',
-      plan_name: plan?.name || "Plano Padrão",
-      subscription_end: null, // No fixed end date after asaas removal
+      subscribed: true,
+      plan_name: subscription.plan_name,
+      subscription_end: subscription.expires_at,
+      subscription_id: subscription.id,
       contact_limit: contactLimit,
       user_limit: userLimit,
       duration_days: durationDays,
       has_premium_modules: hasPremiumModules,
-      expired: tenant?.status === 'suspenso',
+      expired: false,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

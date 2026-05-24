@@ -9,12 +9,19 @@ import {
   Layers, Zap, Star, Eye, Award, Gem, Loader2
 } from "lucide-react";
 import logo from "@/assets/logo-radar-eleitoral.png";
-import heroImg from "@/assets/hero-landing.png";
-// ASAAS_PLANS removed as it is no longer used for dynamic subscription logic
+import { ASAAS_PLANS } from "@/lib/asaas";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-// Unused dialog components removed
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
@@ -58,37 +65,22 @@ const landingPlans = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
-  const [isDemoLoading, setIsDemoLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
       navigate("/dashboard");
     }
   }, [user, loading, navigate]);
-
-  const handleDemoLogin = async () => {
-    setIsDemoLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("setup-demo");
-      if (error) throw error;
-      if (!data?.actionLink) throw new Error("Link de acesso não retornado");
-
-      toast.success("Entrando no modo teste...");
-      window.location.href = data.actionLink;
-    } catch (err: any) {
-      toast.error("Erro ao configurar demo: " + (err.message || "Tente novamente"));
-      setIsDemoLoading(false);
-    }
-  };
-
-  const isLoggedInWithoutSub = false;
+  const isLoggedInWithoutSub = !!user;
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
+  const [cpf, setCpf] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
-
-
 
   const formatCpf = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -105,15 +97,67 @@ export default function LandingPage() {
   };
 
   const handleSubscribe = (planName: string) => {
+    const planKey = planKeyMap[planName];
+    if (!planKey) return;
+
     if (!user) {
-      toast.error("Faça login para continuar");
+      toast.error("Faça login para assinar um plano");
       navigate("/auth", { state: { returnTo: "/" } });
       return;
     }
-    
-    // Auto-subscribe to the chosen plan (Internal logic)
-    toast.success("Solicitação de assinatura enviada!");
-    navigate("/dashboard");
+
+    setSelectedPlanKey(planKey);
+    setCustomerEmail(user?.email || "");
+    setCpfDialogOpen(true);
+  };
+
+  const ensureAsaasCustomer = async (cpfValue: string, emailValue: string) => {
+    const { data, error } = await supabase.functions.invoke("asaas-create-customer", {
+      body: {
+        name: profile?.full_name || emailValue,
+        email: emailValue,
+        cpf: cpfValue,
+      },
+    });
+    if (error) throw new Error("Erro ao criar cliente no gateway de pagamento");
+    return data.customer_id;
+  };
+
+  const processSubscription = async (planKey: string, cpfValue: string, emailValue: string) => {
+    setLoadingPlan(planKey);
+    try {
+      await ensureAsaasCustomer(cpfValue, emailValue);
+      const { data, error } = await supabase.functions.invoke("asaas-create-subscription", {
+        body: { plan_key: planKey },
+      });
+      if (error) throw error;
+      if (data?.payment_url) {
+        window.location.href = data.payment_url;
+      } else {
+        toast.error("Erro ao gerar link de pagamento. Tente novamente.");
+      }
+    } catch (err: any) {
+      console.error("Subscription error:", err);
+      toast.error(err.message || "Erro ao processar assinatura");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
+  const handleCpfSubmit = async () => {
+    const digits = cpf.replace(/\D/g, "");
+    if (digits.length !== 11) {
+      toast.error("CPF deve ter 11 dígitos");
+      return;
+    }
+    if (!customerEmail || !customerEmail.includes("@")) {
+      toast.error("Informe um e-mail válido");
+      return;
+    }
+    setCpfDialogOpen(false);
+    if (selectedPlanKey) {
+      await processSubscription(selectedPlanKey, digits, customerEmail);
+    }
   };
 
   return (
@@ -127,6 +171,7 @@ export default function LandingPage() {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-500">
             <button onClick={() => scrollTo("features")} className="hover:text-[#FF6B00] transition-colors">Funcionalidades</button>
+            <button onClick={() => scrollTo("pricing")} className="hover:text-[#FF6B00] transition-colors">Planos</button>
             <button onClick={() => scrollTo("benefits")} className="hover:text-[#FF6B00] transition-colors">Benefícios</button>
             <button onClick={() => scrollTo("contact")} className="hover:text-[#FF6B00] transition-colors">Contato</button>
           </div>
@@ -140,17 +185,15 @@ export default function LandingPage() {
                 <Button variant="ghost" onClick={() => navigate("/auth")} className="text-sm font-medium text-gray-600">
                   Entrar
                 </Button>
-                <Button onClick={handleDemoLogin} disabled={isDemoLoading}
+                <Button onClick={() => navigate("/auth")}
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-sm font-semibold px-5 rounded-lg shadow-md shadow-[#FF6B00]/20">
-                  {isDemoLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Testar Sistema
+                  Começar Agora
                 </Button>
               </>
             )}
           </div>
         </div>
       </nav>
-
 
       {/* ── Hero ── */}
       <section className="relative pt-28 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
@@ -177,31 +220,55 @@ export default function LandingPage() {
               </motion.p>
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}
                 className="mt-10 flex flex-col sm:flex-row items-start gap-4">
-                <Button onClick={handleDemoLogin} disabled={isDemoLoading} size="lg"
+                <Button onClick={() => navigate("/auth")} size="lg"
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-base font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#FF6B00]/30 hover:shadow-[#FF6B00]/50 transition-all">
-                  {isDemoLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <ArrowRight className="mr-2 h-5 w-5" />}
-                  Testar Sistema Agora
+                  Começar Agora <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="lg" onClick={() => navigate("/auth")}
+                <Button variant="outline" size="lg" onClick={() => navigate("/demo")}
                   className="border-gray-600 text-gray-300 hover:bg-white/5 text-base px-8 py-6 rounded-xl bg-transparent">
-                  Criar Conta
+                  <Eye className="mr-2 h-5 w-5" /> Ver Demonstração
                 </Button>
               </motion.div>
-
             </div>
 
-            {/* Dashboard Mockup - Otimização: Substituído por imagem real com lazy loading */}
+            {/* Dashboard Mockup */}
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4}
-              className="hidden lg:block relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#FF6B00] to-[#FFC107] rounded-2xl blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200" />
-              <img 
-                src={heroImg} 
-                alt="Painel Radar Eleitoral" 
-                className="relative rounded-2xl shadow-2xl border border-white/10 w-full object-cover aspect-[4/3]"
-                loading="eager" // Prioridade no hero
-                width={800}
-                height={600}
-              />
+              className="hidden lg:block">
+              <div className="bg-[#1e1e1e] border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 bg-[#2a2a2a] border-b border-gray-700/50">
+                  <div className="w-3 h-3 rounded-full bg-red-400" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                  <div className="w-3 h-3 rounded-full bg-green-400" />
+                  <span className="ml-3 text-xs text-gray-500">Radar Eleitoral — Painel</span>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Total de Contatos", val: "12.847", color: "#FF6B00" },
+                      { label: "Lideranças Ativas", val: "342", color: "#FFC107" },
+                      { label: "Demandas Abertas", val: "89", color: "#4ade80" },
+                    ].map((s) => (
+                      <div key={s.label} className="bg-[#2a2a2a] rounded-xl p-4 border border-gray-700/30">
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">{s.label}</p>
+                        <p className="text-xl font-bold mt-1" style={{ color: s.color }}>{s.val}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="bg-[#2a2a2a] rounded-xl p-4 border border-gray-700/30 h-32 flex items-end gap-1.5">
+                    {[40, 65, 45, 80, 55, 90, 70, 85, 60, 95, 75, 88].map((h, i) => (
+                      <div key={i} className="flex-1 rounded-t" style={{ height: `${h}%`, background: i % 2 === 0 ? '#FF6B00' : '#FF6B0060' }} />
+                    ))}
+                  </div>
+                  <div className="space-y-2">
+                    {["Maria S. – Bairro Centro", "João P. – Vila Nova", "Ana L. – Jardim"].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between bg-[#2a2a2a] rounded-lg p-3 border border-gray-700/30">
+                        <span className="text-xs text-gray-400">{r}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FF6B00]/20 text-[#FF6B00] font-medium">Líder</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -320,13 +387,11 @@ export default function LandingPage() {
                 O Radar Eleitoral traz a organização política para uma plataforma moderna. Com o sistema você pode gerenciar contatos, acompanhar demandas, coordenar lideranças e planejar campanhas — tudo em um único painel.
               </motion.p>
               <motion.div variants={fadeUp} custom={3} className="mt-8">
-                <Button onClick={handleDemoLogin} disabled={isDemoLoading} size="lg"
+                <Button onClick={() => navigate("/auth")} size="lg"
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#FF6B00]/25">
-                  {isDemoLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <ArrowRight className="mr-2 h-5 w-5" />}
-                  Testar Gratuitamente
+                  Comece Gratuitamente <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </motion.div>
-
             </motion.div>
           </div>
         </div>
@@ -416,7 +481,69 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing section removed as access is now free after login */}
+      {/* ── Planos ── */}
+      <section id="pricing" className="py-20 lg:py-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+            className="text-center max-w-3xl mx-auto mb-4">
+            <span className="text-[#FF6B00] font-semibold text-sm uppercase tracking-wider">Planos</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-extrabold">
+              O melhor custo benefício
+            </h2>
+            <p className="mt-2 text-[#FF6B00] text-xl font-bold">Nº 1 do Brasil</p>
+            <p className="mt-4 text-gray-500 text-lg">
+              Formas de pagamento: PIX ou Cartão de Crédito — Liberação imediata
+            </p>
+          </motion.div>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
+            className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {landingPlans.map((plan, i) => {
+              const planKey = planKeyMap[plan.name];
+              const isLoading = loadingPlan === planKey;
+              return (
+                <motion.div key={plan.name} variants={fadeUp} custom={i}
+                  className={`relative rounded-2xl p-8 border-2 transition-all ${
+                    plan.popular
+                      ? "border-[#FF6B00] bg-white shadow-2xl shadow-[#FF6B00]/10 scale-[1.03]"
+                      : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}>
+                  {plan.popular && (
+                    <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#FF6B00] text-white text-xs font-bold px-5 py-1.5 rounded-full shadow-md">
+                      Mais Popular
+                    </span>
+                  )}
+                  <div className="text-center mb-4">
+                    <plan.icon className="h-8 w-8 text-[#FF6B00] mx-auto mb-2" />
+                    <p className="text-sm text-gray-400 font-medium">{plan.tag}</p>
+                    <h3 className="text-xl font-bold">{plan.name}</h3>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-sm text-gray-500">R$</span>
+                      <span className="text-4xl font-extrabold text-[#FF6B00]">{plan.price}</span>
+                      <span className="text-gray-500 text-sm">{plan.period}</span>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => handleSubscribe(plan.name)}
+                    disabled={isLoading}
+                    className={`w-full mt-6 py-6 text-base font-bold rounded-xl transition-all ${
+                      plan.popular
+                        ? "bg-[#FF6B00] hover:bg-[#e55f00] text-white shadow-lg shadow-[#FF6B00]/20"
+                        : "bg-[#111111] hover:bg-[#222] text-white"
+                    }`}>
+                    {isLoading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando...</>
+                    ) : (
+                      <>Assinar Agora <ChevronRight className="ml-1 h-4 w-4" /></>
+                    )}
+                  </Button>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
+      </section>
 
       {/* ── CTA Final ── */}
       <section className="py-20 lg:py-28 bg-gradient-to-br from-[#FF6B00] via-[#e55f00] to-[#cc5200]">
@@ -463,7 +590,7 @@ export default function LandingPage() {
               <h4 className="font-bold mb-4 text-white text-sm uppercase tracking-wider">Links</h4>
               <ul className="space-y-3 text-sm text-gray-500">
                 <li><button onClick={() => scrollTo("features")} className="hover:text-white transition-colors">Funcionalidades</button></li>
-                <li><button onClick={() => scrollTo("features")} className="hover:text-white transition-colors">Funcionalidades</button></li>
+                <li><button onClick={() => scrollTo("pricing")} className="hover:text-white transition-colors">Planos</button></li>
                 <li><button onClick={() => scrollTo("contact")} className="hover:text-white transition-colors">Contato</button></li>
                 <li><button onClick={() => navigate("/auth")} className="hover:text-white transition-colors">Sobre</button></li>
               </ul>
@@ -492,6 +619,46 @@ export default function LandingPage() {
         <MessageSquare className="h-6 w-6" />
       </a>
 
+      {/* Dialog de dados para cobrança */}
+      <Dialog open={cpfDialogOpen} onOpenChange={setCpfDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dados para cobrança</DialogTitle>
+            <DialogDescription>
+              Informe seu e-mail e CPF para gerar a cobrança.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="customerEmail">E-mail</Label>
+              <Input
+                id="customerEmail"
+                type="email"
+                placeholder="seu@email.com"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="cpf">CPF</Label>
+              <Input
+                id="cpf"
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChange={(e) => setCpf(formatCpf(e.target.value))}
+                maxLength={14}
+              />
+            </div>
+            <Button
+              className="w-full bg-[#FF6B00] hover:bg-[#e55f00] text-white font-bold"
+              onClick={handleCpfSubmit}
+              disabled={cpf.replace(/\D/g, "").length !== 11 || !customerEmail.includes("@")}
+            >
+              Continuar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

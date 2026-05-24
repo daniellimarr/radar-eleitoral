@@ -126,10 +126,7 @@ export default function RegistrationLinks() {
               {slug && (
                 <div className="space-y-2">
                   <Label>Link gerado</Label>
-                  <div className="flex gap-2 items-center">
-                    <p className="text-sm font-mono bg-muted p-2 rounded flex-1 truncate">{getBaseUrl()}/cadastro/{slug}</p>
-                    <Button size="icon" variant="outline" onClick={() => copyLink(slug)}><Copy className="h-4 w-4" /></Button>
-                  </div>
+                  <p className="text-sm font-mono bg-muted p-2 rounded">{getBaseUrl()}/cadastro/{slug}</p>
                 </div>
               )}
               <Button onClick={handleCreate} disabled={loading} className="w-full">{loading ? "Criando..." : "Criar Link"}</Button>
@@ -162,23 +159,7 @@ export default function RegistrationLinks() {
                   <TableCell>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => copyLink(l.slug)}><Copy className="h-4 w-4" /></Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        disabled={loading}
-                        onClick={async () => { 
-                          if (confirm("Deseja realmente excluir este link?")) {
-                            setLoading(true);
-                            const { error } = await supabase.from("registration_links").delete().eq("id", l.id); 
-                            if (error) toast.error("Erro ao excluir link");
-                            else toast.success("Link excluído!");
-                            fetchData(); 
-                            setLoading(false);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <Button variant="ghost" size="icon" onClick={async () => { await supabase.from("registration_links").delete().eq("id", l.id); fetchData(); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>

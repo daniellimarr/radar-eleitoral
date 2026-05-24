@@ -107,83 +107,40 @@ export default function Financial() {
     name: cat,
     valor: expenses.filter(e => e.categoria === cat).reduce((s, e) => s + Number(e.valor), 0),
   })).filter(d => d.valor > 0);
-  return (
-    <div className="space-y-8 animate-in fade-in duration-700">
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Controle Financeiro</h1>
-          <p className="text-muted-foreground mt-1">Gestão completa de arrecadação e despesas da campanha.</p>
-        </div>
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Controle Financeiro</h1>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-none shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-              <TrendingUp className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Arrecadado</p>
-              <p className="text-2xl font-bold tracking-tight">R$ {totalDonations.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-            </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center"><TrendingUp className="h-6 w-6 text-success" /></div>
+            <div><p className="text-sm text-muted-foreground">Total Arrecadado</p><p className="text-2xl font-bold">R$ {totalDonations.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></div>
           </CardContent>
-          <div className="h-1 w-full bg-emerald-500 opacity-20" />
         </Card>
-
-        <Card className="border-none shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-rose-100 dark:bg-rose-950 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-              <TrendingDown className="h-7 w-7 text-rose-600 dark:text-rose-400" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Gasto</p>
-              <p className="text-2xl font-bold tracking-tight">R$ {totalExpenses.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-            </div>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center"><TrendingDown className="h-6 w-6 text-destructive" /></div>
+            <div><p className="text-sm text-muted-foreground">Total Gasto</p><p className="text-2xl font-bold">R$ {totalExpenses.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></div>
           </CardContent>
-          <div className="h-1 w-full bg-rose-500 opacity-20" />
         </Card>
-
-        <Card className="border-none shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-blue-100 dark:bg-blue-950 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-              <Wallet className="h-7 w-7 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Saldo Atual</p>
-              <p className={`text-2xl font-bold tracking-tight ${balance < 0 ? "text-rose-500" : ""}`}>
-                R$ {balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-              </p>
-            </div>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center"><Wallet className="h-6 w-6 text-primary" /></div>
+            <div><p className="text-sm text-muted-foreground">Saldo Atual</p><p className={`text-2xl font-bold ${balance < 0 ? "text-destructive" : ""}`}>R$ {balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></div>
           </CardContent>
-          <div className="h-1 w-full bg-blue-500 opacity-20" />
         </Card>
-
-        <Card className="border-none shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-amber-100 dark:bg-amber-950 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-              <DollarSign className="h-7 w-7 text-amber-600 dark:text-amber-400" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Limite Legal</p>
-              <p className="text-2xl font-bold tracking-tight">R$ {limiteGastos.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-              {limiteGastos > 0 && (
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex-1 h-1.5 rounded-full bg-amber-100 dark:bg-amber-900 overflow-hidden">
-                    <div 
-                      className="h-full bg-amber-500" 
-                      style={{ width: `${Math.min((totalExpenses / limiteGastos) * 100, 100)}%` }} 
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                    {((totalExpenses / limiteGastos) * 100).toFixed(1)}%
-                  </span>
-                </div>
-              )}
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="h-12 w-12 rounded-full bg-warning/10 flex items-center justify-center"><DollarSign className="h-6 w-6 text-warning" /></div>
+            <div><p className="text-sm text-muted-foreground">Limite Legal</p><p className="text-2xl font-bold">R$ {limiteGastos.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              {limiteGastos > 0 && <p className="text-xs text-muted-foreground">{((totalExpenses / limiteGastos) * 100).toFixed(1)}% utilizado</p>}
             </div>
           </CardContent>
-          <div className="h-1 w-full bg-amber-500 opacity-20" />
         </Card>
       </div>
 

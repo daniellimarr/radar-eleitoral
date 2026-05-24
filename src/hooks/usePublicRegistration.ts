@@ -31,14 +31,24 @@ export function usePublicRegistration(slug: string | undefined) {
     const loadTenant = async () => {
       if (!slug) return;
       try {
-        // Use SECURITY DEFINER RPC to avoid exposing the full registration_links table to anon
-        const { data: linkInfo } = await supabase.rpc("get_registration_link_info", { p_slug: slug });
-        const info = Array.isArray(linkInfo) ? linkInfo[0] : linkInfo;
-        if (info?.tenant_id) {
-          setTenantId(info.tenant_id);
-          setLeaderContactId(info.leader_contact_id ?? null);
-          setTenantName(info.tenant_name ?? "");
-          setLeaderName(info.leader_name ?? "");
+        const { data: link } = await supabase
+          .from("registration_links")
+          .select("tenant_id, leader_contact_id")
+          .eq("slug", slug)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (link) {
+          setTenantId(link.tenant_id);
+          setLeaderContactId(link.leader_contact_id);
+          
+          const { data: tenant } = await supabase.from("tenants").select("name").eq("id", link.tenant_id).maybeSingle();
+          if (tenant) setTenantName(tenant.name);
+          
+          if (link.leader_contact_id) {
+            const { data: leaderData } = await supabase.rpc("get_leader_name_for_link", { p_slug: slug });
+            if (leaderData && leaderData.length > 0) setLeaderName(leaderData[0].leader_name || "");
+          }
         }
       } catch (err) {
         console.error("Error loading tenant:", err);

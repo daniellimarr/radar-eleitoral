@@ -1,47 +1,35 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useDemands } from "@/hooks/demands/useDemands";
-import { DemandService } from "@/services/demands/DemandService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Search, Loader2 } from "lucide-react";
+import { Plus, Search, Paperclip, FileText, Image, Trash2, Download, Eye } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
-import { DemandTable } from "@/components/demands/DemandTable";
-import { DocsDialog } from "@/components/demands/DocsDialog";
-import { DemandStatus } from "@/types/demands";
 
+const statusOptions = [
+  { value: "aberta", label: "Aberta", color: "bg-primary text-primary-foreground" },
+  { value: "em_andamento", label: "Em Andamento", color: "bg-warning text-warning-foreground" },
+  { value: "concluida", label: "Concluída", color: "bg-success text-success-foreground" },
+  { value: "cancelada", label: "Cancelada", color: "bg-destructive text-destructive-foreground" },
+];
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "application/pdf"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function Demands() {
   const { tenantId, user } = useAuth();
+  const [demands, setDemands] = useState<any[]>([]);
   const [search, setSearch] = useState("");
-  const { demands, loading: demandsLoading, refresh, updateStatus } = useDemands(tenantId, search);
-  
   const [isOpen, setIsOpen] = useState(false);
-  const [form, setForm] = useState<{
-    title: string;
-    description: string;
-    status: DemandStatus;
-    priority: string;
-    contact_id: string;
-    leader_id: string;
-  }>({ 
-    title: "", 
-    description: "", 
-    status: "aberta", 
-    priority: "normal", 
-    contact_id: "", 
-    leader_id: "" 
-  });
+  const [form, setForm] = useState({ title: "", description: "", status: "aberta", priority: "normal", contact_id: "", leader_id: "" });
   const [loading, setLoading] = useState(false);
   const tableRef = useRef<HTMLTableElement>(null);
 
@@ -60,25 +48,29 @@ export default function Demands() {
   const [previewMimeType, setPreviewMimeType] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const fetchAuxData = async () => {
-      if (!tenantId) return;
-      const [{ data: cData }, { data: lData }] = await Promise.all([
-        supabase.from("contacts").select("id, name, leader_id").eq("tenant_id", tenantId).is("deleted_at", null).order("name"),
-        supabase.from("leaders").select("id, contact_id, contacts(id, name)").eq("tenant_id", tenantId)
-      ]);
-      setContacts(cData || []);
-      setLeaders(lData || []);
-      setFilteredContacts(cData || []);
-    };
-    fetchAuxData();
-  }, [tenantId]);
+  const fetchContacts = async () => {
+    if (!tenantId) return;
+    const { data } = await supabase.from("contacts").select("id, name, leader_id").eq("tenant_id", tenantId).is("deleted_at", null).order("name");
+    setContacts(data || []);
+    setFilteredContacts(data || []);
+  };
 
+  const fetchLeaders = async () => {
+    if (!tenantId) return;
+    const { data } = await supabase.from("leaders").select("id, contact_id, contacts(id, name)").eq("tenant_id", tenantId);
+    setLeaders(data || []);
+  };
+
+  useEffect(() => { if (tenantId) { fetchContacts(); fetchLeaders(); } }, [tenantId]);
+
+  // Filter contacts by leader
   useEffect(() => {
     let filtered = contacts;
     if (form.leader_id) {
       const leader = leaders.find(l => l.id === form.leader_id);
-      if (leader) filtered = contacts.filter(c => c.leader_id === leader.contact_id);
+      if (leader) {
+        filtered = contacts.filter(c => c.leader_id === leader.contact_id);
+      }
     }
     if (contactSearch) {
       filtered = filtered.filter(c => c.name.toLowerCase().includes(contactSearch.toLowerCase()));
@@ -86,38 +78,43 @@ export default function Demands() {
     setFilteredContacts(filtered);
   }, [form.leader_id, contactSearch, contacts, leaders]);
 
+  const fetchDemands = async () => {
+    if (!tenantId) return;
+    let query = supabase.from("demands").select("*, contacts(name, leader_id)").eq("tenant_id", tenantId).is("deleted_at", null).order("created_at", { ascending: false });
+    if (search) query = query.ilike("title", `%${search}%`);
+    const { data } = await query;
+    setDemands(data || []);
+  };
+
+  useEffect(() => { fetchDemands(); }, [tenantId, search]);
+
   const handleSave = async () => {
     if (!tenantId || !form.title) { toast.error("Título é obrigatório"); return; }
     setLoading(true);
-    const { error } = await DemandService.saveDemand({
-      title: form.title, 
-      description: form.description, 
-      priority: form.priority,
-      tenant_id: tenantId, 
-      responsible_id: user?.id,
-      status: form.status,
-      contact_id: form.contact_id || null,
-    });
+    const insertData: any = {
+      title: form.title, description: form.description, priority: form.priority,
+      tenant_id: tenantId, responsible_id: user?.id,
+      status: form.status as "aberta" | "em_andamento" | "concluida" | "cancelada",
+    };
+    if (form.contact_id) insertData.contact_id = form.contact_id;
+    const { error } = await supabase.from("demands").insert([insertData]);
     if (error) toast.error(error.message);
-    else {
-      toast.success("Demanda cadastrada!");
-      setIsOpen(false);
-      setForm({ 
-        title: "", 
-        description: "", 
-        status: "aberta", 
-        priority: "normal", 
-        contact_id: "", 
-        leader_id: "" 
-      });
-      setContactSearch("");
-      refresh();
-    }
+    else { toast.success("Demanda cadastrada!"); setIsOpen(false); setForm({ title: "", description: "", status: "aberta", priority: "normal", contact_id: "", leader_id: "" }); setContactSearch(""); fetchDemands(); }
     setLoading(false);
   };
 
+  const updateStatus = async (id: string, status: string) => {
+    await supabase.from("demands").update({ status: status as "aberta" | "em_andamento" | "concluida" | "cancelada" }).eq("id", id);
+    fetchDemands();
+  };
+
+  // Documents functions
   const fetchDocuments = async (demandId: string) => {
-    const { data } = await DemandService.fetchDocuments(demandId);
+    const { data } = await supabase
+      .from("demand_documents")
+      .select("*")
+      .eq("demand_id", demandId)
+      .order("created_at", { ascending: false });
     setDocuments(data || []);
   };
 
@@ -133,13 +130,28 @@ export default function Demands() {
 
     setUploading(true);
     for (const file of Array.from(files)) {
-      if (!ACCEPTED_TYPES.includes(file.type)) { toast.error(`Tipo não permitido: ${file.name}`); continue; }
-      if (file.size > MAX_FILE_SIZE) { toast.error(`Arquivo muito grande: ${file.name}`); continue; }
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        toast.error(`Tipo não permitido: ${file.name}. Apenas JPEG e PDF.`);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`Arquivo muito grande: ${file.name}. Máximo 10MB.`);
+        continue;
+      }
 
-      const { path, error: uploadError } = await DemandService.uploadDocument(tenantId, selectedDemand.id, file);
-      if (uploadError) { toast.error(`Erro ao enviar ${file.name}`); continue; }
+      const ext = file.name.split(".").pop();
+      const path = `${tenantId}/${selectedDemand.id}/${crypto.randomUUID()}.${ext}`;
 
-      await DemandService.registerDocument({
+      const { error: uploadError } = await supabase.storage
+        .from("demand-documents")
+        .upload(path, file, { contentType: file.type });
+
+      if (uploadError) {
+        toast.error(`Erro ao enviar ${file.name}: ${uploadError.message}`);
+        continue;
+      }
+
+      const { error: dbError } = await supabase.from("demand_documents").insert({
         demand_id: selectedDemand.id,
         tenant_id: tenantId,
         file_name: file.name,
@@ -148,7 +160,12 @@ export default function Demands() {
         storage_path: path,
         uploaded_by: user?.id,
       });
+
+      if (dbError) {
+        toast.error(`Erro ao registrar ${file.name}`);
+      }
     }
+
     toast.success("Documentos enviados!");
     fetchDocuments(selectedDemand.id);
     setUploading(false);
@@ -156,117 +173,237 @@ export default function Demands() {
   };
 
   const handleDeleteDoc = async (doc: any) => {
-    await DemandService.deleteDocument(doc.id, doc.storage_path);
+    await supabase.storage.from("demand-documents").remove([doc.storage_path]);
+    await supabase.from("demand_documents").delete().eq("id", doc.id);
     toast.success("Documento removido");
-    fetchDocuments(selectedDemand.id);
+    if (selectedDemand) fetchDocuments(selectedDemand.id);
   };
 
   const handleDownloadDoc = async (doc: any) => {
     const { data } = await supabase.storage.from("demand-documents").createSignedUrl(doc.storage_path, 60);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+    if (data?.signedUrl) {
+      window.open(data.signedUrl, "_blank");
+    }
   };
 
   const handlePreviewDoc = async (doc: any) => {
     const { data } = await supabase.storage.from("demand-documents").createSignedUrl(doc.storage_path, 120);
-    if (data?.signedUrl) { setPreviewUrl(data.signedUrl); setPreviewMimeType(doc.mime_type || null); }
+    if (data?.signedUrl) {
+      setPreviewUrl(data.signedUrl);
+      setPreviewMimeType(doc.mime_type || null);
+    }
   };
-  return (
-    <div className="space-y-8 animate-in fade-in duration-700">
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Demandas</h1>
-          <p className="text-muted-foreground mt-1">Gestão de solicitações e acompanhamento de tarefas.</p>
-        </div>
-        <div className="flex gap-3">
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getDocCount = (demandId: string) => {
+    // We'll show a clip icon; counts fetched on demand
+    return null;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="text-2xl font-bold">Demandas</h1>
+        <div className="flex gap-2">
           <ExportButtons tableRef={tableRef} title="Demandas" filename="demandas" />
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button className="shadow-lg shadow-primary/20 transition-all hover:scale-105">
-                <Plus className="h-4 w-4 mr-2" /> Nova Demanda
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Nova Demanda</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-5 py-4">
-                <div className="space-y-2">
-                  <Label>Título da Demanda *</Label>
-                  <Input 
-                    placeholder="Ex: Reforma da praça central" 
-                    value={form.title} 
-                    onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))} 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Descrição Detalhada</Label>
-                  <Textarea 
-                    placeholder="Descreva os detalhes da solicitação..." 
-                    className="min-h-[100px]"
-                    value={form.description} 
-                    onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Prioridade</Label>
-                  <Select value={form.priority} onValueChange={(v) => setForm(p => ({ ...p, priority: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="baixa">Baixa</SelectItem>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="alta">Alta</SelectItem>
-                      <SelectItem value="urgente">Urgente</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={handleSave} disabled={loading} className="w-full h-11 text-base font-semibold">
-                  {loading ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
-                  ) : "Criar Demanda"}
-                </Button>
+          <DialogTrigger asChild>
+            <Button><Plus className="h-4 w-4 mr-2" /> Nova Demanda</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Nova Demanda</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2"><Label>Título *</Label><Input value={form.title} onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))} /></div>
+              <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} /></div>
+              <div className="space-y-2">
+                <Label>Prioridade</Label>
+                <Select value={form.priority} onValueChange={(v) => setForm(p => ({ ...p, priority: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="baixa">Baixa</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="alta">Alta</SelectItem>
+                    <SelectItem value="urgente">Urgente</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </DialogContent>
+              <div className="space-y-2">
+                <Label>Liderança (filtro)</Label>
+                <Select value={form.leader_id || "__all__"} onValueChange={(v) => setForm(p => ({ ...p, leader_id: v === "__all__" ? "" : v, contact_id: "" }))}>
+                  <SelectTrigger><SelectValue placeholder="Todas as lideranças" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Todas</SelectItem>
+                    {leaders.map((l: any) => (
+                      <SelectItem key={l.id} value={l.id}>{(l.contacts as any)?.name || "Líder"}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Pessoa (contato cadastrado)</Label>
+                <Input placeholder="Buscar contato..." value={contactSearch} onChange={(e) => setContactSearch(e.target.value)} className="mb-2" />
+                <Select value={form.contact_id || "__none__"} onValueChange={(v) => setForm(p => ({ ...p, contact_id: v === "__none__" ? "" : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um contato" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Nenhum</SelectItem>
+                    {filteredContacts.map((c: any) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleSave} disabled={loading} className="w-full">{loading ? "Salvando..." : "Cadastrar"}</Button>
+            </div>
+          </DialogContent>
           </Dialog>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 bg-card border px-4 py-2 rounded-2xl shadow-sm max-w-md focus-within:ring-2 ring-primary/20 transition-all">
-        <Search className="h-5 w-5 text-muted-foreground" />
-        <Input 
-          className="border-none focus-visible:ring-0 bg-transparent p-0 text-base" 
-          placeholder="Pesquisar por título ou descrição..." 
-          value={search} 
-          onChange={(e) => setSearch(e.target.value)} 
-        />
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input className="pl-10" placeholder="Pesquisar demanda..." value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <DemandTable 
-            demands={demands}
-            onOpenDocs={openDocsDialog}
-            onUpdateStatus={updateStatus}
-            tableRef={tableRef}
-          />
+          <Table ref={tableRef}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Título</TableHead>
+                <TableHead>Pessoa</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Prioridade</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Docs</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {demands.length === 0 ? (
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma demanda</TableCell></TableRow>
+              ) : demands.map((d) => (
+                <TableRow key={d.id}>
+                  <TableCell className="font-medium">{d.title}</TableCell>
+                  <TableCell>{(d.contacts as any)?.name || "—"}</TableCell>
+                  <TableCell>
+                    <Badge className={statusOptions.find(s => s.value === d.status)?.color}>
+                      {statusOptions.find(s => s.value === d.status)?.label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="capitalize">{d.priority}</TableCell>
+                  <TableCell>{new Date(d.created_at).toLocaleDateString("pt-BR")}</TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm" onClick={() => openDocsDialog(d)} title="Documentos">
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Select value={d.status} onValueChange={(v) => updateStatus(d.id, v)}>
+                      <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {statusOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
-      <DocsDialog 
-        open={docsDialogOpen}
-        onOpenChange={(open) => { setDocsDialogOpen(open); if (!open) { setPreviewUrl(null); setPreviewMimeType(null); } }}
-        selectedDemand={selectedDemand}
-        documents={documents}
-        uploading={uploading}
-        previewUrl={previewUrl}
-        previewMimeType={previewMimeType}
-        onPreviewClose={() => { setPreviewUrl(null); setPreviewMimeType(null); }}
-        onFileUpload={handleFileUpload}
-        onDownload={handleDownloadDoc}
-        onPreview={handlePreviewDoc}
-        onDelete={handleDeleteDoc}
-        fileInputRef={fileInputRef}
-      />
+      {/* Documents Dialog */}
+      <Dialog open={docsDialogOpen} onOpenChange={(open) => { setDocsDialogOpen(open); if (!open) { setPreviewUrl(null); setPreviewMimeType(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Paperclip className="h-5 w-5" />
+              Documentos - {selectedDemand?.title}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Upload area */}
+            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".jpg,.jpeg,.pdf"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                id="doc-upload"
+              />
+              <label htmlFor="doc-upload" className="cursor-pointer space-y-2 block">
+                <div className="flex justify-center gap-2 text-muted-foreground">
+                  <Image className="h-8 w-8" />
+                  <FileText className="h-8 w-8" />
+                </div>
+                <p className="text-sm font-medium">Clique para enviar documentos</p>
+                <p className="text-xs text-muted-foreground">JPEG ou PDF • Máximo 10MB por arquivo</p>
+                <p className="text-xs text-muted-foreground">Exames, laudos, receitas e outros documentos de saúde</p>
+              </label>
+              {uploading && <p className="text-sm text-primary mt-2 animate-pulse">Enviando...</p>}
+            </div>
+
+            {/* Preview */}
+            {previewUrl && (
+              <div className="border rounded-lg p-2 bg-muted/50">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">Pré-visualização</span>
+                  <Button variant="ghost" size="sm" onClick={() => { setPreviewUrl(null); setPreviewMimeType(null); }}>✕</Button>
+                </div>
+                {previewMimeType === "application/pdf" ? (
+                  <iframe src={previewUrl + "#toolbar=1"} className="w-full h-96 rounded" title="PDF Preview" />
+                ) : (
+                  <img src={previewUrl} alt="Preview" className="max-w-full max-h-96 mx-auto rounded" />
+                )}
+              </div>
+            )}
+
+            {/* Document list */}
+            {documents.length === 0 ? (
+              <p className="text-center text-muted-foreground text-sm py-4">Nenhum documento anexado</p>
+            ) : (
+              <div className="space-y-2">
+                {documents.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      {doc.mime_type?.includes("pdf") ? (
+                        <FileText className="h-5 w-5 text-destructive shrink-0" />
+                      ) : (
+                        <Image className="h-5 w-5 text-primary shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{doc.file_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatFileSize(doc.file_size || 0)} • {new Date(doc.created_at).toLocaleDateString("pt-BR")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handlePreviewDoc(doc)} title="Visualizar">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownloadDoc(doc)} title="Baixar">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteDoc(doc)} title="Remover">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

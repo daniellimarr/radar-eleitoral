@@ -1,10 +1,6 @@
-import { createContext, useContext, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthService } from "@/services/AuthService";
-import { useSession } from "./auth/useSession";
-import { useProfile } from "./auth/useProfile";
-import { usePermissions } from "./auth/usePermissions";
 
 interface AuthContextType {
   user: User | null;
@@ -19,8 +15,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, fullName: string) => Promise<any>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<any>;
-  updatePassword: (password: string) => Promise<any>;
   hasRole: (role: string) => boolean;
   hasPermission: (module: string) => boolean;
 }
@@ -28,84 +22,121 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user, session, loading: sessionLoading } = useSession();
-  const { profile, tenantId, profileStatus, loading: profileLoading, fetchProfile, clearProfile } = useProfile();
-  const { roles, userPermissions, loading: permissionsLoading, fetchPermissions, clearPermissions } = usePermissions();
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [permissionsLoading, setPermissionsLoading] = useState(true);
+  const [profileStatus, setProfileStatus] = useState<string | null>(null);
+
+  const fetchProfile = async (userId: string) => {
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+    
+    if (profileData) {
+      setProfile(profileData);
+      setTenantId(profileData.tenant_id);
+      setProfileStatus((profileData as any).status || 'pending');
+    }
+
+    const { data: rolesData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    
+    if (rolesData) {
+      setRoles(rolesData.map((r: any) => r.role));
+    }
+
+    // Fetch module permissions
+    setPermissionsLoading(true);
+    const { data: permsData } = await supabase
+      .from("user_permissions")
+      .select("module")
+      .eq("user_id", userId);
+    
+    if (permsData) {
+      setUserPermissions(permsData.map((p: any) => p.module));
+    }
+    setPermissionsLoading(false);
+  };
 
   useEffect(() => {
-    if (user) {
-      fetchProfile(user.id);
-    } else {
-      clearProfile();
-      clearPermissions();
-    }
-  }, [user, fetchProfile, clearProfile, clearPermissions]);
+    let initialSessionHandled = false;
 
-  useEffect(() => {
-    if (user && profile) {
-      fetchPermissions(user.id, tenantId);
-    }
-  }, [user, profile, tenantId, fetchPermissions]);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          if (initialSessionHandled) {
+            setLoading(true);
+            setPermissionsLoading(true);
+            fetchProfile(session.user.id).then(() => setLoading(false));
+          }
+        } else {
+          setProfile(null);
+          setRoles([]);
+          setTenantId(null);
+          setUserPermissions([]);
+          setProfileStatus(null);
+          setPermissionsLoading(false);
+          setLoading(false);
+        }
+      }
+    );
 
-  const hasRole = useCallback((role: string) => {
-    return roles.some(r => r.toLowerCase() === role.toLowerCase());
-  }, [roles]);
-  
-  const hasPermission = useCallback((module: string) => {
-    if (!user) return false;
-    if (roles.includes('super_admin') || roles.includes('admin_gabinete')) return true;
-    if (profileStatus !== 'approved') return false;
-    if (userPermissions && userPermissions.length > 0) {
-      return userPermissions.includes(module);
-    }
-    const defaultModules = ['dashboard', 'contacts', 'demands', 'appointments'];
-    return defaultModules.includes(module);
-  }, [user, profileStatus, roles, userPermissions]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      initialSessionHandled = true;
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id).then(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const signIn = async (email: string, password: string) => {
-    AuthService.clearCache();
-    return AuthService.signIn(email, password);
+    return supabase.auth.signInWithPassword({ email, password });
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    AuthService.clearCache();
-    return AuthService.signUp(email, password, fullName);
+    return supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: window.location.origin,
+      },
+    });
   };
 
   const signOut = async () => {
-    AuthService.clearCache();
-    await AuthService.signOut();
+    await supabase.auth.signOut();
   };
 
-  const resetPassword = async (email: string) => {
-    return AuthService.resetPassword(email);
-  };
-
-  const updatePassword = async (password: string) => {
-    return supabase.auth.updateUser({ password });
-  };
-
-  const value = {
-    user,
-    session,
-    loading: sessionLoading || profileLoading,
-    profile,
-    roles,
-    tenantId,
-    userPermissions,
-    permissionsLoading,
-    profileStatus,
-    signIn,
-    signUp,
-    signOut,
-    resetPassword,
-    updatePassword,
-    hasRole,
-    hasPermission
+  const hasRole = (role: string) => roles.includes(role);
+  
+  const hasPermission = (module: string) => {
+    // Super admins and admin_gabinete always have access to everything
+    if (roles.includes("super_admin") || roles.includes("admin_gabinete")) return true;
+    // If user has no permissions set at all, allow everything (backwards compat)
+    if (userPermissions.length === 0 && !permissionsLoading) return true;
+    return userPermissions.includes(module);
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, session, loading, profile, roles, tenantId, userPermissions, permissionsLoading, profileStatus, signIn, signUp, signOut, hasRole, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

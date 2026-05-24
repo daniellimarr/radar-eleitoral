@@ -1,65 +1,62 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useContacts } from "@/hooks/contacts/useContacts";
-import { ContactService } from "@/services/contacts/ContactService";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Search, Loader2, Users, UserPlus, Filter, FileDown } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Loader2 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
 import { geocodeByCep } from "@/lib/geocoding";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Refactored sub-components
-import { ContactRow } from "@/components/contacts/ContactRow";
-import { StepGeneralData } from "@/components/contacts/StepGeneralData";
-import { StepAddress } from "@/components/contacts/StepAddress";
-import { StepPoliticalData } from "@/components/contacts/StepPoliticalData";
+const engagementOptions = [
+  { value: "nao_trabalhado", label: "Não trabalhado" },
+  { value: "em_prospeccao", label: "Em prospecção" },
+  { value: "conquistado", label: "Conquistado" },
+  { value: "criando_envolvimento", label: "Criando envolvimento" },
+  { value: "falta_trabalhar", label: "Falta trabalhar" },
+  { value: "envolvimento_perdido", label: "Envolvimento perdido" },
+];
+
+const genderOptions = [
+  { value: "masculino", label: "Masculino" },
+  { value: "feminino", label: "Feminino" },
+  { value: "outro", label: "Outro" },
+];
 
 const defaultContact = {
-  name: "", nickname: "", gender: "", birth_date: "", cpf: "",
+  name: "", nickname: "", gender: "", birth_date: "",
   phone: "", has_whatsapp: false, cep: "", address: "",
   address_number: "", neighborhood: "", city: "Boa Vista", state: "RR",
   voting_zone: "", voting_section: "", voting_location: "",
-  engagement: "nao_trabalhado" as any, is_leader: false,
+  engagement: "nao_trabalhado" as const, is_leader: false,
   leader_id: "",
 };
 
 export default function Contacts() {
   const { tenantId, user, hasRole, profile } = useAuth();
   const { contactLimit } = useSubscription();
-  const [search, setSearch] = useState("");
-  const { contacts, totalContacts, loading: contactsLoading, refresh, deleteContact } = useContacts(tenantId, search);
-
+  const [contacts, setContacts] = useState<any[]>([]);
   const [leaders, setLeaders] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [activeFormTab, setActiveFormTab] = useState("dados");
   const [form, setForm] = useState(defaultContact);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showAddress, setShowAddress] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [geoCoords, setGeoCoords] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
   
   const tableRef = useRef<HTMLTableElement>(null);
-  const isOperador = hasRole("operador");
 
-  useEffect(() => {
-    const fetchLeaders = async () => {
-      if (!tenantId) return;
-      const { data } = await ContactService.fetchLeaders(tenantId);
-      setLeaders(data || []);
-      if (isOperador && profile?.full_name) {
-        const matched = (data || []).find(l => l.name.toLowerCase() === profile.full_name.toLowerCase());
-        if (matched) setForm(p => ({ ...p, leader_id: matched.id }));
-      }
-    };
-    fetchLeaders();
-  }, [tenantId, isOperador, profile?.full_name]);
 
   const handleCepBlur = async () => {
     if (!form.cep || form.cep.replace(/\D/g, "").length !== 8) return;
@@ -78,71 +75,175 @@ export default function Contacts() {
     setGeocoding(false);
   };
 
-  const handleSave = async () => {
-    if (!form.name.trim()) { toast.error("O nome é obrigatório para o cadastro."); return; }
+  const isOperador = hasRole("operador");
 
-    let effectiveTenantId = tenantId || profile?.tenant_id || null;
-    if (!effectiveTenantId) { 
-      toast.error("Vínculo com gabinete não localizado."); 
-      return; 
+  const fetchLeaders = async () => {
+    if (!tenantId) return;
+
+    if (isOperador && profile?.full_name) {
+      // Operators: query leaders table (accessible via RLS) joined with contact info
+      const { data: leadersData } = await supabase
+        .from("leaders")
+        .select("id, contact_id, contacts:contact_id(id, name, nickname)")
+        .eq("tenant_id", tenantId);
+
+      const allLeaders = (leadersData || []).map((l: any) => ({
+        id: l.contact_id,
+        name: l.contacts?.name || "",
+        nickname: l.contacts?.nickname || "",
+      }));
+
+      const matched = allLeaders.filter(
+        (l: any) => l.name.toLowerCase() === profile.full_name.toLowerCase() ||
+               (l.nickname && l.nickname.toLowerCase() === profile.full_name.toLowerCase())
+      );
+      setLeaders(matched);
+      if (matched.length >= 1) {
+        setForm((prev) => ({ ...prev, leader_id: matched[0].id }));
+      }
+    } else {
+      const { data } = await supabase
+        .from("contacts_decrypted")
+        .select("id, name, nickname")
+        .eq("tenant_id", tenantId)
+        .eq("is_leader", true)
+        .is("deleted_at", null)
+        .order("name");
+      setLeaders(data || []);
+    }
+  };
+
+  useEffect(() => { fetchLeaders(); }, [tenantId, profile?.full_name]);
+
+  const fetchContacts = async () => {
+    if (!tenantId) return;
+    let query = supabase
+      .from("contacts_decrypted")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (search) {
+      query = query.ilike("name", `%${search}%`);
     }
 
-    if (!editingId && contactLimit !== Infinity && totalContacts >= contactLimit) {
-      toast.error(`Limite do seu plano atingido (${contactLimit.toLocaleString()} contatos).`);
+    const { data } = await query;
+    setContacts(data || []);
+  };
+
+  useEffect(() => { fetchContacts(); }, [tenantId, search]);
+
+  const generateSlug = (name: string) =>
+    name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+  const ensureLeaderAndLink = async (contactId: string, tid: string) => {
+    // Ensure leader record exists
+    const { data: existingLeader } = await supabase
+      .from("leaders").select("id").eq("contact_id", contactId).maybeSingle();
+    if (!existingLeader) {
+      await supabase.from("leaders").insert({ contact_id: contactId, tenant_id: tid });
+    }
+    // Ensure registration link exists
+    const { data: existingLink } = await supabase
+      .from("registration_links").select("id").eq("leader_contact_id", contactId).eq("tenant_id", tid).maybeSingle();
+    if (!existingLink) {
+      // Get contact name for slug
+      const { data: contact } = await supabase.from("contacts_decrypted").select("name, nickname").eq("id", contactId).single();
+      let slug = generateSlug(contact?.nickname || contact?.name || contactId);
+      const { data: slugExists } = await supabase.from("registration_links").select("id, tenant_id").eq("slug", slug).maybeSingle();
+      if (slugExists && slugExists.tenant_id !== tid) {
+        slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+      }
+      if (!slugExists) {
+        await supabase.from("registration_links").insert({ tenant_id: tid, slug, leader_contact_id: contactId, coordinator_id: user?.id });
+      } else if (slugExists.tenant_id === tid) {
+        await supabase.from("registration_links").update({ leader_contact_id: contactId, coordinator_id: user?.id }).eq("id", slugExists.id);
+      }
+    }
+  };
+
+  const handleSave = async () => {
+    const trimmedName = form.name?.trim();
+    if (!tenantId || !trimmedName) {
+      toast.error("Nome é obrigatório");
       return;
     }
-
     setLoading(true);
-    try {
-      const sanitizedPayload = {
-        ...form,
-        tenant_id: effectiveTenantId,
-        registered_by: user?.id,
-        latitude: geoCoords.latitude,
-        longitude: geoCoords.longitude,
-        leader_id: form.leader_id && form.leader_id !== "" ? form.leader_id : null,
-        birth_date: form.birth_date && form.birth_date !== "" ? form.birth_date : null,
-        gender: form.gender || null,
-        phone: form.phone || null,
-        cep: form.cep || null,
-      };
 
-      const { error } = await ContactService.saveContact(sanitizedPayload, editingId);
-      
-      if (error) {
-        toast.error(`Erro: ${error.message}`);
-      } else {
-        toast.success(editingId ? "Contato atualizado com sucesso!" : "Novo contato registrado!");
-        setIsOpen(false);
-        setForm(defaultContact);
-        setEditingId(null);
-        setActiveFormTab("dados");
-        refresh();
+
+
+    const payload = {
+      name: trimmedName,
+      nickname: form.nickname || null,
+      gender: form.gender || null,
+      birth_date: form.birth_date || null,
+      phone: form.phone || null,
+      has_whatsapp: form.has_whatsapp,
+      cep: form.cep || null,
+      address: form.address || null,
+      address_number: form.address_number || null,
+      neighborhood: form.neighborhood || null,
+      city: form.city || null,
+      state: form.state || null,
+      voting_zone: form.voting_zone || null,
+      voting_section: form.voting_section || null,
+      voting_location: form.voting_location || null,
+      engagement: form.engagement as "nao_trabalhado" | "em_prospeccao" | "conquistado" | "criando_envolvimento" | "falta_trabalhar" | "envolvimento_perdido",
+      is_leader: form.is_leader,
+      leader_id: form.leader_id || null,
+      tenant_id: tenantId,
+      registered_by: user?.id,
+      latitude: geoCoords.latitude,
+      longitude: geoCoords.longitude,
+    };
+
+    if (editingId) {
+      const { error } = await supabase.from("contacts").update(payload).eq("id", editingId);
+      if (error) { toast.error(error.message); }
+      else {
+        toast.success("Contato atualizado!");
+        // If marked as leader, ensure leader record + registration link exist
+        if (form.is_leader) {
+          await ensureLeaderAndLink(editingId, tenantId);
+        }
       }
-    } catch (err: any) {
-      toast.error("Ocorreu um erro inesperado.");
-    } finally {
-      setLoading(false);
+    } else {
+      // Check contact limit before inserting
+      if (contactLimit !== Infinity && contacts.length >= contactLimit) {
+        toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido. Faça upgrade do seu plano.`);
+        setLoading(false);
+        return;
+      }
+      const { data: inserted, error } = await supabase.from("contacts").insert(payload).select("id").single();
+      if (error) { toast.error(error.message); }
+      else {
+        toast.success("Contato cadastrado!");
+        // If marked as leader, create leader record + registration link
+        if (form.is_leader && inserted) {
+          await ensureLeaderAndLink(inserted.id, tenantId);
+        }
+      }
     }
+
+    setLoading(false);
+    setIsOpen(false);
+    setForm(defaultContact);
+    setEditingId(null);
+    fetchContacts();
   };
 
   const handleEdit = (contact: any) => {
     setForm({
-      name: contact.name || "", 
-      nickname: contact.nickname || "",
-      gender: contact.gender || "", 
-      birth_date: contact.birth_date || "",
-      cpf: contact.cpf || "",
-      phone: contact.phone || "", 
-      has_whatsapp: contact.has_whatsapp || false,
-      cep: contact.cep || "", 
-      address: contact.address || "",
-      address_number: contact.address_number || "", 
-      neighborhood: contact.neighborhood || "",
-      city: contact.city || "Boa Vista", 
-      state: contact.state || "RR",
-      voting_zone: contact.voting_zone || "", 
-      voting_section: contact.voting_section || "",
+      name: contact.name || "", nickname: contact.nickname || "",
+      gender: contact.gender || "", birth_date: contact.birth_date || "",
+      phone: contact.phone || "", has_whatsapp: contact.has_whatsapp || false,
+      cep: contact.cep || "", address: contact.address || "",
+      address_number: contact.address_number || "", neighborhood: contact.neighborhood || "",
+      city: contact.city || "Boa Vista", state: contact.state || "RR",
+      voting_zone: contact.voting_zone || "", voting_section: contact.voting_section || "",
       voting_location: contact.voting_location || "",
       engagement: contact.engagement || "nao_trabalhado",
       is_leader: contact.is_leader || false,
@@ -150,184 +251,226 @@ export default function Contacts() {
     });
     setEditingId(contact.id);
     setIsOpen(true);
-    setActiveFormTab("dados");
   };
 
-  const updateField = useCallback((field: string, value: any) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("contacts").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Contato removido"); fetchContacts(); }
+  };
+
+  const updateField = (field: string, value: any) => setForm((prev) => ({ ...prev, [field]: value }));
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 p-3 rounded-2xl">
-            <Users className="h-8 w-8 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">Base Eleitoral</h1>
-            <p className="text-slate-500 font-medium">Gestão centralizada de apoiadores e contatos</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <div className="hidden sm:block">
-            <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
-          </div>
-          <Button 
-            onClick={() => { setForm(defaultContact); setEditingId(null); setIsOpen(true); }}
-            className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-6 rounded-xl shadow-lg shadow-primary/20"
-          >
-            <UserPlus className="h-5 w-5 mr-2" />
-            NOVO CADASTRO
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Cadastro &gt; Contato</h1>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => { setForm(defaultContact); setEditingId(null); setIsOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" /> NOVO CADASTRO
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+            <DialogHeader>
+              <DialogTitle>{editingId ? "Editar Contato" : "Novo Cadastro"}</DialogTitle>
+            </DialogHeader>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Card className="border-none shadow-sm bg-white overflow-hidden relative">
-          <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center">
-              <Users className="h-6 w-6 text-slate-400" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total na Base</p>
-              <p className="text-3xl font-black text-slate-900">{totalContacts.toLocaleString()}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
-          <div className="relative flex-1 w-full sm:max-w-md">
-            <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
-            <Input 
-              className="pl-11 h-11 bg-slate-50 border-none rounded-xl focus-visible:ring-primary focus-visible:bg-white transition-all font-medium" 
-              placeholder="Buscar por nome, apelido ou telefone..." 
-              value={search} 
-              onChange={(e) => setSearch(e.target.value)} 
-            />
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-             <Button variant="outline" className="h-11 rounded-xl font-bold text-slate-600 gap-2 flex-1 sm:flex-none">
-                <Filter className="h-4 w-4" /> Filtros
-             </Button>
-          </div>
-        </div>
-
-        <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
-          <CardContent className="p-0">
-            <Table ref={tableRef}>
-              <TableHeader className="bg-slate-50/50">
-                <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] tracking-widest h-12">Nome / Apelido</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] tracking-widest h-12">Contato</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] tracking-widest h-12">Bairro</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] tracking-widest h-12">Liderança</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] tracking-widest h-12">Status</TableHead>
-                  <TableHead className="w-24 text-right h-12"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {contactsLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-20">
-                      <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-slate-400 font-medium text-sm">Carregando base de contatos...</p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : contacts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-20">
-                      <div className="flex flex-col items-center gap-3">
-                        <Users className="h-12 w-12 text-slate-200" />
-                        <p className="text-slate-400 font-medium">Nenhum contato encontrado.</p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : contacts.map((c) => (
-                  <ContactRow 
-                    key={c.id} 
-                    contact={c} 
-                    onEdit={handleEdit} 
-                    onDelete={deleteContact} 
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Registration Dialog */}
-      <Dialog open={isOpen} onOpenChange={(open) => {
-        setIsOpen(open);
-        if (!open) {
-          setEditingId(null);
-          setForm(defaultContact);
-          setActiveFormTab("dados");
-        }
-      }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-white border-none shadow-2xl rounded-2xl">
-          <DialogHeader className="p-6 pb-2">
-            <DialogTitle className="text-xl font-bold text-slate-900">
-              {editingId ? "Editar Contato" : "Novo Cadastro"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <Tabs value={activeFormTab} onValueChange={setActiveFormTab} className="w-full">
-            <div className="px-6">
-              <TabsList className="grid grid-cols-3 w-full bg-slate-100 p-1 rounded-xl h-11">
-                <TabsTrigger value="dados" className="rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                  Dados gerais
-                </TabsTrigger>
-                <TabsTrigger value="endereco" className="rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                  Endereço
-                </TabsTrigger>
-                <TabsTrigger value="politico" className="rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                  Dados políticos
-                </TabsTrigger>
+            <Tabs defaultValue="dados" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="dados">Dados gerais</TabsTrigger>
+                <TabsTrigger value="endereco">Endereço</TabsTrigger>
               </TabsList>
-            </div>
 
-            <div className="px-6 py-4">
-              <TabsContent value="dados" className="mt-0">
-                <StepGeneralData form={form} updateField={updateField} leaders={leaders} />
-              </TabsContent>
-              <TabsContent value="endereco" className="mt-0">
-                <StepAddress form={form} updateField={updateField} geocoding={geocoding} handleCepBlur={handleCepBlur} />
-              </TabsContent>
-              <TabsContent value="politico" className="mt-0">
-                <StepPoliticalData form={form} updateField={updateField} />
-              </TabsContent>
-            </div>
-          </Tabs>
+              <TabsContent value="dados" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nome *</Label>
+                    <Input value={form.name} onChange={(e) => updateField("name", e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Apelido</Label>
+                    <Input value={form.nickname} onChange={(e) => updateField("nickname", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Liderança (Apelido)</Label>
+                    {isOperador ? (
+                      <Input value={profile?.full_name || "Liderança"} disabled />
+                    ) : (
+                      <Select value={form.leader_id} onValueChange={(v) => updateField("leader_id", v === "none" ? "" : v)}>
+                        <SelectTrigger><SelectValue placeholder="SELECIONE" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Nenhuma</SelectItem>
+                          {leaders.map((l) => (
+                            <SelectItem key={l.id} value={l.id}>{l.nickname || l.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                </div>
 
-          <DialogFooter className="flex flex-row justify-end gap-3 pt-4 mt-2">
-            <Button variant="outline" onClick={() => setIsOpen(false)} className="h-11 px-6 rounded-lg font-semibold">
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={loading}
-              className="h-11 px-8 font-bold bg-primary hover:bg-primary/90 text-white rounded-lg"
-            >
-              {loading ? (
-                <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Salvando...</>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>Sexo *</Label>
+                    <Select value={form.gender} onValueChange={(v) => updateField("gender", v)}>
+                      <SelectTrigger><SelectValue placeholder="SELECIONE" /></SelectTrigger>
+                      <SelectContent>
+                        {genderOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Zona</Label>
+                    <Input value={form.voting_zone} onChange={(e) => updateField("voting_zone", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Seção</Label>
+                    <Input value={form.voting_section} onChange={(e) => updateField("voting_section", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Local onde vota</Label>
+                    <Input value={form.voting_location} onChange={(e) => updateField("voting_location", e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Dt. nasc.</Label>
+                    <Input type="date" value={form.birth_date} onChange={(e) => updateField("birth_date", e.target.value)} />
+                  </div>
+                  <div className="flex items-center gap-2 pt-6">
+                    <Checkbox checked={form.is_leader} onCheckedChange={(c) => updateField("is_leader", c)} id="leader" />
+                    <Label htmlFor="leader">Liderança</Label>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Envolvimento</Label>
+                    <Select value={form.engagement} onValueChange={(v) => updateField("engagement", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {engagementOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Celular *</Label>
+                    <Input value={form.phone} onChange={(e) => updateField("phone", e.target.value)} />
+                  </div>
+                  <div className="flex items-center gap-2 pt-6">
+                    <Checkbox checked={form.has_whatsapp} onCheckedChange={(c) => updateField("has_whatsapp", c)} id="whats" />
+                    <Label htmlFor="whats">Whats?</Label>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="endereco" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>CEP {geocoding && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}</Label>
+                    <Input value={form.cep} onChange={(e) => updateField("cep", e.target.value)} onBlur={handleCepBlur} placeholder="00000-000" />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Logradouro</Label>
+                    <Input value={form.address} onChange={(e) => updateField("address", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Número</Label>
+                    <Input value={form.address_number} onChange={(e) => updateField("address_number", e.target.value)} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Bairro</Label>
+                    <Input value={form.neighborhood} onChange={(e) => updateField("neighborhood", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cidade</Label>
+                    <Input value={form.city} onChange={(e) => updateField("city", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>UF</Label>
+                    <Input value={form.state} onChange={(e) => updateField("state", e.target.value)} />
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSave} disabled={loading}>
+                {loading ? "Salvando..." : editingId ? "Atualizar" : "Cadastrar"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Search */}
+      <div className="flex gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input className="pl-10" placeholder="Pesquisar contato..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
+      </div>
+
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          <Table ref={tableRef}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Celular</TableHead>
+                <TableHead>Cidade</TableHead>
+                <TableHead>Envolvimento</TableHead>
+                <TableHead>Cadastrado em</TableHead>
+                <TableHead className="w-24">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contacts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Nenhum contato encontrado
+                  </TableCell>
+                </TableRow>
               ) : (
-                editingId ? "Atualizar" : "Cadastrar"
+                contacts.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell>{c.phone}</TableCell>
+                    <TableCell>{c.city}</TableCell>
+                    <TableCell>
+                      <span className="text-xs px-2 py-1 rounded bg-accent text-accent-foreground">
+                        {engagementOptions.find(e => e.value === c.engagement)?.label || c.engagement}
+                      </span>
+                    </TableCell>
+                    <TableCell>{new Date(c.created_at).toLocaleDateString("pt-BR")}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {!hasRole("operador") && (
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {(hasRole("super_admin") || hasRole("admin_gabinete")) && (
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -79,7 +79,7 @@ export default function TenantManagement() {
       
       // Get profiles linked to these tenants
       const { data: profiles } = await supabase
-        .from("profiles_safe")
+        .from("profiles")
         .select("tenant_id, user_id, full_name")
         .in("tenant_id", tenantIds);
 
@@ -226,7 +226,7 @@ export default function TenantManagement() {
 
     try {
       const { data: profiles } = await supabase
-        .from("profiles_safe")
+        .from("profiles")
         .select("user_id")
         .eq("tenant_id", deleteTarget.id);
 

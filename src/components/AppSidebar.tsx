@@ -1,8 +1,7 @@
-import React, { memo, useMemo } from "react";
 import {
   Home, Users, FileText, Calendar, Car, Package, MapPin, Settings,
   BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield,
-  Flag, Megaphone, Database, FolderDown, Building2, DollarSign, MessageCircle, Layers
+  Flag, Megaphone, Database, FolderDown, Building2
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -18,36 +17,33 @@ import { Button } from "@/components/ui/button";
 import logoRadar from "@/assets/logo-radar-eleitoral.png";
 
 const mainItems = [
-  { title: "Dashboard", url: "/dashboard", icon: Home, module: "dashboard" },
-  { title: "Gestão Eleitoral", group: true, items: [
-    { title: "Contatos", url: "/contacts", icon: Users, module: "contacts" },
-    { title: "Lideranças", url: "/leaders", icon: BarChart3, module: "leaders" },
-    { title: "Mapa Territorial", url: "/map", icon: MapPin, module: "map" },
-    { title: "Links de Captação", url: "/registration-links", icon: Link2, module: "registration_links" },
-  ]},
-  { title: "Operação Gabinete", group: true, items: [
-    { title: "Demandas", url: "/demands", icon: ClipboardList, module: "demands" },
-    { title: "Agenda Social", url: "/appointments", icon: Calendar, module: "appointments" },
-    { title: "Solicitações", url: "/visit-requests", icon: MessageSquare, module: "visit_requests" },
-  ]},
-  { title: "Comunicação", group: true, items: [
-    { title: "Marketing Digital", url: "/marketing", icon: Megaphone, module: "marketing" },
-    { title: "Central de Arquivos", url: "/campaign-files", icon: FolderDown, module: "campaign_files" },
-    { title: "WhatsApp Auto", url: "/whatsapp", icon: MessageCircle, module: "whatsapp" },
-    { title: "Chat Interno", url: "/chat", icon: MessageSquare, module: "chat" },
-  ]},
-  { title: "Logística e Finanças", group: true, items: [
-    { title: "Financeiro", url: "/financial", icon: DollarSign, module: "financial" },
-    { title: "Veículos", url: "/vehicles", icon: Car, module: "vehicles" },
-    { title: "Materiais", url: "/materials", icon: Package, module: "materials" },
-  ]},
+  { title: "Início", url: "/dashboard", icon: Home, module: "dashboard" },
+  { title: "Campanhas", url: "/campaigns", icon: Flag, module: "campaigns" },
+  { title: "Cadastro de Contato", url: "/contacts", icon: Users, module: "contacts" },
+  { title: "Demandas", url: "/demands", icon: ClipboardList, module: "demands" },
+  { title: "Agenda", url: "/appointments", icon: Calendar, module: "appointments" },
+  { title: "Lideranças", url: "/leaders", icon: BarChart3, module: "leaders" },
+  { title: "Marketing", url: "/marketing", icon: Megaphone, module: "marketing" },
+  { title: "Arquivos da Campanha", url: "/campaign-files", icon: FolderDown, module: "campaign_files" },
+  { title: "Mapa", url: "/map", icon: MapPin, module: "map" },
+  { title: "Chat Interno", url: "/chat", icon: MessageSquare, module: "chat" },
+];
+
+const coordinatorItems = [
+  { title: "Gestão de Usuários", url: "/admin/users", icon: Users, module: "user_management" },
+  { title: "Veículos", url: "/vehicles", icon: Car, module: "vehicles" },
+  { title: "Material de Campanha", url: "/materials", icon: Package, module: "materials" },
+  { title: "Solicitações de Visita", url: "/visit-requests", icon: MessageSquare, module: "visit_requests" },
+  { title: "Links de Cadastro", url: "/registration-links", icon: Link2, module: "registration_links" },
 ];
 
 const adminItems = [
-  { title: "Plataforma Master", url: "/admin", icon: Shield },
+  { title: "Painel da Plataforma", url: "/admin", icon: Shield },
   { title: "Gestão de Gabinetes", url: "/admin/tenants", icon: Building2 },
-  { title: "Planos e Cobrança", url: "/admin/plans", icon: Package },
-  { title: "Audit Log / Relatórios", url: "/reports", icon: BarChart3 },
+  { title: "Gestão de Planos", url: "/admin/plans", icon: Package },
+  { title: "Gestão de Usuários", url: "/admin/users", icon: Users },
+  { title: "Assinaturas", url: "/admin/subscriptions", icon: FileText },
+  { title: "Relatórios e Auditoria", url: "/reports", icon: BarChart3 },
 ];
 
 const configItems = [
@@ -55,131 +51,150 @@ const configItems = [
   { title: "Configurações", url: "/settings", icon: Settings },
 ];
 
-export const AppSidebar = memo(React.forwardRef<HTMLDivElement>(function AppSidebar(_props, ref) {
+import React from "react";
+
+export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_props, ref) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { profile, hasRole, hasPermission, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
-  
-  const isSuperAdmin = useMemo(() => hasRole("super_admin"), [hasRole]);
-  const isAdminGabinete = useMemo(() => hasRole("admin_gabinete"), [hasRole]);
-  const isCoordinator = useMemo(() => hasRole("coordenador") || isAdminGabinete || isSuperAdmin, [hasRole, isAdminGabinete, isSuperAdmin]);
+  const isSuperAdmin = hasRole("super_admin");
+  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin;
+  const isCoordinator = hasRole("coordenador") || isAdmin;
 
-  const renderMenuItem = (item: any) => (
-    <SidebarMenuItem key={item.title}>
-      <SidebarMenuButton asChild isActive={isActive(item.url)}>
-        <NavLink to={item.url} end className="hover:bg-sidebar-accent transition-colors" activeClassName="bg-sidebar-primary/20 text-sidebar-primary font-semibold">
-          <item.icon className="h-4 w-4" />
-          {!collapsed && <span>{item.title}</span>}
-        </NavLink>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
+  const visibleMainItems = mainItems.filter((item) => hasPermission(item.module));
+  const visibleCoordinatorItems = coordinatorItems.filter((item) => hasPermission(item.module));
 
   return (
-    <Sidebar ref={ref} collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
+    <Sidebar ref={ref} collapsible="icon">
       <SidebarContent>
-        {/* Logo Section */}
-        <div className="p-6 mb-2">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary p-2 rounded-lg shrink-0 shadow-lg shadow-primary/20">
-              <img src={logoRadar} alt="Radar Eleitoral" className="h-6 w-6 invert brightness-0" />
-            </div>
-            {!collapsed && (
-              <div className="flex flex-col">
-                <span className="font-black text-lg text-sidebar-foreground leading-tight tracking-tighter">RADAR</span>
-                <span className="text-[10px] font-bold text-primary tracking-[0.2em] -mt-1">ELEITORAL</span>
-              </div>
-            )}
-          </div>
+        {/* Logo */}
+        <div className="p-4 flex items-center gap-2">
+          <img src={logoRadar} alt="Radar Eleitoral" className="h-8 w-8 shrink-0 rounded" />
+          {!collapsed && <span className="font-bold text-lg text-foreground">RADAR ELEITORAL</span>}
         </div>
 
-        {/* User Profile Summary */}
+        {/* User Info */}
         {!collapsed && (
-          <div className="px-6 mb-6">
-            <div className="bg-sidebar-accent/50 p-3 rounded-xl border border-sidebar-border/50 flex items-center gap-3">
-              <Avatar className="h-9 w-9 border-2 border-primary/20">
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
-                  {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-sidebar-foreground truncate uppercase tracking-wider">{profile?.full_name || "Usuário"}</p>
-                <p className="text-[10px] text-sidebar-foreground/60 truncate font-medium">
-                  {isSuperAdmin ? "SUPER ADMIN" : isAdminGabinete ? "ADMINISTRADOR" : "OPERADOR"}
-                </p>
-              </div>
+          <div className="px-4 pb-4 flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{profile?.full_name || "Usuário"}</p>
+              <p className="text-xs text-muted-foreground truncate">Online</p>
             </div>
           </div>
         )}
 
-        {/* Main Menu Groups */}
-        <div className="px-3 space-y-4">
-          {mainItems.map((group) => (
-            <SidebarGroup key={group.title} className="p-0">
-              {group.group ? (
-                <>
-                  {!collapsed && <SidebarGroupLabel className="px-3 text-[10px] font-bold text-sidebar-foreground/40 uppercase tracking-[0.15em] mb-1">{group.title}</SidebarGroupLabel>}
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {group.items
-                        .filter((item: any) => hasPermission(item.module))
-                        .map((item: any) => renderMenuItem(item))}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </>
-              ) : (
-                hasPermission(group.module) && (
-                  <SidebarGroupContent>
-                    <SidebarMenu>{renderMenuItem(group)}</SidebarMenu>
-                  </SidebarGroupContent>
-                )
-              )}
-            </SidebarGroup>
-          ))}
+        {/* Main Menu */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Principal</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {visibleMainItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-          {/* Admin Section */}
-          {isSuperAdmin && (
-            <SidebarGroup className="p-0 mt-6 pt-6 border-t border-sidebar-border">
-              {!collapsed && <SidebarGroupLabel className="px-3 text-[10px] font-bold text-primary uppercase tracking-[0.15em] mb-1">Painel Master</SidebarGroupLabel>}
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminItems.map((item) => renderMenuItem(item))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          )}
+        {/* Coordinator Menu */}
+        {isCoordinator && visibleCoordinatorItems.length > 0 && (
+          <SidebarGroup>
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger className="w-full">
+                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer">
+                  Coordenador
+                  <ChevronDown className="h-4 w-4" />
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {visibleCoordinatorItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                          <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                            <item.icon className="h-4 w-4" />
+                            {!collapsed && <span>{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
+        )}
 
-          {/* Configuration Group */}
-          {(isSuperAdmin || isAdminGabinete) && (
-            <SidebarGroup className="p-0 pt-6">
-              {!collapsed && <SidebarGroupLabel className="px-3 text-[10px] font-bold text-sidebar-foreground/40 uppercase tracking-[0.15em] mb-1">Sistema</SidebarGroupLabel>}
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {configItems.map((item) => renderMenuItem(item))}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive("/admin/users")}>
-                      <NavLink to="/admin/users" end className="hover:bg-sidebar-accent transition-colors" activeClassName="bg-sidebar-primary/20 text-sidebar-primary font-semibold">
-                        <Users className="h-4 w-4" />
-                        {!collapsed && <span>Gestão de Usuários</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          )}
-        </div>
+        {/* Admin Menu - Super Admin only */}
+        {isSuperAdmin && (
+          <SidebarGroup>
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger className="w-full">
+                <SidebarGroupLabel className="flex items-center justify-between cursor-pointer">
+                  Administração
+                  <ChevronDown className="h-4 w-4" />
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {adminItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                          <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                            <item.icon className="h-4 w-4" />
+                            {!collapsed && <span>{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
+        )}
+
+        {/* Config */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {configItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-sidebar-border">
-        <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10 px-3" onClick={signOut}>
+      <SidebarFooter>
+        <Button variant="ghost" className="w-full justify-start gap-2" onClick={signOut}>
           <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="font-semibold text-xs uppercase tracking-wider">Sair do Sistema</span>}
+          {!collapsed && "Sair"}
         </Button>
       </SidebarFooter>
     </Sidebar>
   );
-}));
+});

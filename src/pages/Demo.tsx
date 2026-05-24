@@ -231,14 +231,20 @@ export default function Demo() {
     try {
       const { data, error } = await supabase.functions.invoke("setup-demo");
       if (error) throw error;
-      if (!data?.actionLink) throw new Error("Link de acesso não retornado");
-
-      toast.success("Entrando no modo teste...");
-      // Redirect to the magic link; Supabase auth callback will create the session
-      // and then redirect to /dashboard.
-      window.location.href = data.actionLink;
+      
+      // Login with demo credentials
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+      
+      if (loginError) throw loginError;
+      
+      toast.success("Bem-vindo ao modo teste! Explore o sistema livremente.");
+      navigate("/dashboard");
     } catch (err: any) {
       toast.error("Erro ao configurar demo: " + (err.message || "Tente novamente"));
+    } finally {
       setSettingUpDemo(false);
     }
   };

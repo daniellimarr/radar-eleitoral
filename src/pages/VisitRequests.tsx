@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Plus, Clock, MapPin, Search, Loader2 } from "lucide-react";
+import { Plus, Clock, MapPin, Search } from "lucide-react";
 import { format, isSameDay, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -302,34 +302,15 @@ export default function VisitRequests() {
                   </div>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label>Total de cadeiras necessárias</Label>
-                <Input type="number" min="0" value={form.chairs_needed} onChange={(e) => setForm(p => ({ ...p, chairs_needed: e.target.value }))} />
-              </div>
+              <div className="space-y-2"><Label>Total de cadeiras necessárias</Label><Input type="number" value={form.chairs_needed} onChange={(e) => setForm(p => ({ ...p, chairs_needed: e.target.value }))} /></div>
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Necessidades</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-2">
-                    <Checkbox id="mat-pol" checked={form.needs_political_material} onCheckedChange={(c) => setForm(p => ({ ...p, needs_political_material: !!c }))} />
-                    <Label htmlFor="mat-pol" className="text-sm cursor-pointer">Material político</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox id="banners" checked={form.needs_banners} onCheckedChange={(c) => setForm(p => ({ ...p, needs_banners: !!c }))} />
-                    <Label htmlFor="banners" className="text-sm cursor-pointer">Banners</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox id="som" checked={form.needs_sound} onCheckedChange={(c) => setForm(p => ({ ...p, needs_sound: !!c }))} />
-                    <Label htmlFor="som" className="text-sm cursor-pointer">Som</Label>
-                  </div>
-                </div>
+                <div className="flex items-center gap-2"><Checkbox checked={form.needs_political_material} onCheckedChange={(c) => setForm(p => ({ ...p, needs_political_material: !!c }))} /><span className="text-sm">Material político</span></div>
+                <div className="flex items-center gap-2"><Checkbox checked={form.needs_banners} onCheckedChange={(c) => setForm(p => ({ ...p, needs_banners: !!c }))} /><span className="text-sm">Banners</span></div>
+                <div className="flex items-center gap-2"><Checkbox checked={form.needs_sound} onCheckedChange={(c) => setForm(p => ({ ...p, needs_sound: !!c }))} /><span className="text-sm">Som</span></div>
               </div>
-              <div className="space-y-2">
-                <Label>Observações sobre material</Label>
-                <Textarea value={form.material_observations} onChange={(e) => setForm(p => ({ ...p, material_observations: e.target.value }))} placeholder="Ex: Tamanho do banner, tipo de som..." />
-              </div>
-              <Button onClick={handleSave} disabled={loading} className="w-full h-11 text-base font-semibold">
-                {loading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Enviando...</> : "Enviar Solicitação"}
-              </Button>
+              <div className="space-y-2"><Label>Observações sobre material</Label><Textarea value={form.material_observations} onChange={(e) => setForm(p => ({ ...p, material_observations: e.target.value }))} /></div>
+              <Button onClick={handleSave} disabled={loading} className="w-full">{loading ? "Enviando..." : "Enviar Solicitação"}</Button>
             </div>
           </DialogContent>
         </Dialog>

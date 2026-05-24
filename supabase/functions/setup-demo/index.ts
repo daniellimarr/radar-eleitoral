@@ -6,15 +6,8 @@ const corsHeaders = {
 };
 
 const DEMO_EMAIL = "demo@radareleitoral.com.br";
+const DEMO_PASSWORD = "demo123456";
 const DEMO_TENANT_NAME = "Gabinete Demonstração";
-
-// Generate a strong random password for the demo user. It is never returned
-// to the client — auth happens via a short-lived magic link.
-function generateRandomPassword(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -28,32 +21,22 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Determine the URL to which the magic link should redirect after auth.
-    const origin = req.headers.get("origin") ?? req.headers.get("referer") ?? "";
-    const redirectTo = origin ? `${origin.replace(/\/$/, "")}/dashboard` : undefined;
-
     // Check if demo user already exists
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
     const demoUser = existingUsers?.users?.find((u) => u.email === DEMO_EMAIL);
 
     if (demoUser) {
-      // Demo user exists - just return a fresh magic link
-      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email: DEMO_EMAIL,
-        options: redirectTo ? { redirectTo } : undefined,
-      });
-      if (linkError) throw linkError;
+      // Demo user exists - just return credentials
       return new Response(
-        JSON.stringify({ actionLink: linkData.properties?.action_link, message: "Demo já configurado" }),
+        JSON.stringify({ email: DEMO_EMAIL, password: DEMO_PASSWORD, message: "Demo já configurado" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Create demo user with an ephemeral random password (never returned).
+    // Create demo user
     const { data: newUser, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email: DEMO_EMAIL,
-      password: generateRandomPassword(),
+      password: DEMO_PASSWORD,
       email_confirm: true,
       user_metadata: { full_name: "Usuário Demo" },
     });
@@ -106,6 +89,7 @@ Deno.serve(async (req) => {
 
     const { data: insertedContacts } = await supabaseAdmin.from("contacts").insert(contacts).select("id, name, is_leader");
 
+    // Create leaders from leader contacts
     if (insertedContacts) {
       const leaderContacts = insertedContacts.filter((c) => c.is_leader);
       for (const lc of leaderContacts) {
@@ -118,6 +102,7 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Insert demo demands
     const contactIds = insertedContacts?.map((c) => c.id) || [];
     await supabaseAdmin.from("demands").insert([
       { title: "Conserto de bueiro na Rua Principal", description: "Bueiro entupido causando alagamento", status: "aberta", priority: "alta", tenant_id: tenantId, contact_id: contactIds[0] },
@@ -127,6 +112,7 @@ Deno.serve(async (req) => {
       { title: "Poda de árvores no Jardim América", description: "Galhos interferindo na fiação", status: "em_andamento", priority: "normal", tenant_id: tenantId, contact_id: contactIds[4] },
     ]);
 
+    // Insert demo appointments
     const now = new Date();
     await supabaseAdmin.from("appointments").insert([
       { title: "Reunião com líderes do Centro", start_time: new Date(now.getTime() + 86400000).toISOString(), status: "confirmado", tenant_id: tenantId, created_by: userId, location: "Sede da Campanha" },
@@ -134,6 +120,7 @@ Deno.serve(async (req) => {
       { title: "Encontro com moradores Boa Vista", start_time: new Date(now.getTime() + 86400000 * 3).toISOString(), status: "confirmado", tenant_id: tenantId, created_by: userId, location: "Praça Central" },
     ]);
 
+    // Insert demo campaign
     await supabaseAdmin.from("campaigns").insert({
       nome_campanha: "Campanha Demo 2026",
       cargo: "vereador",
@@ -147,6 +134,7 @@ Deno.serve(async (req) => {
       tenant_id: tenantId,
     });
 
+    // Insert demo donations & expenses
     await supabaseAdmin.from("donations").insert([
       { nome_doador: "Maria Silva", valor: 500, forma_pagamento: "PIX", tipo: "PF", tenant_id: tenantId },
       { nome_doador: "Empresa ABC Ltda", valor: 5000, forma_pagamento: "Transferência", tipo: "PJ", tenant_id: tenantId },
@@ -159,38 +147,32 @@ Deno.serve(async (req) => {
       { descricao: "Aluguel sede campanha", valor: 2500, categoria: "Infraestrutura", tenant_id: tenantId },
     ]);
 
+    // Insert demo vehicles
     await supabaseAdmin.from("vehicles").insert([
       { plate: "ABC-1D23", brand: "Fiat", model: "Strada", year: 2023, color: "Branca", status: "disponivel", driver_name: "Carlos Souza", tenant_id: tenantId },
       { plate: "DEF-4G56", brand: "Honda", model: "CG 160", year: 2024, color: "Preta", status: "em_uso", driver_name: "João Pereira", tenant_id: tenantId },
     ]);
 
+    // Insert demo materials
     await supabaseAdmin.from("campaign_materials").insert([
       { name: "Santinhos 10x15", type: "Impresso", quantity: 50000, quantity_distributed: 32000, storage_location: "Galpão Central", tenant_id: tenantId },
       { name: "Adesivos para carro", type: "Adesivo", quantity: 5000, quantity_distributed: 3200, storage_location: "Sede", tenant_id: tenantId },
       { name: "Bandeiras 2m", type: "Bandeira", quantity: 200, quantity_distributed: 145, storage_location: "Galpão Central", tenant_id: tenantId },
     ]);
 
+    // Insert demo visit requests
     await supabaseAdmin.from("visit_requests").insert([
       { title: "Visita ao Bairro São José", description: "Reunião com moradores", requested_by: userId, tenant_id: tenantId, status: "pendente", needs_sound: true, chairs_needed: 50 },
       { title: "Evento na Praça Central", description: "Evento comunitário", requested_by: userId, tenant_id: tenantId, status: "aprovada", needs_sound: true, chairs_needed: 100 },
     ]);
 
-    // Generate a magic link so the client can authenticate without ever
-    // receiving a plaintext password.
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink",
-      email: DEMO_EMAIL,
-      options: redirectTo ? { redirectTo } : undefined,
-    });
-    if (linkError) throw linkError;
-
     return new Response(
-      JSON.stringify({ actionLink: linkData.properties?.action_link, message: "Demo configurado com sucesso!" }),
+      JSON.stringify({ email: DEMO_EMAIL, password: DEMO_PASSWORD, message: "Demo configurado com sucesso!" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

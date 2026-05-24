@@ -1,7 +1,7 @@
-import { useEffect, useState, useMemo, memo, Suspense, lazy } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, MessageSquare, Gift, Megaphone, Calendar as CalendarIcon, Target, TrendingUp, DollarSign, MapPin, Crown, ArrowUpRight, Loader2 } from "lucide-react";
+import { Users, MessageSquare, Gift, Megaphone, Calendar as CalendarIcon, Target, TrendingUp, DollarSign, MapPin, Crown, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -13,12 +13,8 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
-
-// Otimização: Lazy load de dashboards secundários
-const OperatorDashboard = lazy(() => import("@/components/OperatorDashboard"));
-const SuperAdminDashboard = lazy(() => import("@/pages/SuperAdminDashboard"));
-
+import OperatorDashboard from "@/components/OperatorDashboard";
+import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 const engagementLabels: Record<string, string> = {
   nao_trabalhado: "Não trabalhado",
   em_prospeccao: "Em prospecção",
@@ -70,7 +66,6 @@ export default function Dashboard() {
   const [financialSummary, setFinancialSummary] = useState({ donations: 0, expenses: 0 });
   const [neighborhoodData, setNeighborhoodData] = useState<any[]>([]);
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
-
   useEffect(() => {
     if (!tenantId || isOperador) return;
 
@@ -79,7 +74,6 @@ export default function Dashboard() {
       const todayStart = format(now, "yyyy-MM-dd") + "T00:00:00";
       const todayEnd = format(now, "yyyy-MM-dd") + "T23:59:59";
 
-      // Otimização: Promise.all para chamadas paralelas
       const [contactRes, appointmentsRes, birthdayRes, engagementRes, allContactsRes, campaignRes, donationsRes, expensesRes] = await Promise.all([
         supabase.from("contacts_decrypted").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).is("deleted_at", null),
         supabase.from("appointments").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
@@ -143,28 +137,20 @@ export default function Dashboard() {
   }, [tenantId, isOperador]);
 
   // Wait for auth/roles to load before deciding which dashboard to show
-  if (loading) {
+  if (loading || (roles.length === 0 && !tenantId)) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Carregando...</p>
       </div>
     );
   }
 
   if (isSuperAdmin) {
-    return (
-      <Suspense fallback={<div className="flex h-64 items-center justify-center text-muted-foreground">Carregando Painel Super Admin...</div>}>
-        <SuperAdminDashboard />
-      </Suspense>
-    );
+    return <SuperAdminDashboard />;
   }
 
   if (isOperador) {
-    return (
-      <Suspense fallback={<div className="flex h-64 items-center justify-center text-muted-foreground">Carregando Painel Operador...</div>}>
-        <OperatorDashboard />
-      </Suspense>
-    );
+    return <OperatorDashboard />;
   }
 
   const totalEngagement = Object.values(engagementData).reduce((a, b) => a + b, 0) || 1;
@@ -179,117 +165,150 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Painel Geral</h1>
-          <p className="text-muted-foreground mt-1">Acompanhe o desempenho da sua campanha em tempo real.</p>
-        </div>
-        <div className="flex items-center gap-3 bg-card border px-4 py-2.5 rounded-xl shadow-sm">
-          <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-            {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
-          </div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Início</h1>
+        <div className="flex items-center gap-2 text-sm bg-foreground text-background px-4 py-2 rounded-lg font-medium">
+          <CalendarIcon className="h-4 w-4" />
+          {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
         </div>
       </div>
 
+      {/* Plan Banner */}
+      {!isAdminRole && planName && (
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Crown className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">
+                    Plano <span className="text-primary">{planName}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {contactLimit === Infinity
+                      ? "Contatos ilimitados"
+                      : `${stats.contacts.toLocaleString()} / ${contactLimit.toLocaleString()} contatos`}
+                    {" · "}
+                    {userLimit === Infinity
+                      ? "Usuários ilimitados"
+                      : `${userLimit} usuários`}
+                    {subscriptionEnd && (() => {
+                      const d = new Date(subscriptionEnd);
+                      const day = String(d.getDate()).padStart(2, '0');
+                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                      const year = d.getFullYear();
+                      return ` · Expira em ${day}/${month}/${year}`;
+                    })()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                {contactLimit !== Infinity && (
+                  <div className="flex-1 sm:w-40">
+                    <Progress
+                      value={Math.min((stats.contacts / contactLimit) * 100, 100)}
+                      className="h-2"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1 text-right">
+                      {Math.min((stats.contacts / contactLimit) * 100, 100).toFixed(0)}% usado
+                    </p>
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground shrink-0"
+                  onClick={() => navigate("/assinatura")}
+                >
+                  <ArrowUpRight className="h-4 w-4 mr-1" />
+                  Upgrade
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((card, index) => (
-          <Card key={card.label} className="border-none shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-0">
-              <div className="p-6 flex items-center gap-4">
-                <div className={`h-14 w-14 rounded-2xl ${card.bgColor} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300`}>
+      <Card>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {statCards.map((card) => (
+              <div key={card.label} className="flex items-center gap-4">
+                <div className={`h-14 w-14 rounded-full ${card.bgColor} flex items-center justify-center shrink-0`}>
                   <card.icon className={`h-7 w-7 ${card.iconColor}`} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{card.label}</p>
-                  <p className="text-3xl font-bold tracking-tight mt-1">{card.value.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">{card.label}</p>
+                  <p className="text-3xl font-bold">{card.value.toLocaleString()}</p>
                 </div>
               </div>
-              <div className={`h-1 w-full ${card.bgColor.replace('100', '500')} opacity-20`} />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Charts Row: Visão Geral + Termômetro */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-none shadow-md">
-          <CardHeader className="pb-2">
+        <Card>
+          <CardHeader>
             <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold">Crescimento da Base</CardTitle>
-                <p className="text-sm text-muted-foreground">Cadastros realizados por mês</p>
-              </div>
+              <CardTitle>Visão geral</CardTitle>
               <div className="flex gap-2">
                 <Select value={yearFilter} onValueChange={setYearFilter}>
-                  <SelectTrigger className="w-24 h-9 bg-muted/50 border-none"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-20 h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {[2024, 2025, 2026, 2027].map(y => (
                       <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                <Select defaultValue="cadastros">
+                  <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cadastros">Cadastros</SelectItem>
+                    <SelectItem value="atendimentos">Atendimentos</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="h-[300px] pt-4">
+          <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="name" 
-                  fontSize={12} 
-                  tickLine={false} 
-                  axisLine={false} 
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <YAxis 
-                  fontSize={12} 
-                  tickLine={false} 
-                  axisLine={false}
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <Tooltip 
-                  cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                />
-                <Bar dataKey="cadastros" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} barSize={32} />
+              <BarChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip />
+                <Bar dataKey="cadastros" fill="hsl(220, 70%, 85%)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-md">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-bold">Termômetro de Envolvimento</CardTitle>
-            <p className="text-sm text-muted-foreground">Nível de engajamento da sua base</p>
-          </CardHeader>
-          <CardContent className="space-y-5 pt-4">
-            <div className="grid grid-cols-[1fr_auto] gap-x-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest border-b pb-3">
-              <span>Status de Engajamento</span>
-              <span>Total</span>
+        <Card>
+          <CardHeader><CardTitle>Termômetro de envolvimento</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid grid-cols-[1fr_auto] gap-x-4 text-sm font-medium text-muted-foreground border-b pb-2">
+              <span>Status</span>
+              <span>Progresso</span>
             </div>
             {Object.entries(engagementLabels).map(([key, label]) => {
               const count = engagementData[key] || 0;
               const pct = Math.max((count / totalEngagement) * 100, 2);
               return (
-                <div key={key} className="group">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-foreground/80">{label}</span>
-                    <Badge variant="outline" className={`font-mono font-bold transition-colors ${engagementBadgeColors[key]}`}>
-                      {count.toLocaleString()}
-                    </Badge>
+                <div key={key} className="flex items-center gap-4">
+                  <span className="text-sm font-medium w-44 shrink-0">{label}</span>
+                  <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
+                    <div className={`h-full rounded-full ${engagementBarColors[key]}`} style={{ width: `${pct}%` }} />
                   </div>
-                  <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-1000 ${engagementBarColors[key]}`} 
-                      style={{ width: `${pct}%` }} 
-                    />
-                  </div>
+                  <span className={`text-xs font-bold border rounded-full px-3 py-0.5 ${engagementBadgeColors[key]}`}>
+                    {count.toLocaleString()}
+                  </span>
                 </div>
               );
             })}

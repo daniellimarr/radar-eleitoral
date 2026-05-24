@@ -1,5 +1,3 @@
-import { createClient } from 'npm:@supabase/supabase-js@2'
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -25,33 +23,9 @@ function isValidCpfAlgorithm(cpf: string): boolean {
   return true;
 }
 
-export const handler = async (req: Request) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
-  }
-
-  // Require authenticated caller and verify JWT to prevent anonymous CPF/PII enumeration
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return new Response(JSON.stringify({ valid: false, message: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-  const token = authHeader.replace('Bearer ', '');
-  const callerClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-    auth: { persistSession: false },
-  });
-  const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
-  if (claimsError || !claimsData?.claims?.sub) {
-    return new Response(JSON.stringify({ valid: false, message: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
   }
 
   try {
@@ -72,10 +46,10 @@ export const handler = async (req: Request) => {
       });
 
       if (response.ok) {
-        await response.text();
-        // Do NOT return holder name (PII from government source)
+        const data = await response.json();
         return new Response(JSON.stringify({
           valid: true,
+          name: data.nome || null,
           message: 'CPF válido na Receita Federal.',
           source: 'receita_federal',
         }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -109,8 +83,4 @@ export const handler = async (req: Request) => {
       message: 'Erro ao validar CPF. Tente novamente.',
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-};
-
-if (import.meta.main) {
-  Deno.serve(handler);
-}
+});

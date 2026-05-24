@@ -107,7 +107,7 @@ export default function Chat() {
       // Leaders can chat with admins/coordinators
       // Admins/coordinators can chat with leaders (operadores)
       const { data: profiles } = await supabase
-        .from("profiles_safe")
+        .from("profiles")
         .select("user_id, full_name")
         .eq("tenant_id", tenantId)
         .eq("status", "approved")
@@ -228,7 +228,7 @@ export default function Chat() {
 
       const otherUserIds = [...new Set(allParticipants.map(p => p.user_id))];
       const { data: profiles } = await supabase
-        .from("profiles_safe")
+        .from("profiles")
         .select("user_id, full_name")
         .in("user_id", otherUserIds);
 
