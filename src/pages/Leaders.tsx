@@ -1,15 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Users } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
-
-import { useToast } from "@/hooks/use-toast";
+import { useLeaders } from "@/hooks/useLeaders";
+import { contactService } from "@/services/contactService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,48 +20,13 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function Leaders() {
-  const { tenantId } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [leaders, setLeaders] = useState<any[]>([]);
+  const { leaders, voterCounts, deleteLeader } = useLeaders();
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [expandedLeader, setExpandedLeader] = useState<string | null>(null);
   const [voters, setVoters] = useState<Record<string, any[]>>({});
   const [loadingVoters, setLoadingVoters] = useState<string | null>(null);
-  const [voterCounts, setVoterCounts] = useState<Record<string, number>>({});
   const tableRef = useRef<HTMLTableElement>(null);
-
-  const fetchLeaders = async () => {
-    if (!tenantId) return;
-    const { data } = await supabase
-      .from("contacts_decrypted")
-      .select("*")
-      .eq("tenant_id", tenantId)
-      .eq("is_leader", true)
-      .is("deleted_at", null)
-      .order("name");
-    setLeaders(data || []);
-
-    // Fetch voter counts per leader
-    if (data && data.length > 0) {
-      const leaderIds = data.map((l: any) => l.id);
-      const { data: allVoters } = await supabase
-        .from("contacts_decrypted")
-        .select("leader_id")
-        .in("leader_id", leaderIds)
-        .is("deleted_at", null);
-      
-      const counts: Record<string, number> = {};
-      (allVoters || []).forEach((v: any) => {
-        counts[v.leader_id] = (counts[v.leader_id] || 0) + 1;
-      });
-      setVoterCounts(counts);
-    }
-  };
-
-  useEffect(() => {
-    fetchLeaders();
-  }, [tenantId]);
 
   const toggleExpand = async (leaderId: string) => {
     if (expandedLeader === leaderId) {
@@ -73,38 +36,21 @@ export default function Leaders() {
     setExpandedLeader(leaderId);
     if (!voters[leaderId]) {
       setLoadingVoters(leaderId);
-      const { data } = await supabase
-        .from("contacts_decrypted")
-        .select("id, name, phone, city, engagement")
-        .eq("leader_id", leaderId)
-        .is("deleted_at", null)
-        .order("name");
-      setVoters((prev) => ({ ...prev, [leaderId]: data || [] }));
-      setLoadingVoters(null);
+      try {
+        const data = await contactService.fetchVotersByLeader(leaderId);
+        setVoters((prev) => ({ ...prev, [leaderId]: data }));
+      } catch (error) {
+        console.error("Error fetching voters:", error);
+      } finally {
+        setLoadingVoters(null);
+      }
     }
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    try {
-      const { error: contactError } = await supabase
-        .from("contacts")
-        .update({ deleted_at: new Date().toISOString(), is_leader: false })
-        .eq("id", deleteTarget.id);
-      if (contactError) throw contactError;
-
-      const { error: leaderError } = await supabase
-        .from("leaders")
-        .delete()
-        .eq("contact_id", deleteTarget.id);
-      if (leaderError) throw leaderError;
-
-      toast({ title: "Liderança excluída com sucesso" });
-      setDeleteTarget(null);
-      fetchLeaders();
-    } catch (err: any) {
-      toast({ title: "Erro ao excluir", description: err.message, variant: "destructive" });
-    }
+    const success = await deleteLeader(deleteTarget.id);
+    if (success) setDeleteTarget(null);
   };
 
   return (
@@ -119,7 +65,7 @@ export default function Leaders() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <Trophy className="h-8 w-8 text-warning" />
+            <Trophy className="h-8 w-8 text-yellow-500" />
             <div>
               <p className="text-sm text-muted-foreground">Total Lideranças</p>
               <p className="text-2xl font-bold">{leaders.length}</p>
@@ -176,7 +122,7 @@ export default function Leaders() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{l.engagement}</Badge>
+                      <Badge variant="secondary">{l.engagement?.replace("_", " ")}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
@@ -236,7 +182,7 @@ export default function Leaders() {
                                     <TableCell>{v.phone}</TableCell>
                                     <TableCell>{v.city}</TableCell>
                                     <TableCell>
-                                      <Badge variant="outline">{v.engagement}</Badge>
+                                      <Badge variant="outline">{v.engagement?.replace("_", " ")}</Badge>
                                     </TableCell>
                                   </TableRow>
                                 ))}
