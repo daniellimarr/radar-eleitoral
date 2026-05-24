@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -17,6 +17,8 @@ import { Plus, Search, Trash2, Edit, Loader2 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { geocodeByCep } from "@/lib/geocoding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+type LeaderSummary = { id: string; name: string; nickname: string };
 
 const engagementOptions = [
   { value: "nao_trabalhado", label: "Não trabalhado" },
@@ -47,8 +49,9 @@ export default function Contacts() {
   const { contactLimit } = useSubscription();
   const location = useLocation();
   const [contacts, setContacts] = useState<any[]>([]);
-  const [leaders, setLeaders] = useState<any[]>([]);
+  const [leaders, setLeaders] = useState<LeaderSummary[]>([]);
   const [registrationLinks, setRegistrationLinks] = useState<Record<string, string>>({});
+  const [operatorLeaderIds, setOperatorLeaderIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [engagementFilter, setEngagementFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -103,7 +106,7 @@ export default function Contacts() {
         .select("id, contact_id, contacts:contact_id(id, name, nickname)")
         .eq("tenant_id", tenantId);
 
-      const allLeaders = (leadersData || []).map((l: any) => ({
+      const allLeaders: LeaderSummary[] = (leadersData || []).map((l: any) => ({
         id: l.contact_id,
         name: l.contacts?.name || "",
         nickname: l.contacts?.nickname || "",
@@ -114,6 +117,7 @@ export default function Contacts() {
                (l.nickname && l.nickname.toLowerCase() === profile.full_name.toLowerCase())
       );
       setLeaders(matched);
+      setOperatorLeaderIds(matched.map((l: any) => l.id));
       if (matched.length >= 1) {
         setForm((prev) => ({ ...prev, leader_id: matched[0].id }));
       }
@@ -125,13 +129,14 @@ export default function Contacts() {
         .eq("is_leader", true)
         .is("deleted_at", null)
         .order("name");
-      setLeaders(data || []);
+      setLeaders((data || []) as LeaderSummary[]);
+      setOperatorLeaderIds([]);
     }
   };
 
   useEffect(() => { fetchLeaders(); }, [tenantId, profile?.full_name]);
 
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     if (!tenantId) return;
     let query = supabase
       .from("contacts_decrypted")
@@ -149,6 +154,14 @@ export default function Contacts() {
       query = query.eq("engagement", engagementFilter as any);
     }
 
+    if (isOperador && operatorLeaderIds.length > 0 && user?.id) {
+      query = query.or([
+        `registered_by.eq.${user?.id}`,
+        ...operatorLeaderIds.map((leaderId) => `leader_id.eq.${leaderId}`),
+        ...operatorLeaderIds.map((leaderId) => `id.eq.${leaderId}`),
+      ].join(","));
+    }
+
     if (typeFilter === "leaders") {
       query = query.eq("is_leader", true);
     } else if (typeFilter === "contacts") {
@@ -157,7 +170,7 @@ export default function Contacts() {
 
     const { data } = await query;
     setContacts(data || []);
-  };
+  }, [tenantId, search, engagementFilter, typeFilter, isOperador, operatorLeaderIds, user?.id]);
 
   const fetchRegistrationLinks = async () => {
     if (!tenantId) return;
@@ -173,7 +186,17 @@ export default function Contacts() {
     setRegistrationLinks(map);
   };
 
-  useEffect(() => { fetchContacts(); }, [tenantId, search, engagementFilter, typeFilter]);
+  useEffect(() => { fetchContacts(); }, [fetchContacts]);
+
+  useEffect(() => {
+    const refreshContacts = () => {
+      fetchContacts();
+      fetchRegistrationLinks();
+    };
+
+    window.addEventListener("contact-added", refreshContacts);
+    return () => window.removeEventListener("contact-added", refreshContacts);
+  }, [fetchContacts, tenantId]);
   useEffect(() => { fetchRegistrationLinks(); }, [tenantId]);
 
 
