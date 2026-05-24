@@ -45,18 +45,37 @@ export default function Campaigns() {
   useEffect(() => { fetch(); }, [tenantId]);
 
   const handleSave = async () => {
-    if (!tenantId || !form.nome_campanha.trim()) { toast.error("Nome da campanha é obrigatório"); return; }
+    if (!form.nome_campanha.trim()) {
+      toast.error("Nome da campanha é obrigatório");
+      return;
+    }
+    if (!tenantId) {
+      toast.error("Gabinete não identificado. Recarregue a página e tente novamente.");
+      return;
+    }
     setLoading(true);
-    const payload = { ...form, meta_votos: Number(form.meta_votos), limite_gastos: Number(form.limite_gastos), tenant_id: tenantId };
+    const payload = {
+      nome_campanha: form.nome_campanha.trim(),
+      cargo: form.cargo,
+      cidade: form.cidade?.trim() || null,
+      estado: form.estado?.trim() || null,
+      partido: form.partido?.trim() || null,
+      numero: form.numero?.toString().trim() || null,
+      meta_votos: Number(form.meta_votos) || 0,
+      limite_gastos: Number(form.limite_gastos) || 0,
+      status: form.status as any,
+      tenant_id: tenantId,
+    };
     if (editingId) {
       const { error } = await supabase.from("campaigns").update(payload).eq("id", editingId);
-      if (error) toast.error(error.message); else toast.success("Campanha atualizada!");
+      if (error) toast.error(error.message); else { toast.success("Campanha atualizada!"); setIsOpen(false); setForm(defaultForm); setEditingId(null); fetch(); }
     } else {
       const { error } = await supabase.from("campaigns").insert(payload);
-      if (error) toast.error(error.message); else toast.success("Campanha criada!");
+      if (error) toast.error(error.message); else { toast.success("Campanha criada!"); setIsOpen(false); setForm(defaultForm); setEditingId(null); fetch(); }
     }
-    setLoading(false); setIsOpen(false); setForm(defaultForm); setEditingId(null); fetch();
+    setLoading(false);
   };
+
 
   const handleEdit = (item: any) => {
     setForm({ nome_campanha: item.nome_campanha, cargo: item.cargo, cidade: item.cidade || "Boa Vista", estado: item.estado || "RR", partido: item.partido || "", numero: item.numero || "", meta_votos: item.meta_votos || 0, limite_gastos: item.limite_gastos || 0, status: item.status });
