@@ -18,7 +18,7 @@ const defaultContact = {
   address_number: "", neighborhood: "", city: "Boa Vista", state: "RR",
   voting_zone: "", voting_section: "", voting_location: "",
   engagement: "nao_trabalhado" as EngagementLevel, is_leader: false,
-  leader_id: "",
+  leader_id: null,
 };
 
 export default function Contacts() {
