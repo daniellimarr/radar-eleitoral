@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { MAIN_TENANT } from "@/lib/constants";
 
 const engagementWeight: Record<string, number> = {
   conquistado: 0.9,
@@ -11,7 +12,9 @@ const engagementWeight: Record<string, number> = {
   envolvimento_perdido: 0.05,
 };
 
-export function useDashboardStats(effectiveTenantId: string, isOperador: boolean) {
+export function useDashboardStats(tenantId: string | null, isOperador: boolean) {
+  const effectiveTenantId = tenantId || MAIN_TENANT;
+
   return useQuery({
     queryKey: ["dashboard-stats", effectiveTenantId],
     queryFn: async () => {

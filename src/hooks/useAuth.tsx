@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { MAIN_TENANT } from "@/lib/constants";
 
 interface AuthContextType {
   user: User | null;
@@ -33,15 +34,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileStatus, setProfileStatus] = useState<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
-    const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
     const { data: profileData } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
       .single();
     
-    // Default to MAIN_TENANT if no tenant is associated with the profile
-    const currentTenantId = profileData?.tenant_id || MAIN_TENANT;
+    // Default to MAIN_TENANT if no tenant is associated with the profile or if it's an empty string
+    const currentTenantId = profileData?.tenant_id && profileData.tenant_id !== "" 
+      ? profileData.tenant_id 
+      : MAIN_TENANT;
 
     if (profileData) {
       setProfile(profileData);

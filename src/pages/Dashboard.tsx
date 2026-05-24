@@ -52,22 +52,15 @@ export default function Dashboard() {
   const isAdminRole = isSuperAdmin || hasRole("admin_gabinete");
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
 
-  const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
-  const effectiveTenantId = tenantId || MAIN_TENANT;
-
-  const { data: dashboardData, isLoading: statsLoading } = useDashboardStats(effectiveTenantId, isOperador);
+  const { data: dashboardData, isLoading: statsLoading } = useDashboardStats(tenantId, isOperador);
 
   // Wait for auth/roles to load before deciding which dashboard to show
-  if (authLoading || (roles.length === 0 && !effectiveTenantId)) {
+  if (authLoading || (roles.length === 0 && !tenantId)) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Carregando...</p>
       </div>
     );
-  }
-
-  if (isSuperAdmin) {
-    return <SuperAdminDashboard />;
   }
 
   if (isOperador) {

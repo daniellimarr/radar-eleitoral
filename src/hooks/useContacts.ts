@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { MAIN_TENANT } from "@/lib/constants";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { contactService } from "@/services/contactService";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,16 +15,15 @@ export function useContacts() {
 
   const isOperador = hasRole("operador");
 
-  const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
   const effectiveTenantId = tenantId || MAIN_TENANT;
 
-  const { data: contacts = [], isLoading: contactsLoading } = useQuery({
+  const { data: contacts = [], isLoading: contactsLoading, refetch: refetchContacts } = useQuery({
     queryKey: ["contacts", effectiveTenantId, search],
     queryFn: () => contactService.fetchContacts(effectiveTenantId, search),
     enabled: !!effectiveTenantId,
   });
 
-  const { data: leaders = [], isLoading: leadersLoading } = useQuery({
+  const { data: leaders = [], isLoading: leadersLoading, refetch: refetchLeaders } = useQuery({
     queryKey: ["leaders", effectiveTenantId, isOperador, profile?.full_name],
     queryFn: () => contactService.fetchLeaders(effectiveTenantId, isOperador, profile?.full_name),
     enabled: !!effectiveTenantId,
