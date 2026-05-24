@@ -9,25 +9,38 @@ export function useDemands() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
+  const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
+  const effectiveTenantId = tenantId || MAIN_TENANT;
+
   const fetchDemands = useCallback(async () => {
-    if (!tenantId) return;
     try {
-      const data = await demandService.fetchDemands(tenantId, search);
+      const data = await demandService.fetchDemands(effectiveTenantId, search);
       setDemands(data);
     } catch (error: any) {
       toast.error(error.message);
     }
-  }, [tenantId, search]);
+  }, [effectiveTenantId, search]);
 
   useEffect(() => {
     fetchDemands();
   }, [fetchDemands]);
 
   const saveDemand = async (form: any) => {
-    if (!tenantId || !user) return;
+    if (!user) {
+      toast.error("Faça login para cadastrar demandas.");
+      return;
+    }
     setLoading(true);
     try {
-      const payload = { ...form, tenant_id: tenantId, responsible_id: user.id };
+      const payload = { 
+        ...form, 
+        tenant_id: effectiveTenantId, 
+        responsible_id: user.id,
+        contact_id: form.contact_id || null
+      };
+      // Remove leader_id from payload as it's not in the table
+      delete (payload as any).leader_id;
+      
       await demandService.saveDemand(payload);
       toast.success("Demanda cadastrada!");
       fetchDemands();
