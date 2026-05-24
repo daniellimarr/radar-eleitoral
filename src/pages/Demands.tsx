@@ -15,6 +15,8 @@ import { Plus, Search, Loader2 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { DemandTable } from "@/components/demands/DemandTable";
 import { DocsDialog } from "@/components/demands/DocsDialog";
+import { DemandStatus } from "@/types/demands";
+
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "application/pdf"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
