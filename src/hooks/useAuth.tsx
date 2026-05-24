@@ -39,10 +39,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("user_id", userId)
       .single();
     
+    // Sistema de gabinete único - sempre usa o tenant principal
+    const MAIN_TENANT_ID = "a0000000-0000-0000-0000-000000000001";
     if (profileData) {
       setProfile(profileData);
-      setTenantId(profileData.tenant_id);
+      setTenantId(profileData.tenant_id || MAIN_TENANT_ID);
       setProfileStatus((profileData as any).status || 'pending');
+    } else {
+      setTenantId(MAIN_TENANT_ID);
     }
 
     const { data: rolesData } = await supabase
