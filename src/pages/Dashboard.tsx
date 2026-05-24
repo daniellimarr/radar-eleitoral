@@ -118,11 +118,12 @@ export default function Dashboard() {
     setFinancialSummary({ donations: totalDonations, expenses: totalExpenses });
 
     setStats({
-      contacts: contactRes.count || 0,
+      contacts: contactRes.count ?? (engagementRes.data?.length || 0),
       appointmentsToday: appointmentsRes.count || 0,
       birthdays: birthdayCount,
-      citizenParticipates: 0,
+      citizenParticipates: contacts.filter((c: any) => c.engagement === "conquistado").length,
     });
+
 
     // Monthly chart
     const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
