@@ -4,7 +4,12 @@ import { format } from "date-fns";
 import { MAIN_TENANT } from "@/lib/constants";
 
 const engagementWeight: Record<string, number> = {
-  // ... (keep existing weight mapping)
+  conquistado: 0.9,
+  criando_envolvimento: 0.6,
+  em_prospeccao: 0.3,
+  nao_trabalhado: 0.1,
+  falta_trabalhar: 0.15,
+  envolvimento_perdido: 0.05,
 };
 
 export function useDashboardStats(tenantId: string | null, isOperador: boolean) {
