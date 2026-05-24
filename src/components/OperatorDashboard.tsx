@@ -8,14 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 export default function OperatorDashboard() {
-  const { tenantId, profile } = useAuth();
+  const { tenantId, profile, loading } = useAuth();
+  const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
+  const effectiveTenantId = tenantId || MAIN_TENANT;
+
   const navigate = useNavigate();
   const [todayAppointments, setTodayAppointments] = useState(0);
   const [pendingDemands, setPendingDemands] = useState(0);
   const [recentContacts, setRecentContacts] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!tenantId) return;
+    if (loading) return;
 
     const fetchData = async () => {
       const now = new Date();
@@ -24,11 +27,11 @@ export default function OperatorDashboard() {
 
       const [apptRes, demandRes, contactsRes] = await Promise.all([
         supabase.from("appointments").select("*", { count: "exact", head: true })
-          .eq("tenant_id", tenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
+          .eq("tenant_id", effectiveTenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
         supabase.from("demands").select("*", { count: "exact", head: true })
-          .eq("tenant_id", tenantId).in("status", ["aberta", "em_andamento"]),
+          .eq("tenant_id", effectiveTenantId).in("status", ["aberta", "em_andamento"]),
         supabase.from("contacts_decrypted").select("id, name, birth_date, created_at")
-          .eq("tenant_id", tenantId).is("deleted_at", null)
+          .eq("tenant_id", effectiveTenantId).is("deleted_at", null)
           .order("created_at", { ascending: false }).limit(10),
       ]);
 
@@ -38,7 +41,7 @@ export default function OperatorDashboard() {
     };
 
     fetchData();
-  }, [tenantId]);
+  }, [effectiveTenantId, loading]);
 
   const quickActions = [
     { label: "Novo Contato", icon: UserPlus, path: "/contacts", color: "bg-emerald-100 text-emerald-600" },
