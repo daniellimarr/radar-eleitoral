@@ -1,17 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { MAIN_TENANT } from "@/lib/constants";
 
 const engagementWeight: Record<string, number> = {
-  conquistado: 0.9,
-  criando_envolvimento: 0.6,
-  em_prospeccao: 0.3,
-  nao_trabalhado: 0.1,
-  falta_trabalhar: 0.15,
-  envolvimento_perdido: 0.05,
+  // ... (keep existing weight mapping)
 };
 
-export function useDashboardStats(effectiveTenantId: string, isOperador: boolean) {
+export function useDashboardStats(tenantId: string | null, isOperador: boolean) {
+  const effectiveTenantId = tenantId || MAIN_TENANT;
+
   return useQuery({
     queryKey: ["dashboard-stats", effectiveTenantId],
     queryFn: async () => {

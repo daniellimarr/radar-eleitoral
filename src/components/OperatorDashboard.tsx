@@ -5,10 +5,10 @@ import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useOperatorStats } from "@/hooks/useOperatorStats";
+import { MAIN_TENANT } from "@/lib/constants";
 
 export default function OperatorDashboard() {
   const { tenantId, profile, loading: authLoading } = useAuth();
-  const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
   const effectiveTenantId = tenantId || MAIN_TENANT;
 
   const navigate = useNavigate();
