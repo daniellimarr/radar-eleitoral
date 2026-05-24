@@ -1,0 +1,1 @@
+DELETE FROM public.campaigns WHERE nome_campanha = 'TEST_BUG';
