@@ -16,7 +16,6 @@ const genderOptions = [
   { value: "outro", label: "Outro" },
 ];
 
-
 export const StepGeneralData = memo(({ form, updateField, leaders }: ContactFormProps) => {
   return (
     <div className="space-y-4 py-2 animate-in fade-in slide-in-from-right-4 duration-300">

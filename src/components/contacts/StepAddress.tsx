@@ -10,9 +10,6 @@ interface StepAddressProps {
   handleCepBlur: () => void;
 }
 
-const inputCls = "h-11 bg-white border-slate-200";
-const labelCls = "text-xs font-semibold text-slate-700";
-
 export const StepAddress = memo(({ form, updateField, geocoding, handleCepBlur }: StepAddressProps) => {
   return (
     <div className="space-y-4 py-2 animate-in fade-in slide-in-from-right-4 duration-300">
