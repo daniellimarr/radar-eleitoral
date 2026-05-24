@@ -29,7 +29,7 @@ export default function UserManagement() {
   const activeUsers = useMemo(() => users.filter((u) => u.status === "approved"), [users]);
   const suspendedUsers = useMemo(() => users.filter((u) => u.status === "suspended"), [users]);
   
-  const hasReachedUserLimit = userLimit !== Infinity && activeUsers.length >= userLimit;
+  const hasReachedUserLimit = false;
 
   const availableRoles = useMemo(() => {
     const roles = [
@@ -57,11 +57,7 @@ export default function UserManagement() {
           <h1 className="text-2xl font-bold">Gestão de Usuários</h1>
           <p className="text-muted-foreground">
             Cadastre usuários e defina suas permissões de acesso
-            {userLimit !== Infinity && (
-              <span className={`ml-2 font-medium ${hasReachedUserLimit ? "text-destructive" : "text-primary"}`}>
-                ({activeUsers.length}/{userLimit} usuários)
-              </span>
-            )}
+
           </p>
         </div>
 

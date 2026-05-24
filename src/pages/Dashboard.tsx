@@ -14,7 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import OperatorDashboard from "@/components/OperatorDashboard";
-import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
+
 const engagementLabels: Record<string, string> = {
   nao_trabalhado: "Não trabalhado",
   em_prospeccao: "Em prospecção",
@@ -145,9 +145,6 @@ export default function Dashboard() {
     );
   }
 
-  if (isSuperAdmin) {
-    return <SuperAdminDashboard />;
-  }
 
   if (isOperador) {
     return <OperatorDashboard />;

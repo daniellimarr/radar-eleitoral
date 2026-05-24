@@ -27,8 +27,6 @@ import Backup from "@/pages/Backup";
 import CampaignFiles from "@/pages/CampaignFiles";
 import Reports from "@/pages/Reports";
 import Chat from "@/pages/Chat";
-import TenantManagement from "@/pages/TenantManagement";
-import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 
 
 import Demo from "@/pages/Demo";
@@ -58,7 +56,7 @@ function App() {
             
             
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
+
             <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
             <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
             <Route path="/demands" element={<ProtectedRoute><Demands /></ProtectedRoute>} />
@@ -73,7 +71,7 @@ function App() {
             <Route path="/registration-links" element={<ProtectedRoute><RegistrationLinks /></ProtectedRoute>} />
             <Route path="/map" element={<ProtectedRoute><Georeferencing /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
-            <Route path="/admin/tenants" element={<ProtectedRoute><TenantManagement /></ProtectedRoute>} />
+
 
             <Route path="/backup" element={<ProtectedRoute><Backup /></ProtectedRoute>} />
             <Route path="/campaign-files" element={<ProtectedRoute><CampaignFiles /></ProtectedRoute>} />
