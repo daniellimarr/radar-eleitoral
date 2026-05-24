@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useContacts } from "@/hooks/useContacts";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,8 @@ export default function Contacts() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [geocoding, setGeocoding] = useState(false);
   const [geoCoords, setGeoCoords] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
+  
+  const tableRef = useRef<HTMLTableElement>(null);
 
   const handleCepBlur = async () => {
     if (!form.cep || form.cep.replace(/\D/g, "").length !== 8) return;
@@ -136,12 +138,13 @@ export default function Contacts() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <ExportButtons tableRef={{ current: null }} data={contacts} filename="contatos" />
+              <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <ContactTable 
+            tableRef={tableRef}
             contacts={contacts}
             onEdit={handleEdit}
             onDelete={deleteContact}

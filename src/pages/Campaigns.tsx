@@ -19,7 +19,7 @@ const defaultForm = {
 };
 
 export default function Campaigns() {
-  const { tenantId, user } = useAuth();
+  const { tenantId } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState(defaultForm);
@@ -41,12 +41,10 @@ export default function Campaigns() {
   const handleSave = async () => {
     if (!form.nome_campanha.trim()) { toast.error("Nome da campanha é obrigatório"); return; }
     
-    const tid = tenantId;
-    if (!tid) { 
+    if (!tenantId) { 
       toast.error("Gabinete não identificado. Recarregue a página."); 
       return; 
     }
-
     
     setLoading(true);
     try {
@@ -54,7 +52,7 @@ export default function Campaigns() {
         ...form, 
         meta_votos: Number(form.meta_votos) || 0, 
         limite_gastos: Number(form.limite_gastos) || 0, 
-        tenant_id: tid 
+        tenant_id: tenantId 
       };
       await campaignService.saveCampaign(payload, editingId);
       toast.success(editingId ? "Campanha atualizada!" : "Campanha criada!");

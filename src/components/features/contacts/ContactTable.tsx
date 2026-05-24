@@ -2,16 +2,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { Contact } from "@/types";
+import { RefObject } from "react";
 
 interface ContactTableProps {
   contacts: Contact[];
   onEdit: (contact: Contact) => void;
   onDelete: (id: string) => void;
+  tableRef?: RefObject<HTMLTableElement | null>;
 }
 
-export function ContactTable({ contacts, onEdit, onDelete }: ContactTableProps) {
+export function ContactTable({ contacts, onEdit, onDelete, tableRef }: ContactTableProps) {
   return (
-    <Table>
+    <Table ref={tableRef}>
       <TableHeader>
         <TableRow>
           <TableHead>Nome/Apelido</TableHead>
