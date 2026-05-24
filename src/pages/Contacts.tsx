@@ -498,9 +498,11 @@ export default function Contacts() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
+                <TableHead>Tipo</TableHead>
                 <TableHead>Celular</TableHead>
                 <TableHead>Cidade</TableHead>
                 <TableHead>Envolvimento</TableHead>
+                <TableHead>Link de cadastro</TableHead>
                 <TableHead>Cadastrado em</TableHead>
                 <TableHead className="w-24">Ações</TableHead>
               </TableRow>
@@ -508,20 +510,41 @@ export default function Contacts() {
             <TableBody>
               {contacts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     Nenhum contato encontrado
                   </TableCell>
                 </TableRow>
               ) : (
-                contacts.map((c) => (
+                contacts.map((c) => {
+                  const slug = c.is_leader ? registrationLinks[c.id] : null;
+                  const linkUrl = slug ? `${window.location.origin}/cadastro/${slug}` : null;
+                  return (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell>
+                      <span className={`text-xs px-2 py-1 rounded ${c.is_leader ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                        {c.is_leader ? 'Liderança' : 'Contato'}
+                      </span>
+                    </TableCell>
                     <TableCell>{c.phone}</TableCell>
                     <TableCell>{c.city}</TableCell>
                     <TableCell>
                       <span className="text-xs px-2 py-1 rounded bg-accent text-accent-foreground">
                         {engagementOptions.find(e => e.value === c.engagement)?.label || c.engagement}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      {linkUrl ? (
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(linkUrl); toast.success("Link copiado!"); }}
+                          className="text-xs text-primary hover:underline truncate max-w-[200px] block text-left"
+                          title={linkUrl}
+                        >
+                          /cadastro/{slug}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>{new Date(c.created_at).toLocaleDateString("pt-BR")}</TableCell>
                     <TableCell>
@@ -539,10 +562,12 @@ export default function Contacts() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )}
             </TableBody>
           </Table>
+
         </CardContent>
       </Card>
     </div>
