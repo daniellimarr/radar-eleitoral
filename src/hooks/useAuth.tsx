@@ -33,31 +33,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileStatus, setProfileStatus] = useState<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
+    const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
     const { data: profileData } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
       .single();
     
-    let currentTenantId = profileData?.tenant_id || null;
-
-    // If user has no tenant, check if there's only one active tenant in the system
-    if (!currentTenantId) {
-      const { data: tenants } = await supabase
-        .from("tenants")
-        .select("id")
-        .eq("status", "ativo")
-        .is("deleted_at", null);
-      
-      if (tenants && tenants.length === 1) {
-        currentTenantId = tenants[0].id;
-      }
-    }
+    // Default to MAIN_TENANT if no tenant is associated with the profile
+    const currentTenantId = profileData?.tenant_id || MAIN_TENANT;
 
     if (profileData) {
       setProfile(profileData);
       setTenantId(currentTenantId);
       setProfileStatus((profileData as any).status || 'pending');
+    } else {
+      setTenantId(currentTenantId);
     }
 
     const { data: rolesData } = await supabase
@@ -69,17 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const fetchedRoles = rolesData.map((r: any) => r.role);
       setRoles(fetchedRoles);
       
-      // If user is super_admin and still has no tenantId, try to pick the first active one
+      // If user is super_admin and still has no tenantId, use the main one
       if (fetchedRoles.includes("super_admin") && !currentTenantId) {
-        const { data: activeTenants } = await supabase
-          .from("tenants")
-          .select("id")
-          .eq("status", "ativo")
-          .is("deleted_at", null)
-          .limit(1);
-        if (activeTenants && activeTenants.length > 0) {
-          setTenantId(activeTenants[0].id);
-        }
+        setTenantId(MAIN_TENANT);
       }
     }
 
