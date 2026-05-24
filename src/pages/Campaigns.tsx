@@ -45,15 +45,18 @@ export default function Campaigns() {
   useEffect(() => { fetch(); }, [tenantId]);
 
   const handleSave = async () => {
-    if (!tenantId || !form.nome_campanha.trim()) { toast.error("Nome da campanha é obrigatório"); return; }
+    if (!form.nome_campanha.trim()) { toast.error("Nome da campanha é obrigatório"); return; }
+    if (!tenantId) { toast.error("Não foi possível identificar seu gabinete. Faça logout e entre novamente."); return; }
     setLoading(true);
-    const payload = { ...form, meta_votos: Number(form.meta_votos), limite_gastos: Number(form.limite_gastos), tenant_id: tenantId };
+    const payload = { ...form, meta_votos: Number(form.meta_votos) || 0, limite_gastos: Number(form.limite_gastos) || 0, tenant_id: tenantId };
     if (editingId) {
       const { error } = await supabase.from("campaigns").update(payload).eq("id", editingId);
-      if (error) toast.error(error.message); else toast.success("Campanha atualizada!");
+      if (error) { toast.error(error.message); setLoading(false); return; }
+      toast.success("Campanha atualizada!");
     } else {
       const { error } = await supabase.from("campaigns").insert(payload);
-      if (error) toast.error(error.message); else toast.success("Campanha criada!");
+      if (error) { toast.error(error.message); setLoading(false); return; }
+      toast.success("Campanha criada!");
     }
     setLoading(false); setIsOpen(false); setForm(defaultForm); setEditingId(null); fetch();
   };
