@@ -37,6 +37,7 @@ export function useDemands() {
       toast.success("Demanda cadastrada!");
       queryClient.invalidateQueries({ queryKey: ["demands"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["operator-stats"] });
     },
     onError: (error: any) => {
       toast.error(error.message);
