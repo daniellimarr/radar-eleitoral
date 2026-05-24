@@ -130,22 +130,13 @@ export default function PublicRegistration() {
   useEffect(() => {
     const load = async () => {
       if (!slug) return;
-      const { data: link } = await supabase
-        .from("registration_links")
-        .select("tenant_id, leader_contact_id")
-        .eq("slug", slug)
-        .eq("is_active", true)
-        .maybeSingle();
-
-      if (link) {
-        setTenantId(link.tenant_id);
-        setLeaderContactId(link.leader_contact_id);
-        const { data: tenant } = await supabase.from("tenants").select("name").eq("id", link.tenant_id).maybeSingle();
-        if (tenant) setTenantName(tenant.name);
-        if (link.leader_contact_id && slug) {
-          const { data: leaderData } = await supabase.rpc("get_leader_name_for_link", { p_slug: slug });
-          if (leaderData && leaderData.length > 0) setLeaderName(leaderData[0].leader_name || "");
-        }
+      const { data: info } = await supabase.rpc("get_registration_link_info", { p_slug: slug });
+      if (info && info.length > 0) {
+        const row = info[0] as { tenant_id: string; tenant_name: string | null; leader_contact_id: string | null; leader_name: string | null };
+        setTenantId(row.tenant_id);
+        setLeaderContactId(row.leader_contact_id);
+        if (row.tenant_name) setTenantName(row.tenant_name);
+        if (row.leader_name) setLeaderName(row.leader_name);
       }
       setLoading(false);
     };
