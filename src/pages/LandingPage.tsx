@@ -267,11 +267,11 @@ export default function LandingPage() {
               <div className="bg-gradient-to-br from-[#FF6B00] to-[#e55f00] rounded-3xl p-8 lg:p-10 text-white shadow-xl">
                 <div className="space-y-5">
                   {[
-                    { icon: Users, title: "Controle Total da Base Eleitoral", desc: "Segurança e organização para cada eleitor" },
-                    { icon: Crown, title: "Geolocalização de Lideranças", desc: "Saiba exatamente quem lidera em cada rua" },
-                    { icon: ClipboardList, title: "Monitoramento de Demandas", desc: "Gestão eficiente do protocolo ao resultado" },
-                    { icon: Rocket, title: "Estratégia de Mobilização Digital", desc: "Comunicação assertiva com sua base" },
-                    { icon: BarChart3, title: "Métricas de Performance Política", desc: "Sua campanha guiada por resultados" },
+                    { icon: Users, title: "Gerencie toda a sua base eleitoral", desc: "Todos os contatos em uma plataforma segura" },
+                    { icon: Crown, title: "Cadastre apoiadores e lideranças", desc: "Organização hierárquica por região" },
+                    { icon: ClipboardList, title: "Acompanhe solicitações dos cidadãos", desc: "Nunca mais perca uma demanda" },
+                    { icon: Rocket, title: "Organize estratégias de campanha", desc: "Planeje e execute com precisão" },
+                    { icon: BarChart3, title: "Analise o crescimento da sua base", desc: "Decisões políticas baseadas em dados" },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                       <item.icon className="h-6 w-6 flex-shrink-0" />
