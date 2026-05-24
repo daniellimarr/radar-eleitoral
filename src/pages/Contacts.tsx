@@ -18,6 +18,8 @@ import ExportButtons from "@/components/ExportButtons";
 import { geocodeByCep } from "@/lib/geocoding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+type LeaderSummary = { id: string; name: string; nickname: string };
+
 const engagementOptions = [
   { value: "nao_trabalhado", label: "Não trabalhado" },
   { value: "em_prospeccao", label: "Em prospecção" },
@@ -47,7 +49,7 @@ export default function Contacts() {
   const { contactLimit } = useSubscription();
   const location = useLocation();
   const [contacts, setContacts] = useState<any[]>([]);
-  const [leaders, setLeaders] = useState<any[]>([]);
+  const [leaders, setLeaders] = useState<LeaderSummary[]>([]);
   const [registrationLinks, setRegistrationLinks] = useState<Record<string, string>>({});
   const [operatorLeaderIds, setOperatorLeaderIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
@@ -104,7 +106,7 @@ export default function Contacts() {
         .select("id, contact_id, contacts:contact_id(id, name, nickname)")
         .eq("tenant_id", tenantId);
 
-      const allLeaders = (leadersData || []).map((l: any) => ({
+      const allLeaders: LeaderSummary[] = (leadersData || []).map((l: any) => ({
         id: l.contact_id,
         name: l.contacts?.name || "",
         nickname: l.contacts?.nickname || "",
@@ -127,7 +129,7 @@ export default function Contacts() {
         .eq("is_leader", true)
         .is("deleted_at", null)
         .order("name");
-      setLeaders(data || []);
+      setLeaders((data || []) as LeaderSummary[]);
       setOperatorLeaderIds([]);
     }
   };
@@ -152,7 +154,7 @@ export default function Contacts() {
       query = query.eq("engagement", engagementFilter as any);
     }
 
-    if (isOperador && operatorLeaderIds.length > 0) {
+    if (isOperador && operatorLeaderIds.length > 0 && user?.id) {
       query = query.or([
         `registered_by.eq.${user?.id}`,
         ...operatorLeaderIds.map((leaderId) => `leader_id.eq.${leaderId}`),
