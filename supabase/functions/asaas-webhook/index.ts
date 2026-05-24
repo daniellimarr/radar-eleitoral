@@ -12,8 +12,15 @@ serve(async (req) => {
   }
 
   const asaasApiKey = Deno.env.get("ASAAS_API_KEY");
+  if (!asaasApiKey) {
+    console.error("[ASAAS-WEBHOOK] ASAAS_API_KEY not configured");
+    return new Response(JSON.stringify({ error: "Server misconfiguration" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
   const accessToken = req.headers.get("asaas-access-token");
-  if (asaasApiKey && accessToken !== asaasApiKey) {
+  if (accessToken !== asaasApiKey) {
     console.error("[ASAAS-WEBHOOK] Invalid or missing access token");
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
