@@ -40,7 +40,7 @@ interface TenantAdmin {
 }
 
 export default function TenantManagement() {
-  const { hasRole } = useAuth();
+  const { hasRole, user } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [tenantAdmins, setTenantAdmins] = useState<TenantAdmin[]>([]);
