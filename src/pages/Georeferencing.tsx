@@ -257,9 +257,9 @@ export default function Georeferencing() {
         <div className="p-6 border-b space-y-1">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
             <MapIcon className="h-5 w-5 text-primary" />
-            Mapeamento Estratégico
+            Mapa Territorial
           </h2>
-          <p className="text-sm text-muted-foreground">Visualize sua força política e identifique áreas de oportunidade.</p>
+          <p className="text-sm text-muted-foreground">Localize apoiadores por região.</p>
         </div>
 
         <ScrollArea className="flex-1 px-6 py-4">
@@ -349,7 +349,7 @@ export default function Georeferencing() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="w-3 h-3 rounded-full bg-[#ec4899] ring-4 ring-pink-500/20" />
-                    <span className="text-sm font-medium">Apoiadores Mapeados</span>
+                    <span className="text-sm font-medium">Eleitores/Apoiadores</span>
                   </div>
                   <Badge variant="secondary" className="font-mono text-[10px]">{geoVoters.length}</Badge>
                 </div>
@@ -371,7 +371,7 @@ export default function Georeferencing() {
                 {geocoding ? (
                   <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Processando...</>
                 ) : (
-                  <><RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Sincronizar Território</>
+                  <><RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Geolocalizar Todos</>
                 )}
               </Button>
             </div>
