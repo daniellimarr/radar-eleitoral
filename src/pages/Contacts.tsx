@@ -168,7 +168,12 @@ export default function Contacts() {
   const handleSave = async () => {
     const trimmedName = form.name?.trim();
     if (!trimmedName) { toast.error("Nome é obrigatório"); return; }
-    if (!tenantId) { toast.error("Gabinete não identificado. Recarregue a página."); return; }
+    let tid = tenantId;
+    if (!tid && user?.id) {
+      const { data: prof } = await supabase.from("profiles").select("tenant_id").eq("user_id", user.id).maybeSingle();
+      tid = prof?.tenant_id || null;
+    }
+    if (!tid) { toast.error("Gabinete não identificado. Recarregue a página."); return; }
     setLoading(true);
 
 
