@@ -116,5 +116,48 @@ export const contactService = {
         await supabase.from("registration_links").update({ leader_contact_id: contactId, coordinator_id: userId }).eq("id", slugExists.id);
       }
     }
+  },
+
+  async fetchVoterCounts(tenantId: string, leaderIds: string[]) {
+    const { data, error } = await supabase
+      .from("contacts_decrypted")
+      .select("leader_id")
+      .in("leader_id", leaderIds)
+      .is("deleted_at", null);
+    
+    if (error) throw error;
+    
+    const counts: Record<string, number> = {};
+    (data || []).forEach((v: any) => {
+      counts[v.leader_id] = (counts[v.leader_id] || 0) + 1;
+    });
+    return counts;
+  },
+
+  async fetchVotersByLeader(leaderId: string) {
+    const { data, error } = await supabase
+      .from("contacts_decrypted")
+      .select("id, name, phone, city, engagement")
+      .eq("leader_id", leaderId)
+      .is("deleted_at", null)
+      .order("name");
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async markAsNotLeader(id: string) {
+    const { error: contactError } = await supabase
+      .from("contacts")
+      .update({ deleted_at: new Date().toISOString(), is_leader: false })
+      .eq("id", id);
+    if (contactError) throw contactError;
+
+    const { error: leaderError } = await supabase
+      .from("leaders")
+      .delete()
+      .eq("contact_id", id);
+    if (leaderError) throw leaderError;
   }
 };
+
