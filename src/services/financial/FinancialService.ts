@@ -1,8 +1,9 @@
-import { supabase } from "@/integrations/supabase/client";
+import { BaseService } from "../BaseService";
+import { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
-export class FinancialService {
+export class FinancialService extends BaseService {
   static async fetchDonations(tenantId: string) {
-    return supabase
+    return this.getClient()
       .from("donations")
       .select("*")
       .eq("tenant_id", tenantId)
@@ -10,7 +11,7 @@ export class FinancialService {
   }
 
   static async fetchExpenses(tenantId: string) {
-    return supabase
+    return this.getClient()
       .from("expenses")
       .select("*, suppliers(nome)")
       .eq("tenant_id", tenantId)
@@ -18,46 +19,49 @@ export class FinancialService {
   }
 
   static async fetchSuppliers(tenantId: string) {
-    return supabase
+    return this.getClient()
       .from("suppliers")
       .select("*")
       .eq("tenant_id", tenantId)
       .order("nome");
   }
 
-  static async saveDonation(payload: any, editingId?: string | null) {
+  static async saveDonation(payload: TablesInsert<"donations"> | TablesUpdate<"donations">, editingId?: string | null) {
+    const client = this.getClient();
     if (editingId) {
-      return supabase.from("donations").update(payload).eq("id", editingId);
+      return client.from("donations").update(payload as TablesUpdate<"donations">).eq("id", editingId);
     } else {
-      return supabase.from("donations").insert(payload);
+      return client.from("donations").insert(payload as TablesInsert<"donations">);
     }
   }
 
-  static async saveExpense(payload: any, editingId?: string | null) {
+  static async saveExpense(payload: TablesInsert<"expenses"> | TablesUpdate<"expenses">, editingId?: string | null) {
+    const client = this.getClient();
     if (editingId) {
-      return supabase.from("expenses").update(payload).eq("id", editingId);
+      return client.from("expenses").update(payload as TablesUpdate<"expenses">).eq("id", editingId);
     } else {
-      return supabase.from("expenses").insert(payload);
+      return client.from("expenses").insert(payload as TablesInsert<"expenses">);
     }
   }
 
-  static async saveSupplier(payload: any, editingId?: string | null) {
+  static async saveSupplier(payload: TablesInsert<"suppliers"> | TablesUpdate<"suppliers">, editingId?: string | null) {
+    const client = this.getClient();
     if (editingId) {
-      return supabase.from("suppliers").update(payload).eq("id", editingId);
+      return client.from("suppliers").update(payload as TablesUpdate<"suppliers">).eq("id", editingId);
     } else {
-      return supabase.from("suppliers").insert(payload);
+      return client.from("suppliers").insert(payload as TablesInsert<"suppliers">);
     }
   }
 
   static async deleteDonation(id: string) {
-    return supabase.from("donations").delete().eq("id", id);
+    return this.getClient().from("donations").delete().eq("id", id);
   }
 
   static async deleteExpense(id: string) {
-    return supabase.from("expenses").delete().eq("id", id);
+    return this.getClient().from("expenses").delete().eq("id", id);
   }
 
   static async deleteSupplier(id: string) {
-    return supabase.from("suppliers").delete().eq("id", id);
+    return this.getClient().from("suppliers").delete().eq("id", id);
   }
 }

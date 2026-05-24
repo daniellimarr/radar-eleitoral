@@ -1,19 +1,20 @@
-import { supabase } from "@/integrations/supabase/client";
+import { BaseService } from "./BaseService";
+import { Profile, UserRole, UserPermission } from "@/types/auth";
 
-// Cache simples para evitar múltiplas requisições de perfil/roles no mesmo ciclo
 const authCache = {
-  profile: null as any,
+  profile: null as Profile | null,
   roles: null as string[] | null,
   userId: null as string | null
 };
 
-export class AuthService {
+export class AuthService extends BaseService {
   static async getProfile(userId: string) {
     if (authCache.userId === userId && authCache.profile) {
       return { data: authCache.profile, error: null };
     }
     
-    const res = await supabase
+    const client = this.getClient();
+    const res = await client
       .from("profiles_safe")
       .select("*")
       .eq("user_id", userId)
@@ -21,7 +22,7 @@ export class AuthService {
       
     if (res.data) {
       authCache.userId = userId;
-      authCache.profile = res.data;
+      authCache.profile = res.data as Profile;
     }
     return res;
   }
@@ -31,7 +32,8 @@ export class AuthService {
       return { data: authCache.roles.map(r => ({ role: r })), error: null };
     }
 
-    const res = await supabase
+    const client = this.getClient();
+    const res = await client
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
@@ -44,22 +46,21 @@ export class AuthService {
   }
 
   static async getPermissions(userId: string, tenantId: string) {
-    // Permissões mudam com frequência dependendo do tenant, cache mais complexo
-    return supabase
+    return this.getClient()
       .from("user_permissions")
-      .select("user_id, module") // Adicionando user_id para consistência
+      .select("user_id, module")
       .in("user_id", [userId])
       .eq("tenant_id", tenantId);
   }
 
   static async signIn(email: string, password: string) {
     this.clearCache();
-    return supabase.auth.signInWithPassword({ email, password });
+    return this.getClient().auth.signInWithPassword({ email, password });
   }
 
   static async signUp(email: string, password: string, fullName: string) {
     this.clearCache();
-    return supabase.auth.signUp({
+    return this.getClient().auth.signUp({
       email,
       password,
       options: {
@@ -71,7 +72,7 @@ export class AuthService {
 
   static async signOut() {
     this.clearCache();
-    return supabase.auth.signOut();
+    return this.getClient().auth.signOut();
   }
 
   static clearCache() {
@@ -81,7 +82,7 @@ export class AuthService {
   }
 
   static async resetPassword(email: string) {
-    return supabase.auth.resetPasswordForEmail(email, {
+    return this.getClient().auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth?reset=true`,
     });
   }

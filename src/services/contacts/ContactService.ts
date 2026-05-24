@@ -1,8 +1,11 @@
-import { supabase } from "@/integrations/supabase/client";
+import { BaseService } from "../BaseService";
+import { Contact } from "@/types/contacts";
+import { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
-export class ContactService {
+export class ContactService extends BaseService {
   static async fetchContacts(tenantId: string, search?: string, limit = 100) {
-    const { data: contactsData, error: contactsError } = await supabase
+    const client = this.getClient();
+    const { data: contactsData, error: contactsError } = await client
       .from("contacts_decrypted")
       .select("*")
       .eq("tenant_id", tenantId)
@@ -12,14 +15,13 @@ export class ContactService {
 
     if (contactsError) return { data: null, error: contactsError };
 
-    // Buscar nomes das lideranças para os contatos que possuem leader_id
     const leaderIds = contactsData
       ?.map(c => c.leader_id)
       .filter((id): id is string => !!id) || [];
 
     let leadersMap: Record<string, string> = {};
     if (leaderIds.length > 0) {
-      const { data: leadersData } = await supabase
+      const { data: leadersData } = await client
         .from("contacts_decrypted")
         .select("id, name, nickname")
         .in("id", leaderIds);
@@ -36,19 +38,20 @@ export class ContactService {
     }));
 
     if (search) {
+      const searchLower = search.toLowerCase();
       const filtered = contactsWithLeaderNames?.filter(c => 
-        c.name.toLowerCase().includes(search.toLowerCase()) || 
-        (c.nickname && c.nickname.toLowerCase().includes(search.toLowerCase())) ||
+        c.name.toLowerCase().includes(searchLower) || 
+        (c.nickname && c.nickname.toLowerCase().includes(searchLower)) ||
         (c.phone && c.phone.includes(search))
       );
       return { data: filtered || [], error: null };
     }
 
-    return { data: contactsWithLeaderNames || [], error: null };
+    return { data: (contactsWithLeaderNames || []) as Contact[], error: null };
   }
 
   static async fetchTotalCount(tenantId: string) {
-    return supabase
+    return this.getClient()
       .from("contacts_decrypted")
       .select("*", { count: "exact", head: true })
       .eq("tenant_id", tenantId)
@@ -56,7 +59,7 @@ export class ContactService {
   }
 
   static async fetchLeaders(tenantId: string) {
-    return supabase
+    return this.getClient()
       .from("contacts_decrypted")
       .select("id, name, nickname")
       .eq("tenant_id", tenantId)
@@ -65,16 +68,18 @@ export class ContactService {
       .order("name");
   }
 
-  static async saveContact(payload: any, editingId?: string | null) {
+  static async saveContact(payload: TablesInsert<"contacts"> | TablesUpdate<"contacts">, editingId?: string | null) {
+    const client = this.getClient();
     if (editingId) {
-      return supabase.from("contacts").update(payload).eq("id", editingId);
+      return client.from("contacts").update(payload as TablesUpdate<"contacts">).eq("id", editingId);
     } else {
-      return supabase.from("contacts").insert(payload).select("id").single();
+      return client.from("contacts").insert(payload as TablesInsert<"contacts">).select("id").single();
     }
   }
 
   static async deleteContact(id: string) {
-    const { error: contactError } = await supabase
+    const client = this.getClient();
+    const { error: contactError } = await client
       .from("contacts")
       .update({ 
         deleted_at: new Date().toISOString(),
@@ -84,8 +89,7 @@ export class ContactService {
     
     if (contactError) return { error: contactError };
 
-    // Se o contato era uma liderança, remover da tabela de leaders também
-    return supabase
+    return client
       .from("leaders")
       .delete()
       .eq("contact_id", id);

@@ -15,6 +15,8 @@ import { Plus, Search, Loader2 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { DemandTable } from "@/components/demands/DemandTable";
 import { DocsDialog } from "@/components/demands/DocsDialog";
+import { DemandStatus } from "@/types/demands";
+
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "application/pdf"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -25,7 +27,21 @@ export default function Demands() {
   const { demands, loading: demandsLoading, refresh, updateStatus } = useDemands(tenantId, search);
   
   const [isOpen, setIsOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", status: "aberta", priority: "normal", contact_id: "", leader_id: "" });
+  const [form, setForm] = useState<{
+    title: string;
+    description: string;
+    status: DemandStatus;
+    priority: string;
+    contact_id: string;
+    leader_id: string;
+  }>({ 
+    title: "", 
+    description: "", 
+    status: "aberta", 
+    priority: "normal", 
+    contact_id: "", 
+    leader_id: "" 
+  });
   const [loading, setLoading] = useState(false);
   const tableRef = useRef<HTMLTableElement>(null);
 
@@ -74,8 +90,11 @@ export default function Demands() {
     if (!tenantId || !form.title) { toast.error("Título é obrigatório"); return; }
     setLoading(true);
     const { error } = await DemandService.saveDemand({
-      title: form.title, description: form.description, priority: form.priority,
-      tenant_id: tenantId, responsible_id: user?.id,
+      title: form.title, 
+      description: form.description, 
+      priority: form.priority,
+      tenant_id: tenantId, 
+      responsible_id: user?.id,
       status: form.status,
       contact_id: form.contact_id || null,
     });
@@ -83,7 +102,14 @@ export default function Demands() {
     else {
       toast.success("Demanda cadastrada!");
       setIsOpen(false);
-      setForm({ title: "", description: "", status: "aberta", priority: "normal", contact_id: "", leader_id: "" });
+      setForm({ 
+        title: "", 
+        description: "", 
+        status: "aberta", 
+        priority: "normal", 
+        contact_id: "", 
+        leader_id: "" 
+      });
       setContactSearch("");
       refresh();
     }
