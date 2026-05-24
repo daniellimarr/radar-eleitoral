@@ -48,6 +48,8 @@ export function useDemands() {
     mutationFn: ({ id, status }: { id: string; status: string }) => demandService.updateStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["demands"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["operator-stats"] });
     },
     onError: (error: any) => {
       toast.error(error.message);
