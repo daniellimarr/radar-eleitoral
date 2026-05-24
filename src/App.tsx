@@ -27,8 +27,6 @@ import Backup from "@/pages/Backup";
 import CampaignFiles from "@/pages/CampaignFiles";
 import Reports from "@/pages/Reports";
 import Chat from "@/pages/Chat";
-import TenantManagement from "@/pages/TenantManagement";
-import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 
 
 import Demo from "@/pages/Demo";
