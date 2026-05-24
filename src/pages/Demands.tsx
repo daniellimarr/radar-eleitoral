@@ -32,7 +32,7 @@ export default function Demands() {
   const { contacts, leaders } = useContacts();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", status: "aberta", priority: "normal", contact_id: "", leader_id: "" });
+  const [form, setForm] = useState({ title: "", description: "", status: "aberta", priority: "normal", contact_id: null as string | null, leader_id: null as string | null });
   const [contactSearch, setContactSearch] = useState("");
   const [filteredContacts, setFilteredContacts] = useState<any[]>([]);
 
@@ -66,7 +66,7 @@ export default function Demands() {
     const success = await saveDemand(form);
     if (success) {
       setIsOpen(false);
-      setForm({ title: "", description: "", status: "aberta", priority: "normal", contact_id: "", leader_id: "" });
+      setForm({ title: "", description: "", status: "aberta", priority: "normal", contact_id: null, leader_id: null });
       setContactSearch("");
     }
   };
@@ -177,7 +177,7 @@ export default function Demands() {
                 </div>
                 <div className="space-y-2">
                   <Label>Liderança (filtro)</Label>
-                  <Select value={form.leader_id || "__all__"} onValueChange={(v) => setForm(p => ({ ...p, leader_id: v === "__all__" ? "" : v, contact_id: "" }))}>
+                  <Select value={form.leader_id || "__all__"} onValueChange={(v) => setForm(p => ({ ...p, leader_id: v === "__all__" ? null : v, contact_id: null }))}>
                     <SelectTrigger><SelectValue placeholder="Todas as lideranças" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__all__">Todas</SelectItem>
@@ -190,7 +190,7 @@ export default function Demands() {
                 <div className="space-y-2">
                   <Label>Pessoa (contato cadastrado)</Label>
                   <Input placeholder="Buscar contato..." value={contactSearch} onChange={(e) => setContactSearch(e.target.value)} className="mb-2" />
-                  <Select value={form.contact_id || "__none__"} onValueChange={(v) => setForm(p => ({ ...p, contact_id: v === "__none__" ? "" : v }))}>
+                  <Select value={form.contact_id || "__none__"} onValueChange={(v) => setForm(p => ({ ...p, contact_id: v === "__none__" ? null : v }))}>
                     <SelectTrigger><SelectValue placeholder="Selecione um contato" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">Nenhum</SelectItem>
