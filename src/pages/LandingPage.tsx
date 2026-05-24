@@ -177,15 +177,17 @@ export default function LandingPage() {
               </motion.p>
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}
                 className="mt-10 flex flex-col sm:flex-row items-start gap-4">
-                <Button onClick={() => navigate("/auth")} size="lg"
+                <Button onClick={handleDemoLogin} disabled={isDemoLoading} size="lg"
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-base font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#FF6B00]/30 hover:shadow-[#FF6B00]/50 transition-all">
-                  Começar Agora <ArrowRight className="ml-2 h-5 w-5" />
+                  {isDemoLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <ArrowRight className="mr-2 h-5 w-5" />}
+                  Testar Sistema Agora
                 </Button>
-                <Button variant="outline" size="lg" onClick={() => navigate("/demo")}
+                <Button variant="outline" size="lg" onClick={() => navigate("/auth")}
                   className="border-gray-600 text-gray-300 hover:bg-white/5 text-base px-8 py-6 rounded-xl bg-transparent">
-                  <Eye className="mr-2 h-5 w-5" /> Ver Demonstração
+                  Criar Conta
                 </Button>
               </motion.div>
+
             </div>
 
             {/* Dashboard Mockup - Otimização: Substituído por imagem real com lazy loading */}
