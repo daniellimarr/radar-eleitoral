@@ -3,7 +3,24 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { MAIN_TENANT } from "@/lib/constants";
 
-// ... (existing imports and interface)
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  profile: any;
+  roles: string[];
+  tenantId: string | null;
+  userPermissions: string[];
+  permissionsLoading: boolean;
+  profileStatus: string | null;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, fullName: string) => Promise<any>;
+  signOut: () => Promise<void>;
+  hasRole: (role: string) => boolean;
+  hasPermission: (module: string) => boolean;
+}
+
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
