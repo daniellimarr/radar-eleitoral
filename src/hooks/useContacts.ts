@@ -57,8 +57,13 @@ export function useContacts() {
 
     setLoading(true);
     try {
-      const payload = { ...form, tenant_id: effectiveTenantId, registered_by: user.id };
-      const saved = await contactService.saveContact(payload, editingId);
+      const sanitizedPayload = { 
+        ...form, 
+        tenant_id: effectiveTenantId, 
+        registered_by: user.id,
+        leader_id: form.leader_id === "" ? null : form.leader_id 
+      };
+      const saved = await contactService.saveContact(sanitizedPayload, editingId);
       
       if (form.is_leader && saved) {
         await contactService.ensureLeaderAndLink(saved.id, effectiveTenantId, user.id);

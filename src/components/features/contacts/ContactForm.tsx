@@ -47,7 +47,7 @@ export function ContactForm({
             {isOperador ? (
               <Input value={profileName || "Liderança"} disabled />
             ) : (
-              <Select value={form.leader_id} onValueChange={(v) => updateField("leader_id", v === "none" ? "" : v)}>
+              <Select value={form.leader_id || "none"} onValueChange={(v) => updateField("leader_id", v === "none" ? null : v)}>
                 <SelectTrigger><SelectValue placeholder="SELECIONE" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Nenhuma</SelectItem>
