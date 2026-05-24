@@ -83,6 +83,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Fetch module permissions
+    setPermissionsLoading(true);
+    const { data: permsData } = await supabase
+      .from("user_permissions")
+      .select("module")
+      .eq("user_id", userId);
+    
+    if (permsData) {
+      setUserPermissions(permsData.map((p: any) => p.module));
+    }
+    setPermissionsLoading(false);
+  };
 
   useEffect(() => {
     let initialSessionHandled = false;
