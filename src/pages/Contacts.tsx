@@ -56,6 +56,8 @@ export default function Contacts() {
     const engagement = params.get("engagement");
     if (engagement && engagementOptions.some(o => o.value === engagement)) {
       setEngagementFilter(engagement);
+    } else {
+      setEngagementFilter("all");
     }
   }, [location.search]);
   const [isOpen, setIsOpen] = useState(false);
