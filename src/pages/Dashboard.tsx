@@ -183,8 +183,8 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Painel Geral</h1>
-          <p className="text-muted-foreground mt-1">Acompanhe o desempenho da sua campanha em tempo real.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Inteligência Estratégica</h1>
+          <p className="text-muted-foreground mt-1">Visão completa e em tempo real da sua capilaridade política.</p>
         </div>
         <div className="flex items-center gap-3 bg-card border px-4 py-2.5 rounded-xl shadow-sm">
           <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
@@ -205,7 +205,7 @@ export default function Dashboard() {
                   <card.icon className={`h-7 w-7 ${card.iconColor}`} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{card.label}</p>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Potencial Eleitoral</p>
                   <p className="text-3xl font-bold tracking-tight mt-1">{card.value.toLocaleString()}</p>
                 </div>
               </div>
@@ -221,8 +221,8 @@ export default function Dashboard() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold">Crescimento da Base</CardTitle>
-                <p className="text-sm text-muted-foreground">Cadastros realizados por mês</p>
+                <CardTitle className="text-lg font-bold">Expansão de Base</CardTitle>
+                <p className="text-sm text-muted-foreground">Novas adesões estratégicas por período</p>
               </div>
               <div className="flex gap-2">
                 <Select value={yearFilter} onValueChange={setYearFilter}>
@@ -265,8 +265,8 @@ export default function Dashboard() {
 
         <Card className="border-none shadow-md">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-bold">Termômetro de Envolvimento</CardTitle>
-            <p className="text-sm text-muted-foreground">Nível de engajamento da sua base</p>
+            <CardTitle className="text-lg font-bold">Termômetro de Lealdade</CardTitle>
+            <p className="text-sm text-muted-foreground">Nível de conversão e engajamento territorial</p>
           </CardHeader>
           <CardContent className="space-y-5 pt-4">
             <div className="grid grid-cols-[1fr_auto] gap-x-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest border-b pb-3">

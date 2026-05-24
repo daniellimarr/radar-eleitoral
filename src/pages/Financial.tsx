@@ -113,7 +113,7 @@ export default function Financial() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Controle Financeiro</h1>
-          <p className="text-muted-foreground mt-1">Gestão completa de arrecadação e despesas da campanha.</p>
+          <p className="text-muted-foreground mt-1">Transparência e controle absoluto sobre o investimento da sua jornada.</p>
         </div>
       </div>
 
@@ -125,7 +125,7 @@ export default function Financial() {
               <TrendingUp className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Arrecadado</p>
+              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Recursos Mobilizados</p>
               <p className="text-2xl font-bold tracking-tight">R$ {totalDonations.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
             </div>
           </CardContent>
@@ -138,7 +138,7 @@ export default function Financial() {
               <TrendingDown className="h-7 w-7 text-rose-600 dark:text-rose-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Gasto</p>
+              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Investimento Realizado</p>
               <p className="text-2xl font-bold tracking-tight">R$ {totalExpenses.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
             </div>
           </CardContent>
@@ -200,7 +200,7 @@ export default function Financial() {
       )}
 
       <Tabs defaultValue="donations">
-        <TabsList><TabsTrigger value="donations">Doações</TabsTrigger><TabsTrigger value="expenses">Despesas</TabsTrigger><TabsTrigger value="suppliers">Fornecedores</TabsTrigger></TabsList>
+        <TabsList><TabsTrigger value="donations">Receitas</TabsTrigger><TabsTrigger value="expenses">Investimentos</TabsTrigger><TabsTrigger value="suppliers">Fornecedores</TabsTrigger></TabsList>
 
         {/* DONATIONS TAB */}
         <TabsContent value="donations" className="space-y-4">

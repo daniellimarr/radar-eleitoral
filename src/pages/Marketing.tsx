@@ -76,11 +76,11 @@ export default function Marketing() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Marketing & Conteúdo</h1>
+        <h1 className="text-2xl font-bold">Presença Digital e Ativação</h1>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild><Button onClick={() => { setForm(defaultForm); setEditingId(null); }}><Plus className="h-4 w-4 mr-2" /> Novo Conteúdo</Button></DialogTrigger>
+          <DialogTrigger asChild><Button onClick={() => { setForm(defaultForm); setEditingId(null); }}><Plus className="h-4 w-4 mr-2" /> Planejar Ativação</Button></DialogTrigger>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>{editingId ? "Editar Conteúdo" : "Novo Conteúdo"}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editingId ? "Refinar Estratégia de Conteúdo" : "Planejar Nova Ativação"}</DialogTitle></DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2 col-span-2"><Label>Título *</Label><Input value={form.titulo} onChange={e => u("titulo", e.target.value)} /></div>
               <div className="space-y-2"><Label>Tipo</Label>
@@ -102,7 +102,7 @@ export default function Marketing() {
                   <SelectContent>{statusOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2"><Label>Custo Impulsionamento (R$)</Label><Input type="number" value={form.custo_impulsionamento} onChange={e => u("custo_impulsionamento", e.target.value)} /></div>
+              <div className="space-y-2"><Label>Investimento em Alcance (R$)</Label><Input type="number" value={form.custo_impulsionamento} onChange={e => u("custo_impulsionamento", e.target.value)} /></div>
               <div className="space-y-2 col-span-2"><Label>Descrição</Label><Textarea value={form.descricao} onChange={e => u("descricao", e.target.value)} rows={3} /></div>
             </div>
             <div className="flex justify-end gap-2 pt-4">
@@ -117,7 +117,7 @@ export default function Marketing() {
         <Card><CardContent className="p-4 text-center"><p className="text-sm text-muted-foreground">Planejados</p><p className="text-2xl font-bold">{planned}</p></CardContent></Card>
         <Card><CardContent className="p-4 text-center"><p className="text-sm text-muted-foreground">Aprovados</p><p className="text-2xl font-bold">{approved}</p></CardContent></Card>
         <Card><CardContent className="p-4 text-center"><p className="text-sm text-muted-foreground">Publicados</p><p className="text-2xl font-bold">{published}</p></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><p className="text-sm text-muted-foreground">Impulsionamento</p><p className="text-2xl font-bold">R$ {totalBoost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><p className="text-sm text-muted-foreground">Investimento em Alcance</p><p className="text-2xl font-bold">R$ {totalBoost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></CardContent></Card>
       </div>
 
       <Card>

@@ -149,20 +149,20 @@ export default function Demands() {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Demandas</h1>
-          <p className="text-muted-foreground mt-1">Gestão de solicitações e acompanhamento de tarefas.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Gestão de Demandas</h1>
+          <p className="text-muted-foreground mt-1">Transforme solicitações em compromissos e lealdade política.</p>
         </div>
         <div className="flex gap-3">
           <ExportButtons tableRef={tableRef} title="Demandas" filename="demandas" />
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button className="shadow-lg shadow-primary/20 transition-all hover:scale-105">
-                <Plus className="h-4 w-4 mr-2" /> Nova Demanda
+                <Plus className="h-4 w-4 mr-2" /> Protocolar Demanda
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Nova Demanda</DialogTitle>
+                <DialogTitle>Protocolar Nova Solicitação</DialogTitle>
               </DialogHeader>
               <div className="space-y-5 py-4">
                 <div className="space-y-2">

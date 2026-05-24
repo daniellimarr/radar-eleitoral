@@ -112,7 +112,7 @@ export default function Contacts() {
       if (error) {
         toast.error(`Erro: ${error.message}`);
       } else {
-        toast.success(editingId ? "Contato atualizado com sucesso!" : "Novo contato registrado!");
+        toast.success(editingId ? "Cadastro atualizado com sucesso!" : "Apoiador registrado com sucesso!");
         setIsOpen(false);
         setForm(defaultContact);
         setEditingId(null);
@@ -167,7 +167,7 @@ export default function Contacts() {
           </div>
           <div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900">Base Eleitoral</h1>
-            <p className="text-slate-500 font-medium">Gestão centralizada de apoiadores e contatos</p>
+            <p className="text-slate-500 font-medium">Sua inteligência de campo organizada e protegida</p>
           </div>
         </div>
         
@@ -180,7 +180,7 @@ export default function Contacts() {
             className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-6 rounded-xl shadow-lg shadow-primary/20"
           >
             <UserPlus className="h-5 w-5 mr-2" />
-            NOVO CADASTRO
+            NOVO APOIADOR
           </Button>
         </div>
       </div>
@@ -194,7 +194,7 @@ export default function Contacts() {
               <Users className="h-6 w-6 text-slate-400" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total na Base</p>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Apoiadores Mobilizados</p>
               <p className="text-3xl font-black text-slate-900">{totalContacts.toLocaleString()}</p>
             </div>
           </CardContent>
@@ -239,7 +239,7 @@ export default function Contacts() {
                     <TableCell colSpan={6} className="text-center py-20">
                       <div className="flex flex-col items-center gap-3">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-slate-400 font-medium text-sm">Carregando base de contatos...</p>
+                        <p className="text-slate-400 font-medium text-sm">Carregando inteligência de campo...</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -248,7 +248,7 @@ export default function Contacts() {
                     <TableCell colSpan={6} className="text-center py-20">
                       <div className="flex flex-col items-center gap-3">
                         <Users className="h-12 w-12 text-slate-200" />
-                        <p className="text-slate-400 font-medium">Nenhum contato encontrado.</p>
+                        <p className="text-slate-400 font-medium">Nenhum registro encontrado. Comece a construir sua base agora.</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -282,7 +282,7 @@ export default function Contacts() {
                 <div className="bg-primary p-2 rounded-xl">
                   {editingId ? <Users className="h-6 w-6" /> : <UserPlus className="h-6 w-6" />}
                 </div>
-                {editingId ? "Atualizar Ficha de Contato" : "Novo Registro na Base"}
+                {editingId ? "Atualizar Ficha Estratégica" : "Novo Apoiador na Base"}
               </DialogTitle>
             </DialogHeader>
           </div>
@@ -320,7 +320,7 @@ export default function Contacts() {
                 {loading ? (
                   <><Loader2 className="h-5 w-5 animate-spin mr-2" /> SALVANDO...</>
                 ) : (
-                  editingId ? "ATUALIZAR CADASTRO" : "FINALIZAR REGISTRO"
+                  editingId ? "ATUALIZAR CADASTRO" : "CONFIRMAR REGISTRO"
                 )}
               </Button>
             </DialogFooter>
