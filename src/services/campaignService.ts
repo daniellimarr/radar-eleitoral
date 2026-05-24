@@ -13,7 +13,7 @@ export const campaignService = {
     return data || [];
   },
 
-  async saveCampaign(payload: Partial<Campaign>, editingId?: string | null) {
+  async saveCampaign(payload: any, editingId?: string | null) {
     if (editingId) {
       const { data, error } = await supabase
         .from("campaigns")

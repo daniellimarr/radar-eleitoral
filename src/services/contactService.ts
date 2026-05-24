@@ -54,7 +54,7 @@ export const contactService = {
     }
   },
 
-  async saveContact(payload: Partial<Contact>, editingId?: string | null) {
+  async saveContact(payload: any, editingId?: string | null) {
     if (editingId) {
       const { data, error } = await supabase
         .from("contacts")
