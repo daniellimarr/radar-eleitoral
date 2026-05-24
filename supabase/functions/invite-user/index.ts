@@ -1,9 +1,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { respond, handleOptions } from "../_shared/responses.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return handleOptions();
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -14,7 +18,10 @@ Deno.serve(async (req) => {
     // Verify caller is authenticated using getClaims (works with ES256)
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return respond(false, { error: "Não autenticado" }, 401);
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
     const token = authHeader.replace("Bearer ", "");
 
@@ -26,7 +33,10 @@ Deno.serve(async (req) => {
     const { data: claimsData, error: claimsError } = await callerClient.auth.getClaims(token);
     if (claimsError || !claimsData?.claims?.sub) {
       console.error("Claims error:", claimsError);
-      return respond(false, { error: "Não autenticado" }, 401);
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const callerId = claimsData.claims.sub;
@@ -139,7 +149,7 @@ Deno.serve(async (req) => {
     }
 
     // Set module permissions
-    if (modules && Array.isArray(modules)) {
+    if (modules && Array.isArray(modules) && modules.length > 0) {
       // Clear existing permissions first
       await adminClient
         .from("user_permissions")
@@ -147,19 +157,22 @@ Deno.serve(async (req) => {
         .eq("user_id", userId)
         .eq("tenant_id", callerProfile.tenant_id);
 
-      if (modules.length > 0) {
-        const permRows = modules.map((m: string) => ({
-          user_id: userId,
-          tenant_id: callerProfile.tenant_id,
-          module: m,
-        }));
-        await adminClient.from("user_permissions").insert(permRows);
-      }
+      const permRows = modules.map((m: string) => ({
+        user_id: userId,
+        tenant_id: callerProfile.tenant_id,
+        module: m,
+      }));
+      await adminClient.from("user_permissions").insert(permRows);
     }
 
-    return respond(true, { success: true, user_id: userId });
+    return new Response(JSON.stringify({ success: true, user_id: userId }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error: any) {
     console.error("invite-user error:", error);
-    return respond(false, { error: error.message }, 400);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

@@ -863,27 +863,6 @@ export type Database = {
           },
         ]
       }
-      login_attempts: {
-        Row: {
-          attempted_at: string | null
-          id: string
-          ip_address: string
-          success: boolean | null
-        }
-        Insert: {
-          attempted_at?: string | null
-          id?: string
-          ip_address: string
-          success?: boolean | null
-        }
-        Update: {
-          attempted_at?: string | null
-          id?: string
-          ip_address?: string
-          success?: boolean | null
-        }
-        Relationships: []
-      }
       notifications: {
         Row: {
           created_at: string
@@ -928,6 +907,7 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          asaas_payment_id: string | null
           billing_type: string | null
           created_at: string
           due_date: string | null
@@ -941,6 +921,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          asaas_payment_id?: string | null
           billing_type?: string | null
           created_at?: string
           due_date?: string | null
@@ -954,6 +935,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          asaas_payment_id?: string | null
           billing_type?: string | null
           created_at?: string
           due_date?: string | null
@@ -971,13 +953,6 @@ export type Database = {
             columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "subscriptions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_subscription_id_fkey"
-            columns: ["subscription_id"]
-            isOneToOne: false
-            referencedRelation: "subscriptions_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1030,9 +1005,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          asaas_customer_id: string | null
           avatar_url: string | null
           created_at: string
-          email: string | null
           full_name: string | null
           id: string
           phone: string | null
@@ -1042,9 +1017,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          asaas_customer_id?: string | null
           avatar_url?: string | null
           created_at?: string
-          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -1054,9 +1029,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          asaas_customer_id?: string | null
           avatar_url?: string | null
           created_at?: string
-          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -1079,36 +1054,30 @@ export type Database = {
         Row: {
           coordinator_id: string | null
           created_at: string
-          current_uses: number | null
           expires_at: string | null
           id: string
           is_active: boolean | null
           leader_contact_id: string | null
-          max_uses: number | null
           slug: string
           tenant_id: string
         }
         Insert: {
           coordinator_id?: string | null
           created_at?: string
-          current_uses?: number | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
           leader_contact_id?: string | null
-          max_uses?: number | null
           slug: string
           tenant_id: string
         }
         Update: {
           coordinator_id?: string | null
           created_at?: string
-          current_uses?: number | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
           leader_contact_id?: string | null
-          max_uses?: number | null
           slug?: string
           tenant_id?: string
         }
@@ -1138,6 +1107,8 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          asaas_customer_id: string | null
+          asaas_subscription_id: string | null
           cancelled_at: string | null
           created_at: string
           expires_at: string | null
@@ -1151,6 +1122,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
           cancelled_at?: string | null
           created_at?: string
           expires_at?: string | null
@@ -1164,6 +1137,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
           cancelled_at?: string | null
           created_at?: string
           expires_at?: string | null
@@ -1747,287 +1722,6 @@ export type Database = {
           },
         ]
       }
-      donations_decrypted: {
-        Row: {
-          campaign_id: string | null
-          comprovante_url: string | null
-          cpf_cnpj: string | null
-          created_at: string | null
-          data: string | null
-          forma_pagamento: string | null
-          id: string | null
-          nome_doador: string | null
-          tenant_id: string | null
-          tipo: string | null
-          updated_at: string | null
-          valor: number | null
-        }
-        Insert: {
-          campaign_id?: string | null
-          comprovante_url?: string | null
-          cpf_cnpj?: never
-          created_at?: string | null
-          data?: string | null
-          forma_pagamento?: string | null
-          id?: string | null
-          nome_doador?: string | null
-          tenant_id?: string | null
-          tipo?: string | null
-          updated_at?: string | null
-          valor?: number | null
-        }
-        Update: {
-          campaign_id?: string | null
-          comprovante_url?: string | null
-          cpf_cnpj?: never
-          created_at?: string | null
-          data?: string | null
-          forma_pagamento?: string | null
-          id?: string | null
-          nome_doador?: string | null
-          tenant_id?: string | null
-          tipo?: string | null
-          updated_at?: string | null
-          valor?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "donations_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "donations_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      donations_safe: {
-        Row: {
-          campaign_id: string | null
-          comprovante_url: string | null
-          cpf_cnpj: string | null
-          created_at: string | null
-          data: string | null
-          forma_pagamento: string | null
-          id: string | null
-          nome_doador: string | null
-          tenant_id: string | null
-          tipo: string | null
-          updated_at: string | null
-          valor: number | null
-        }
-        Insert: {
-          campaign_id?: string | null
-          comprovante_url?: string | null
-          cpf_cnpj?: never
-          created_at?: string | null
-          data?: string | null
-          forma_pagamento?: string | null
-          id?: string | null
-          nome_doador?: string | null
-          tenant_id?: string | null
-          tipo?: string | null
-          updated_at?: string | null
-          valor?: number | null
-        }
-        Update: {
-          campaign_id?: string | null
-          comprovante_url?: string | null
-          cpf_cnpj?: never
-          created_at?: string | null
-          data?: string | null
-          forma_pagamento?: string | null
-          id?: string | null
-          nome_doador?: string | null
-          tenant_id?: string | null
-          tipo?: string | null
-          updated_at?: string | null
-          valor?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "donations_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "donations_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      payments_safe: {
-        Row: {
-          amount: number | null
-          billing_type: string | null
-          created_at: string | null
-          due_date: string | null
-          id: string | null
-          payment_date: string | null
-          status: string | null
-          subscription_id: string | null
-          tenant_id: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          amount?: number | null
-          billing_type?: string | null
-          created_at?: string | null
-          due_date?: string | null
-          id?: string | null
-          payment_date?: string | null
-          status?: string | null
-          subscription_id?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number | null
-          billing_type?: string | null
-          created_at?: string | null
-          due_date?: string | null
-          id?: string | null
-          payment_date?: string | null
-          status?: string | null
-          subscription_id?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payments_subscription_id_fkey"
-            columns: ["subscription_id"]
-            isOneToOne: false
-            referencedRelation: "subscriptions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_subscription_id_fkey"
-            columns: ["subscription_id"]
-            isOneToOne: false
-            referencedRelation: "subscriptions_safe"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles_safe: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          email: string | null
-          full_name: string | null
-          id: string | null
-          phone: string | null
-          status: string | null
-          tenant_id: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          email?: string | null
-          full_name?: string | null
-          id?: string | null
-          phone?: string | null
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          email?: string | null
-          full_name?: string | null
-          id?: string | null
-          phone?: string | null
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      subscriptions_safe: {
-        Row: {
-          cancelled_at: string | null
-          created_at: string | null
-          expires_at: string | null
-          id: string | null
-          next_due_date: string | null
-          plan_name: string | null
-          started_at: string | null
-          status: string | null
-          tenant_id: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          cancelled_at?: string | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string | null
-          next_due_date?: string | null
-          plan_name?: string | null
-          started_at?: string | null
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          cancelled_at?: string | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string | null
-          next_due_date?: string | null
-          plan_name?: string | null
-          started_at?: string | null
-          status?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "subscriptions_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Functions: {
       decrypt_sensitive: { Args: { val: string }; Returns: string }
@@ -2037,15 +1731,6 @@ export type Database = {
         Args: { p_slug: string }
         Returns: {
           leader_name: string
-        }[]
-      }
-      get_registration_link_info: {
-        Args: { p_slug: string }
-        Returns: {
-          leader_contact_id: string
-          leader_name: string
-          tenant_id: string
-          tenant_name: string
         }[]
       }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
@@ -2058,11 +1743,6 @@ export type Database = {
       }
       is_chat_participant: {
         Args: { _conversation_id: string; _user_id: string }
-        Returns: boolean
-      }
-      safe_uuid: { Args: { val: string }; Returns: string }
-      tenant_has_active_registration_link: {
-        Args: { p_tenant_id: string }
         Returns: boolean
       }
     }

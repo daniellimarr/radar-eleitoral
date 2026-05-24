@@ -14,7 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import OperatorDashboard from "@/components/OperatorDashboard";
-
+import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 const engagementLabels: Record<string, string> = {
   nao_trabalhado: "Não trabalhado",
   em_prospeccao: "Em prospecção",
@@ -66,78 +66,74 @@ export default function Dashboard() {
   const [financialSummary, setFinancialSummary] = useState({ donations: 0, expenses: 0 });
   const [neighborhoodData, setNeighborhoodData] = useState<any[]>([]);
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
-  const fetchStats = async () => {
-    if (!tenantId || isOperador) return;
-    const now = new Date();
-    const todayStart = format(now, "yyyy-MM-dd") + "T00:00:00";
-    const todayEnd = format(now, "yyyy-MM-dd") + "T23:59:59";
-
-    const [contactRes, appointmentsRes, birthdayRes, engagementRes, allContactsRes, campaignRes, donationsRes, expensesRes] = await Promise.all([
-      supabase.from("contacts_decrypted").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).is("deleted_at", null),
-      supabase.from("appointments").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
-      supabase.from("contacts_decrypted").select("birth_date").eq("tenant_id", tenantId).is("deleted_at", null).not("birth_date", "is", null),
-      supabase.from("contacts_decrypted").select("engagement, neighborhood").eq("tenant_id", tenantId).is("deleted_at", null),
-      supabase.from("contacts_decrypted").select("created_at").eq("tenant_id", tenantId).is("deleted_at", null),
-      supabase.from("campaigns").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(1),
-      supabase.from("donations").select("valor").eq("tenant_id", tenantId),
-      supabase.from("expenses").select("valor").eq("tenant_id", tenantId),
-    ]);
-
-    // Birthdays
-    const todayMMDD = `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-    const birthdayCount = (birthdayRes.data || []).filter((c: any) => {
-      const [, month, day] = c.birth_date.split("-");
-      return `${month}-${day}` === todayMMDD;
-    }).length;
-
-    // Engagement
-    const contacts = engagementRes.data || [];
-    const engagement: Record<string, number> = {};
-    let projVotes = 0;
-    const neighborhoodMap: Record<string, number> = {};
-
-    contacts.forEach((c: any) => {
-      const e = c.engagement || "nao_trabalhado";
-      engagement[e] = (engagement[e] || 0) + 1;
-      projVotes += engagementWeight[e] || 0;
-      if (c.neighborhood) {
-        neighborhoodMap[c.neighborhood] = (neighborhoodMap[c.neighborhood] || 0) + 1;
-      }
-    });
-
-    setEngagementData(engagement);
-    setProjectedVotes(Math.round(projVotes));
-    setNeighborhoodData(
-      Object.entries(neighborhoodMap).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, value]) => ({ name, value }))
-    );
-
-    if (campaignRes.data && campaignRes.data.length > 0) setCampaign(campaignRes.data[0]);
-
-    const totalDonations = (donationsRes.data || []).reduce((s: number, d: any) => s + Number(d.valor), 0);
-    const totalExpenses = (expensesRes.data || []).reduce((s: number, e: any) => s + Number(e.valor), 0);
-    setFinancialSummary({ donations: totalDonations, expenses: totalExpenses });
-
-    setStats({
-      contacts: contactRes.count ?? (engagementRes.data?.length || 0),
-      appointmentsToday: appointmentsRes.count || 0,
-      birthdays: birthdayCount,
-      citizenParticipates: contacts.filter((c: any) => c.engagement === "conquistado").length,
-    });
-
-
-    // Monthly chart
-    const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    const monthCounts = new Array(12).fill(0);
-    (allContactsRes.data || []).forEach((c: any) => { monthCounts[new Date(c.created_at).getMonth()]++; });
-    setMonthlyData(months.map((m, i) => ({ name: m, cadastros: monthCounts[i] })));
-  };
-
   useEffect(() => {
-    fetchStats();
+    if (!tenantId || isOperador) return;
 
-    // Listen for contact-added events to refresh stats
-    window.addEventListener("contact-added", fetchStats);
-    return () => window.removeEventListener("contact-added", fetchStats);
+    const fetchStats = async () => {
+      const now = new Date();
+      const todayStart = format(now, "yyyy-MM-dd") + "T00:00:00";
+      const todayEnd = format(now, "yyyy-MM-dd") + "T23:59:59";
+
+      const [contactRes, appointmentsRes, birthdayRes, engagementRes, allContactsRes, campaignRes, donationsRes, expensesRes] = await Promise.all([
+        supabase.from("contacts_decrypted").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).is("deleted_at", null),
+        supabase.from("appointments").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
+        supabase.from("contacts_decrypted").select("birth_date").eq("tenant_id", tenantId).is("deleted_at", null).not("birth_date", "is", null),
+        supabase.from("contacts_decrypted").select("engagement, neighborhood").eq("tenant_id", tenantId).is("deleted_at", null),
+        supabase.from("contacts_decrypted").select("created_at").eq("tenant_id", tenantId).is("deleted_at", null),
+        supabase.from("campaigns").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(1),
+        supabase.from("donations").select("valor").eq("tenant_id", tenantId),
+        supabase.from("expenses").select("valor").eq("tenant_id", tenantId),
+      ]);
+
+      // Birthdays
+      const todayMMDD = `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const birthdayCount = (birthdayRes.data || []).filter((c: any) => {
+        const [, month, day] = c.birth_date.split("-");
+        return `${month}-${day}` === todayMMDD;
+      }).length;
+
+      // Engagement
+      const contacts = engagementRes.data || [];
+      const engagement: Record<string, number> = {};
+      let projVotes = 0;
+      const neighborhoodMap: Record<string, number> = {};
+
+      contacts.forEach((c: any) => {
+        const e = c.engagement || "nao_trabalhado";
+        engagement[e] = (engagement[e] || 0) + 1;
+        projVotes += engagementWeight[e] || 0;
+        if (c.neighborhood) {
+          neighborhoodMap[c.neighborhood] = (neighborhoodMap[c.neighborhood] || 0) + 1;
+        }
+      });
+
+      setEngagementData(engagement);
+      setProjectedVotes(Math.round(projVotes));
+      setNeighborhoodData(
+        Object.entries(neighborhoodMap).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, value]) => ({ name, value }))
+      );
+
+      if (campaignRes.data && campaignRes.data.length > 0) setCampaign(campaignRes.data[0]);
+
+      const totalDonations = (donationsRes.data || []).reduce((s: number, d: any) => s + Number(d.valor), 0);
+      const totalExpenses = (expensesRes.data || []).reduce((s: number, e: any) => s + Number(e.valor), 0);
+      setFinancialSummary({ donations: totalDonations, expenses: totalExpenses });
+
+      setStats({
+        contacts: contactRes.count || 0,
+        appointmentsToday: appointmentsRes.count || 0,
+        birthdays: birthdayCount,
+        citizenParticipates: 0,
+      });
+
+      // Monthly chart
+      const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      const monthCounts = new Array(12).fill(0);
+      (allContactsRes.data || []).forEach((c: any) => { monthCounts[new Date(c.created_at).getMonth()]++; });
+      setMonthlyData(months.map((m, i) => ({ name: m, cadastros: monthCounts[i] })));
+    };
+
+    fetchStats();
   }, [tenantId, isOperador]);
 
   // Wait for auth/roles to load before deciding which dashboard to show
@@ -149,6 +145,9 @@ export default function Dashboard() {
     );
   }
 
+  if (isSuperAdmin) {
+    return <SuperAdminDashboard />;
+  }
 
   if (isOperador) {
     return <OperatorDashboard />;
@@ -176,6 +175,63 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Plan Banner */}
+      {!isAdminRole && planName && (
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Crown className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">
+                    Plano <span className="text-primary">{planName}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {contactLimit === Infinity
+                      ? "Contatos ilimitados"
+                      : `${stats.contacts.toLocaleString()} / ${contactLimit.toLocaleString()} contatos`}
+                    {" · "}
+                    {userLimit === Infinity
+                      ? "Usuários ilimitados"
+                      : `${userLimit} usuários`}
+                    {subscriptionEnd && (() => {
+                      const d = new Date(subscriptionEnd);
+                      const day = String(d.getDate()).padStart(2, '0');
+                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                      const year = d.getFullYear();
+                      return ` · Expira em ${day}/${month}/${year}`;
+                    })()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                {contactLimit !== Infinity && (
+                  <div className="flex-1 sm:w-40">
+                    <Progress
+                      value={Math.min((stats.contacts / contactLimit) * 100, 100)}
+                      className="h-2"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1 text-right">
+                      {Math.min((stats.contacts / contactLimit) * 100, 100).toFixed(0)}% usado
+                    </p>
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground shrink-0"
+                  onClick={() => navigate("/assinatura")}
+                >
+                  <ArrowUpRight className="h-4 w-4 mr-1" />
+                  Upgrade
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stat Cards */}
       <Card>
@@ -245,11 +301,7 @@ export default function Dashboard() {
               const count = engagementData[key] || 0;
               const pct = Math.max((count / totalEngagement) * 100, 2);
               return (
-                <div 
-                  key={key} 
-                  className="flex items-center gap-4 cursor-pointer hover:bg-muted/50 p-1 rounded transition-colors"
-                  onClick={() => navigate(`/contacts?engagement=${key}`)}
-                >
+                <div key={key} className="flex items-center gap-4">
                   <span className="text-sm font-medium w-44 shrink-0">{label}</span>
                   <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
                     <div className={`h-full rounded-full ${engagementBarColors[key]}`} style={{ width: `${pct}%` }} />

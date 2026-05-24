@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,8 +16,6 @@ import { Plus, Search, Trash2, Edit, Loader2 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { geocodeByCep } from "@/lib/geocoding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-type LeaderSummary = { id: string; name: string; nickname: string };
 
 const engagementOptions = [
   { value: "nao_trabalhado", label: "Não trabalhado" },
@@ -47,25 +44,9 @@ const defaultContact = {
 export default function Contacts() {
   const { tenantId, user, hasRole, profile } = useAuth();
   const { contactLimit } = useSubscription();
-  const location = useLocation();
   const [contacts, setContacts] = useState<any[]>([]);
-  const [leaders, setLeaders] = useState<LeaderSummary[]>([]);
-  const [registrationLinks, setRegistrationLinks] = useState<Record<string, string>>({});
-  const [operatorLeaderIds, setOperatorLeaderIds] = useState<string[]>([]);
+  const [leaders, setLeaders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
-  const [engagementFilter, setEngagementFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const engagement = params.get("engagement");
-    if (engagement && engagementOptions.some(o => o.value === engagement)) {
-      setEngagementFilter(engagement);
-    } else {
-      setEngagementFilter("all");
-    }
-  }, [location.search]);
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState(defaultContact);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -106,7 +87,7 @@ export default function Contacts() {
         .select("id, contact_id, contacts:contact_id(id, name, nickname)")
         .eq("tenant_id", tenantId);
 
-      const allLeaders: LeaderSummary[] = (leadersData || []).map((l: any) => ({
+      const allLeaders = (leadersData || []).map((l: any) => ({
         id: l.contact_id,
         name: l.contacts?.name || "",
         nickname: l.contacts?.nickname || "",
@@ -117,7 +98,6 @@ export default function Contacts() {
                (l.nickname && l.nickname.toLowerCase() === profile.full_name.toLowerCase())
       );
       setLeaders(matched);
-      setOperatorLeaderIds(matched.map((l: any) => l.id));
       if (matched.length >= 1) {
         setForm((prev) => ({ ...prev, leader_id: matched[0].id }));
       }
@@ -129,14 +109,13 @@ export default function Contacts() {
         .eq("is_leader", true)
         .is("deleted_at", null)
         .order("name");
-      setLeaders((data || []) as LeaderSummary[]);
-      setOperatorLeaderIds([]);
+      setLeaders(data || []);
     }
   };
 
   useEffect(() => { fetchLeaders(); }, [tenantId, profile?.full_name]);
 
-  const fetchContacts = useCallback(async () => {
+  const fetchContacts = async () => {
     if (!tenantId) return;
     let query = supabase
       .from("contacts_decrypted")
@@ -144,61 +123,17 @@ export default function Contacts() {
       .eq("tenant_id", tenantId)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(100);
 
     if (search) {
       query = query.ilike("name", `%${search}%`);
     }
 
-    if (engagementFilter !== "all") {
-      query = query.eq("engagement", engagementFilter as any);
-    }
-
-    if (isOperador && operatorLeaderIds.length > 0 && user?.id) {
-      query = query.or([
-        `registered_by.eq.${user?.id}`,
-        ...operatorLeaderIds.map((leaderId) => `leader_id.eq.${leaderId}`),
-        ...operatorLeaderIds.map((leaderId) => `id.eq.${leaderId}`),
-      ].join(","));
-    }
-
-    if (typeFilter === "leaders") {
-      query = query.eq("is_leader", true);
-    } else if (typeFilter === "contacts") {
-      query = query.eq("is_leader", false);
-    }
-
     const { data } = await query;
     setContacts(data || []);
-  }, [tenantId, search, engagementFilter, typeFilter, isOperador, operatorLeaderIds, user?.id]);
-
-  const fetchRegistrationLinks = async () => {
-    if (!tenantId) return;
-    const { data } = await supabase
-      .from("registration_links")
-      .select("slug, leader_contact_id")
-      .eq("tenant_id", tenantId)
-      .eq("is_active", true);
-    const map: Record<string, string> = {};
-    (data || []).forEach((l: any) => {
-      if (l.leader_contact_id) map[l.leader_contact_id] = l.slug;
-    });
-    setRegistrationLinks(map);
   };
 
-  useEffect(() => { fetchContacts(); }, [fetchContacts]);
-
-  useEffect(() => {
-    const refreshContacts = () => {
-      fetchContacts();
-      fetchRegistrationLinks();
-    };
-
-    window.addEventListener("contact-added", refreshContacts);
-    return () => window.removeEventListener("contact-added", refreshContacts);
-  }, [fetchContacts, tenantId]);
-  useEffect(() => { fetchRegistrationLinks(); }, [tenantId]);
-
+  useEffect(() => { fetchContacts(); }, [tenantId, search]);
 
   const generateSlug = (name: string) =>
     name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -276,7 +211,12 @@ export default function Contacts() {
         }
       }
     } else {
-
+      // Check contact limit before inserting
+      if (contactLimit !== Infinity && contacts.length >= contactLimit) {
+        toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido. Faça upgrade do seu plano.`);
+        setLoading(false);
+        return;
+      }
       const { data: inserted, error } = await supabase.from("contacts").insert(payload).select("id").single();
       if (error) { toast.error(error.message); }
       else {
@@ -293,12 +233,6 @@ export default function Contacts() {
     setForm(defaultContact);
     setEditingId(null);
     fetchContacts();
-    fetchLeaders(); // Ensure leaders are refreshed as well
-    fetchRegistrationLinks();
-
-    
-    // Dispatch a custom event to notify other components (like Dashboard) to refresh
-    window.dispatchEvent(new CustomEvent("contact-added"));
   };
 
   const handleEdit = (contact: any) => {
@@ -474,45 +408,14 @@ export default function Contacts() {
         </Dialog>
       </div>
 
-      {/* Search & Filter */}
-      <div className="flex flex-col md:flex-row gap-4 items-end">
-        <div className="flex-1 w-full space-y-2">
-          <Label>Buscar por nome</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Pesquisar..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-        </div>
-        <div className="w-full md:w-48 space-y-2">
-          <Label>Tipo</Label>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="contacts">Apenas contatos</SelectItem>
-              <SelectItem value="leaders">Apenas lideranças</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-full md:w-64 space-y-2">
-          <Label>Filtrar por Envolvimento</Label>
-          <Select value={engagementFilter} onValueChange={setEngagementFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todos os envolvimentos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os envolvimentos</SelectItem>
-              {engagementOptions.map(o => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Search */}
+      <div className="flex gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input className="pl-10" placeholder="Pesquisar contato..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
       </div>
-
 
       {/* Table */}
       <Card>
@@ -521,11 +424,9 @@ export default function Contacts() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>Tipo</TableHead>
                 <TableHead>Celular</TableHead>
                 <TableHead>Cidade</TableHead>
                 <TableHead>Envolvimento</TableHead>
-                <TableHead>Link de cadastro</TableHead>
                 <TableHead>Cadastrado em</TableHead>
                 <TableHead className="w-24">Ações</TableHead>
               </TableRow>
@@ -533,41 +434,20 @@ export default function Contacts() {
             <TableBody>
               {contacts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     Nenhum contato encontrado
                   </TableCell>
                 </TableRow>
               ) : (
-                contacts.map((c) => {
-                  const slug = c.is_leader ? registrationLinks[c.id] : null;
-                  const linkUrl = slug ? `${window.location.origin}/cadastro/${slug}` : null;
-                  return (
+                contacts.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell>
-                      <span className={`text-xs px-2 py-1 rounded ${c.is_leader ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                        {c.is_leader ? 'Liderança' : 'Contato'}
-                      </span>
-                    </TableCell>
                     <TableCell>{c.phone}</TableCell>
                     <TableCell>{c.city}</TableCell>
                     <TableCell>
                       <span className="text-xs px-2 py-1 rounded bg-accent text-accent-foreground">
                         {engagementOptions.find(e => e.value === c.engagement)?.label || c.engagement}
                       </span>
-                    </TableCell>
-                    <TableCell>
-                      {linkUrl ? (
-                        <button
-                          onClick={() => { navigator.clipboard.writeText(linkUrl); toast.success("Link copiado!"); }}
-                          className="text-xs text-primary hover:underline truncate max-w-[200px] block text-left"
-                          title={linkUrl}
-                        >
-                          /cadastro/{slug}
-                        </button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
                     </TableCell>
                     <TableCell>{new Date(c.created_at).toLocaleDateString("pt-BR")}</TableCell>
                     <TableCell>
@@ -585,12 +465,10 @@ export default function Contacts() {
                       </div>
                     </TableCell>
                   </TableRow>
-                  );
-                })
+                ))
               )}
             </TableBody>
           </Table>
-
         </CardContent>
       </Card>
     </div>

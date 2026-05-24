@@ -1,4 +1,6 @@
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SubscriptionContextType {
   subscribed: boolean;
@@ -15,36 +17,93 @@ interface SubscriptionContextType {
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType>({
-  subscribed: true,
-  loading: false,
-  planName: "Gabinete",
+  subscribed: false,
+  loading: true,
+  planName: null,
   subscriptionEnd: null,
-  contactLimit: Infinity,
-  userLimit: Infinity,
-  durationDays: Infinity,
-  hasPremiumModules: true,
+  contactLimit: 5000,
+  userLimit: 5,
+  durationDays: 30,
+  hasPremiumModules: false,
   expired: false,
   expiredAt: null,
   checkSubscription: async () => {},
 });
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const value = {
-    subscribed: true,
-    loading: false,
-    planName: "Gabinete",
-    subscriptionEnd: null,
-    contactLimit: Infinity,
-    userLimit: Infinity,
-    durationDays: Infinity,
-    hasPremiumModules: true,
-    expired: false,
-    expiredAt: null,
-    checkSubscription: async () => {},
-  };
+  const { user, session, roles, loading: authLoading } = useAuth();
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [planName, setPlanName] = useState<string | null>(null);
+  const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [contactLimit, setContactLimit] = useState(5000);
+  const [userLimit, setUserLimit] = useState(5);
+  const [durationDays, setDurationDays] = useState(30);
+  const [hasPremiumModules, setHasPremiumModules] = useState(false);
+  const [expired, setExpired] = useState(false);
+  const [expiredAt, setExpiredAt] = useState<string | null>(null);
+
+  const checkSubscription = useCallback(async () => {
+    if (!session) {
+      setSubscribed(false);
+      setLoading(false);
+      return;
+    }
+
+    if (authLoading) return;
+
+    if (roles.includes("super_admin")) {
+      setSubscribed(true);
+      setPlanName("Super Admin");
+      setContactLimit(Infinity);
+      setUserLimit(Infinity);
+      setDurationDays(Infinity);
+      setHasPremiumModules(true);
+      setExpired(false);
+      setExpiredAt(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke("check-subscription");
+      if (error) throw error;
+
+      setSubscribed(data.subscribed || false);
+      setSubscriptionEnd(data.subscription_end || null);
+      setPlanName(data.plan_name || null);
+      setContactLimit(data.contact_limit ?? 5000);
+      setUserLimit(data.user_limit ?? 5);
+      setDurationDays(data.duration_days ?? 30);
+      setHasPremiumModules(data.has_premium_modules ?? false);
+      setExpired(data.expired || false);
+      setExpiredAt(data.expired_at || null);
+    } catch (err) {
+      console.error("Error checking subscription:", err);
+      setSubscribed(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [session, roles, authLoading]);
+
+  useEffect(() => {
+    if (session) {
+      setLoading(true);
+      checkSubscription();
+    } else {
+      setSubscribed(false);
+      setLoading(false);
+    }
+  }, [session, checkSubscription]);
+
+  useEffect(() => {
+    if (!session) return;
+    const interval = setInterval(checkSubscription, 60000);
+    return () => clearInterval(interval);
+  }, [session, checkSubscription]);
 
   return (
-    <SubscriptionContext.Provider value={value}>
+    <SubscriptionContext.Provider value={{ subscribed, loading, planName, subscriptionEnd, contactLimit, userLimit, durationDays, hasPremiumModules, expired, expiredAt, checkSubscription }}>
       {children}
     </SubscriptionContext.Provider>
   );
