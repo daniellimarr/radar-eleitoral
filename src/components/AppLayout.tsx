@@ -14,42 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-function ExpiredSubscriptionScreen({ planName, expiredAt }: { planName: string | null; expiredAt: string | null }) {
-  const navigate = useNavigate();
-  const { signOut } = useAuth();
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center p-4">
-      <Card className="max-w-md w-full border-destructive/50">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
-            <AlertTriangle className="h-8 w-8 text-destructive" />
-          </div>
-          <CardTitle className="text-2xl">Assinatura Expirada</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <p className="text-muted-foreground">
-            Seu plano <strong>{planName || "atual"}</strong> expirou
-            {expiredAt && (
-              <> em <strong>{format(new Date(expiredAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</strong></>
-            )}.
-          </p>
-          <p className="text-muted-foreground text-sm">
-            O acesso ao sistema está bloqueado até que você renove sua assinatura.
-          </p>
-          <div className="flex flex-col gap-3 pt-4">
-            <Button onClick={() => navigate("/planos")} size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600">
-              Renovar Plano
-            </Button>
-            <Button variant="ghost" onClick={() => signOut()} size="sm">
-              Sair
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading, profile, profileStatus, roles, signOut } = useAuth();
@@ -99,23 +63,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return <PendingApproval />;
   }
 
-  if (subLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // Show expired screen with renewal option
-  if (expired && !isSuperAdmin) {
-    return <ExpiredSubscriptionScreen planName={planName} expiredAt={expiredAt} />;
-  }
-
-  // Not subscribed at all - redirect to landing
-  if (!subscribed && !isSuperAdmin && location.pathname !== "/assinatura") {
-    return <Navigate to="/" replace />;
-  }
 
   return (
     <SidebarProvider>

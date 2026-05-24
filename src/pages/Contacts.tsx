@@ -211,12 +211,7 @@ export default function Contacts() {
         }
       }
     } else {
-      // Check contact limit before inserting
-      if (contactLimit !== Infinity && contacts.length >= contactLimit) {
-        toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido. Faça upgrade do seu plano.`);
-        setLoading(false);
-        return;
-      }
+
       const { data: inserted, error } = await supabase.from("contacts").insert(payload).select("id").single();
       if (error) { toast.error(error.message); }
       else {
