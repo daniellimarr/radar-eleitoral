@@ -2048,6 +2048,12 @@ export type Database = {
           tenant_name: string
         }[]
       }
+      get_user_leader_contact_ids: {
+        Args: { _user_id: string }
+        Returns: {
+          contact_id: string
+        }[]
+      }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
