@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { contactService } from "@/services/contactService";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -8,9 +9,7 @@ import { Contact } from "@/types";
 export function useContacts() {
   const { tenantId, profile, hasRole, user } = useAuth();
   const { contactLimit } = useSubscription();
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [leaders, setLeaders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
 
   const isOperador = hasRole("operador");
@@ -18,45 +17,26 @@ export function useContacts() {
   const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
   const effectiveTenantId = tenantId || MAIN_TENANT;
 
-  const fetchContacts = useCallback(async () => {
-    try {
-      const data = await contactService.fetchContacts(effectiveTenantId, search);
-      setContacts(data as Contact[]);
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  }, [effectiveTenantId, search]);
+  const { data: contacts = [], isLoading: contactsLoading } = useQuery({
+    queryKey: ["contacts", effectiveTenantId, search],
+    queryFn: () => contactService.fetchContacts(effectiveTenantId, search),
+    enabled: !!effectiveTenantId,
+  });
 
-  const fetchLeaders = useCallback(async () => {
-    try {
-      const data = await contactService.fetchLeaders(effectiveTenantId, isOperador, profile?.full_name);
-      setLeaders(data);
-    } catch (error: any) {
-      console.error("Error fetching leaders:", error);
-    }
-  }, [effectiveTenantId, isOperador, profile?.full_name]);
+  const { data: leaders = [], isLoading: leadersLoading } = useQuery({
+    queryKey: ["leaders", effectiveTenantId, isOperador, profile?.full_name],
+    queryFn: () => contactService.fetchLeaders(effectiveTenantId, isOperador, profile?.full_name),
+    enabled: !!effectiveTenantId,
+  });
 
-  useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
+  const saveMutation = useMutation({
+    mutationFn: async ({ form, editingId }: { form: any; editingId: string | null }) => {
+      if (!user) throw new Error("Faça login para cadastrar contatos.");
 
-  useEffect(() => {
-    fetchLeaders();
-  }, [fetchLeaders]);
+      if (!editingId && contactLimit !== Infinity && contacts.length >= contactLimit) {
+        throw new Error(`Limite de ${contactLimit.toLocaleString()} contatos atingido.`);
+      }
 
-  const saveContact = async (form: any, editingId: string | null) => {
-    if (!user) {
-      toast.error("Faça login para cadastrar contatos.");
-      return;
-    }
-
-    if (!editingId && contactLimit !== Infinity && contacts.length >= contactLimit) {
-      toast.error(`Limite de ${contactLimit.toLocaleString()} contatos atingido.`);
-      return;
-    }
-
-    setLoading(true);
-    try {
       const sanitizedPayload = { 
         ...form, 
         tenant_id: effectiveTenantId, 
@@ -68,36 +48,55 @@ export function useContacts() {
       if (form.is_leader && saved) {
         await contactService.ensureLeaderAndLink(saved.id, effectiveTenantId, user.id);
       }
-      
-      toast.success(editingId ? "Contato atualizado!" : "Contato cadastrado!");
-      fetchContacts();
-      return true;
-    } catch (error: any) {
+      return saved;
+    },
+    onSuccess: (_, variables) => {
+      toast.success(variables.editingId ? "Contato atualizado!" : "Contato cadastrado!");
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["leaders"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["operator-stats"] });
+    },
+    onError: (error: any) => {
       toast.error(error.message);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => contactService.deleteContact(id),
+    onSuccess: () => {
+      toast.success("Contato removido");
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["leaders"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["operator-stats"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message);
+    },
+  });
+
+  const saveContact = async (form: any, editingId: string | null) => {
+    try {
+      await saveMutation.mutateAsync({ form, editingId });
+      return true;
+    } catch {
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
   const deleteContact = async (id: string) => {
-    try {
-      await contactService.deleteContact(id);
-      toast.success("Contato removido");
-      fetchContacts();
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    deleteMutation.mutate(id);
   };
 
   return {
-    contacts,
+    contacts: contacts as Contact[],
     leaders,
-    loading,
+    loading: contactsLoading || leadersLoading || saveMutation.isPending || deleteMutation.isPending,
     search,
     setSearch,
     saveContact,
     deleteContact,
-    refresh: fetchContacts
+    refresh: () => queryClient.invalidateQueries({ queryKey: ["contacts"] })
   };
 }

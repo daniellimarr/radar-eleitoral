@@ -3,50 +3,29 @@ import { CalendarIcon, ClipboardList, UserPlus, MapPin, Navigation, Home } from 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useOperatorStats } from "@/hooks/useOperatorStats";
 
 export default function OperatorDashboard() {
-  const { tenantId, profile, loading } = useAuth();
+  const { tenantId, profile, loading: authLoading } = useAuth();
   const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
   const effectiveTenantId = tenantId || MAIN_TENANT;
 
   const navigate = useNavigate();
-  const [todayAppointments, setTodayAppointments] = useState(0);
-  const [pendingDemands, setPendingDemands] = useState(0);
-  const [recentContacts, setRecentContacts] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (loading) return;
-
-    const fetchData = async () => {
-      const now = new Date();
-      const todayStart = format(now, "yyyy-MM-dd") + "T00:00:00";
-      const todayEnd = format(now, "yyyy-MM-dd") + "T23:59:59";
-
-      const [apptRes, demandRes, contactsRes] = await Promise.all([
-        supabase.from("appointments").select("*", { count: "exact", head: true })
-          .eq("tenant_id", effectiveTenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
-        supabase.from("demands").select("*", { count: "exact", head: true })
-          .eq("tenant_id", effectiveTenantId).in("status", ["aberta", "em_andamento"]),
-        supabase.from("contacts_decrypted").select("id, name, birth_date, created_at")
-          .eq("tenant_id", effectiveTenantId).is("deleted_at", null)
-          .order("created_at", { ascending: false }).limit(10),
-      ]);
-
-      setTodayAppointments(apptRes.count || 0);
-      setPendingDemands(demandRes.count || 0);
-      setRecentContacts(contactsRes.data || []);
-    };
-
-    fetchData();
-  }, [effectiveTenantId, loading]);
+  const { data: stats, isLoading: statsLoading } = useOperatorStats(effectiveTenantId);
 
   const quickActions = [
     { label: "Novo Contato", icon: UserPlus, path: "/contacts", color: "bg-emerald-100 text-emerald-600" },
     { label: "Solicitar Visita", icon: Navigation, path: "/visit-requests", color: "bg-blue-100 text-blue-600" },
   ];
+
+  if (authLoading || statsLoading || !stats) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -74,7 +53,7 @@ export default function OperatorDashboard() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Atendimentos hoje</p>
-              <p className="text-2xl font-bold">{todayAppointments}</p>
+              <p className="text-2xl font-bold">{stats.todayAppointments}</p>
             </div>
           </CardContent>
         </Card>
@@ -85,7 +64,7 @@ export default function OperatorDashboard() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Demandas pendentes</p>
-              <p className="text-2xl font-bold">{pendingDemands}</p>
+              <p className="text-2xl font-bold">{stats.pendingDemands}</p>
             </div>
           </CardContent>
         </Card>
@@ -113,12 +92,12 @@ export default function OperatorDashboard() {
       </Card>
 
       {/* Recent contacts */}
-      {recentContacts.length > 0 && (
+      {stats.recentContacts.length > 0 && (
         <Card>
           <CardHeader><CardTitle>Meus cadastros</CardTitle></CardHeader>
           <CardContent>
             <ul className="divide-y">
-              {recentContacts.map((c) => (
+              {stats.recentContacts.map((c: any) => (
                 <li key={c.id} className="py-3 flex justify-between items-center">
                   <div>
                     <span className="font-medium">{c.name}</span>

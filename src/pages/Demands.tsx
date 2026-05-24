@@ -52,7 +52,8 @@ export default function Demands() {
     if (form.leader_id) {
       const leader = leaders.find(l => l.id === form.leader_id);
       if (leader) {
-        filtered = contacts.filter(c => c.leader_id === leader.contact_id);
+        // Use leader.id which is the contact_id of the leader
+        filtered = contacts.filter(c => c.leader_id === leader.id);
       }
     }
     if (contactSearch) {

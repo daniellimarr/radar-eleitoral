@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, MessageSquare, Gift, Megaphone, Calendar as CalendarIcon, Target, TrendingUp, DollarSign, MapPin, Crown, ArrowUpRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import OperatorDashboard from "@/components/OperatorDashboard";
 import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
+
 const engagementLabels: Record<string, string> = {
   nao_trabalhado: "Não trabalhado",
   em_prospeccao: "Em prospecção",
@@ -42,105 +43,22 @@ const engagementBadgeColors: Record<string, string> = {
   envolvimento_perdido: "border-destructive text-destructive",
 };
 
-const engagementWeight: Record<string, number> = {
-  conquistado: 0.9,
-  criando_envolvimento: 0.6,
-  em_prospeccao: 0.3,
-  nao_trabalhado: 0.1,
-  falta_trabalhar: 0.15,
-  envolvimento_perdido: 0.05,
-};
-
 export default function Dashboard() {
-  const { tenantId, hasRole, loading, roles } = useAuth();
+  const { tenantId, hasRole, loading: authLoading, roles } = useAuth();
   const { planName, contactLimit, userLimit, subscriptionEnd } = useSubscription();
   const navigate = useNavigate();
   const isOperador = hasRole("operador");
   const isSuperAdmin = hasRole("super_admin");
   const isAdminRole = isSuperAdmin || hasRole("admin_gabinete");
-  const [stats, setStats] = useState({ contacts: 0, appointmentsToday: 0, birthdays: 0, citizenParticipates: 0 });
-  const [engagementData, setEngagementData] = useState<Record<string, number>>({});
-  const [monthlyData, setMonthlyData] = useState<any[]>([]);
-  const [campaign, setCampaign] = useState<any>(null);
-  const [projectedVotes, setProjectedVotes] = useState(0);
-  const [financialSummary, setFinancialSummary] = useState({ donations: 0, expenses: 0 });
-  const [neighborhoodData, setNeighborhoodData] = useState<any[]>([]);
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
+
   const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
   const effectiveTenantId = tenantId || MAIN_TENANT;
 
-  useEffect(() => {
-    if (isOperador) return;
-
-    const fetchStats = async () => {
-      const now = new Date();
-      const todayStart = format(now, "yyyy-MM-dd") + "T00:00:00";
-      const todayEnd = format(now, "yyyy-MM-dd") + "T23:59:59";
-
-      const [contactRes, appointmentsRes, birthdayRes, engagementRes, allContactsRes, campaignRes, donationsRes, expensesRes] = await Promise.all([
-        supabase.from("contacts_decrypted").select("*", { count: "exact", head: true }).eq("tenant_id", effectiveTenantId).is("deleted_at", null),
-        supabase.from("appointments").select("*", { count: "exact", head: true }).eq("tenant_id", effectiveTenantId).gte("start_time", todayStart).lte("start_time", todayEnd),
-        supabase.from("contacts_decrypted").select("birth_date").eq("tenant_id", effectiveTenantId).is("deleted_at", null).not("birth_date", "is", null),
-        supabase.from("contacts_decrypted").select("engagement, neighborhood").eq("tenant_id", effectiveTenantId).is("deleted_at", null),
-        supabase.from("contacts_decrypted").select("created_at").eq("tenant_id", effectiveTenantId).is("deleted_at", null),
-        supabase.from("campaigns").select("*").eq("tenant_id", effectiveTenantId).order("created_at", { ascending: false }).limit(1),
-        supabase.from("donations").select("valor").eq("tenant_id", effectiveTenantId),
-        supabase.from("expenses").select("valor").eq("tenant_id", effectiveTenantId),
-      ]);
-
-      // Birthdays
-      const todayMMDD = `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-      const birthdayCount = (birthdayRes.data || []).filter((c: any) => {
-        const [, month, day] = c.birth_date.split("-");
-        return `${month}-${day}` === todayMMDD;
-      }).length;
-
-      // Engagement
-      const contacts = engagementRes.data || [];
-      const engagement: Record<string, number> = {};
-      let projVotes = 0;
-      const neighborhoodMap: Record<string, number> = {};
-
-      contacts.forEach((c: any) => {
-        const e = c.engagement || "nao_trabalhado";
-        engagement[e] = (engagement[e] || 0) + 1;
-        projVotes += engagementWeight[e] || 0;
-        if (c.neighborhood) {
-          neighborhoodMap[c.neighborhood] = (neighborhoodMap[c.neighborhood] || 0) + 1;
-        }
-      });
-
-      setEngagementData(engagement);
-      setProjectedVotes(Math.round(projVotes));
-      setNeighborhoodData(
-        Object.entries(neighborhoodMap).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, value]) => ({ name, value }))
-      );
-
-      if (campaignRes.data && campaignRes.data.length > 0) setCampaign(campaignRes.data[0]);
-
-      const totalDonations = (donationsRes.data || []).reduce((s: number, d: any) => s + Number(d.valor), 0);
-      const totalExpenses = (expensesRes.data || []).reduce((s: number, e: any) => s + Number(e.valor), 0);
-      setFinancialSummary({ donations: totalDonations, expenses: totalExpenses });
-
-      setStats({
-        contacts: contactRes.count || 0,
-        appointmentsToday: appointmentsRes.count || 0,
-        birthdays: birthdayCount,
-        citizenParticipates: 0,
-      });
-
-      // Monthly chart
-      const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-      const monthCounts = new Array(12).fill(0);
-      (allContactsRes.data || []).forEach((c: any) => { monthCounts[new Date(c.created_at).getMonth()]++; });
-      setMonthlyData(months.map((m, i) => ({ name: m, cadastros: monthCounts[i] })));
-    };
-
-    fetchStats();
-  }, [effectiveTenantId, isOperador]);
+  const { data: dashboardData, isLoading: statsLoading } = useDashboardStats(effectiveTenantId, isOperador);
 
   // Wait for auth/roles to load before deciding which dashboard to show
-  if (loading || (roles.length === 0 && !effectiveTenantId)) {
+  if (authLoading || (roles.length === 0 && !effectiveTenantId)) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Carregando...</p>
@@ -155,6 +73,24 @@ export default function Dashboard() {
   if (isOperador) {
     return <OperatorDashboard />;
   }
+
+  if (statsLoading || !dashboardData) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Carregando estatísticas...</p>
+      </div>
+    );
+  }
+
+  const {
+    stats,
+    engagementData,
+    projectedVotes,
+    neighborhoodData,
+    campaign,
+    financialSummary,
+    monthlyData,
+  } = dashboardData;
 
   const totalEngagement = Object.values(engagementData).reduce((a, b) => a + b, 0) || 1;
   const metaVotos = campaign?.meta_votos || 0;

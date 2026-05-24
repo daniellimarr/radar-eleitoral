@@ -1,37 +1,27 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { demandService } from "@/services/demandService";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 export function useDemands() {
   const { tenantId, user } = useAuth();
-  const [demands, setDemands] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
 
   const MAIN_TENANT = "a0000000-0000-0000-0000-000000000001";
   const effectiveTenantId = tenantId || MAIN_TENANT;
 
-  const fetchDemands = useCallback(async () => {
-    try {
-      const data = await demandService.fetchDemands(effectiveTenantId, search);
-      setDemands(data);
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  }, [effectiveTenantId, search]);
+  const { data: demands = [], isLoading: demandsLoading } = useQuery({
+    queryKey: ["demands", effectiveTenantId, search],
+    queryFn: () => demandService.fetchDemands(effectiveTenantId, search),
+    enabled: !!effectiveTenantId,
+  });
 
-  useEffect(() => {
-    fetchDemands();
-  }, [fetchDemands]);
-
-  const saveDemand = async (form: any) => {
-    if (!user) {
-      toast.error("Faça login para cadastrar demandas.");
-      return;
-    }
-    setLoading(true);
-    try {
+  const saveMutation = useMutation({
+    mutationFn: async (form: any) => {
+      if (!user) throw new Error("Faça login para cadastrar demandas.");
+      
       const payload = { 
         ...form, 
         tenant_id: effectiveTenantId, 
@@ -41,34 +31,51 @@ export function useDemands() {
       // Remove leader_id from payload as it's not in the table
       delete (payload as any).leader_id;
       
-      await demandService.saveDemand(payload);
+      return demandService.saveDemand(payload);
+    },
+    onSuccess: () => {
       toast.success("Demanda cadastrada!");
-      fetchDemands();
-      return true;
-    } catch (error: any) {
+      queryClient.invalidateQueries({ queryKey: ["demands"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["operator-stats"] });
+    },
+    onError: (error: any) => {
       toast.error(error.message);
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) => demandService.updateStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["demands"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["operator-stats"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message);
+    },
+  });
+
+  const saveDemand = async (form: any) => {
+    try {
+      await saveMutation.mutateAsync(form);
+      return true;
+    } catch {
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
   const updateStatus = async (id: string, status: string) => {
-    try {
-      await demandService.updateStatus(id, status);
-      fetchDemands();
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    updateStatusMutation.mutate({ id, status });
   };
 
   return {
     demands,
-    loading,
+    loading: demandsLoading || saveMutation.isPending || updateStatusMutation.isPending,
     search,
     setSearch,
     saveDemand,
     updateStatus,
-    refresh: fetchDemands
+    refresh: () => queryClient.invalidateQueries({ queryKey: ["demands"] })
   };
 }
