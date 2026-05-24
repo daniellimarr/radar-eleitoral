@@ -41,12 +41,12 @@ export default function Campaigns() {
   const handleSave = async () => {
     if (!form.nome_campanha.trim()) { toast.error("Nome da campanha é obrigatório"); return; }
     
-    let tid = tenantId;
-    if (!tid && user?.id) {
-      const { data: prof } = await supabase.from("profiles").select("tenant_id").eq("user_id", user.id).maybeSingle();
-      tid = prof?.tenant_id || null;
+    const tid = tenantId;
+    if (!tid) { 
+      toast.error("Gabinete não identificado. Recarregue a página."); 
+      return; 
     }
-    if (!tid) { toast.error("Gabinete não identificado. Recarregue a página."); return; }
+
     
     setLoading(true);
     try {
