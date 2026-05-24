@@ -139,7 +139,7 @@ export default function Contacts() {
       .eq("tenant_id", tenantId)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(200);
 
     if (search) {
       query = query.ilike("name", `%${search}%`);
@@ -149,11 +149,33 @@ export default function Contacts() {
       query = query.eq("engagement", engagementFilter as any);
     }
 
+    if (typeFilter === "leaders") {
+      query = query.eq("is_leader", true);
+    } else if (typeFilter === "contacts") {
+      query = query.eq("is_leader", false);
+    }
+
     const { data } = await query;
     setContacts(data || []);
   };
 
-  useEffect(() => { fetchContacts(); }, [tenantId, search, engagementFilter]);
+  const fetchRegistrationLinks = async () => {
+    if (!tenantId) return;
+    const { data } = await supabase
+      .from("registration_links")
+      .select("slug, leader_contact_id")
+      .eq("tenant_id", tenantId)
+      .eq("is_active", true);
+    const map: Record<string, string> = {};
+    (data || []).forEach((l: any) => {
+      if (l.leader_contact_id) map[l.leader_contact_id] = l.slug;
+    });
+    setRegistrationLinks(map);
+  };
+
+  useEffect(() => { fetchContacts(); }, [tenantId, search, engagementFilter, typeFilter]);
+  useEffect(() => { fetchRegistrationLinks(); }, [tenantId]);
+
 
   const generateSlug = (name: string) =>
     name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
