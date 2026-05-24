@@ -47,7 +47,7 @@ const NotificationBell = React.forwardRef<HTMLDivElement>(function NotificationB
 
     // Realtime subscription
     const channel = supabase
-      .channel("notifications-realtime")
+      .channel(`notifications-${tenantId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications" },
