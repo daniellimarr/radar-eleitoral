@@ -13,6 +13,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 // Otimização: Lazy load de dashboards secundários
 const OperatorDashboard = lazy(() => import("@/components/OperatorDashboard"));
@@ -178,92 +179,117 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-700">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Início</h1>
-        <div className="flex items-center gap-2 text-sm bg-foreground text-background px-4 py-2 rounded-lg font-medium">
-          <CalendarIcon className="h-4 w-4" />
-          {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Painel Geral</h1>
+          <p className="text-muted-foreground mt-1">Acompanhe o desempenho da sua campanha em tempo real.</p>
+        </div>
+        <div className="flex items-center gap-3 bg-card border px-4 py-2.5 rounded-xl shadow-sm">
+          <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+          </div>
         </div>
       </div>
 
       {/* Stat Cards */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {statCards.map((card) => (
-              <div key={card.label} className="flex items-center gap-4">
-                <div className={`h-14 w-14 rounded-full ${card.bgColor} flex items-center justify-center shrink-0`}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((card, index) => (
+          <Card key={card.label} className="border-none shadow-md overflow-hidden group hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-0">
+              <div className="p-6 flex items-center gap-4">
+                <div className={`h-14 w-14 rounded-2xl ${card.bgColor} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300`}>
                   <card.icon className={`h-7 w-7 ${card.iconColor}`} />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">{card.label}</p>
-                  <p className="text-3xl font-bold">{card.value.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{card.label}</p>
+                  <p className="text-3xl font-bold tracking-tight mt-1">{card.value.toLocaleString()}</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <div className={`h-1 w-full ${card.bgColor.replace('100', '500')} opacity-20`} />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       {/* Charts Row: Visão Geral + Termômetro */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
+        <Card className="border-none shadow-md">
+          <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle>Visão geral</CardTitle>
+              <div>
+                <CardTitle className="text-lg font-bold">Crescimento da Base</CardTitle>
+                <p className="text-sm text-muted-foreground">Cadastros realizados por mês</p>
+              </div>
               <div className="flex gap-2">
                 <Select value={yearFilter} onValueChange={setYearFilter}>
-                  <SelectTrigger className="w-20 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-24 h-9 bg-muted/50 border-none"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {[2024, 2025, 2026, 2027].map(y => (
                       <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Select defaultValue="cadastros">
-                  <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cadastros">Cadastros</SelectItem>
-                    <SelectItem value="atendimentos">Atendimentos</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="h-72">
+          <CardContent className="h-[300px] pt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip />
-                <Bar dataKey="cadastros" fill="hsl(220, 70%, 85%)" radius={[4, 4, 0, 0]} />
+              <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="name" 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <YAxis 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                />
+                <Bar dataKey="cadastros" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} barSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader><CardTitle>Termômetro de envolvimento</CardTitle></CardHeader>
-          <CardContent className="space-y-5">
-            <div className="grid grid-cols-[1fr_auto] gap-x-4 text-sm font-medium text-muted-foreground border-b pb-2">
-              <span>Status</span>
-              <span>Progresso</span>
+        <Card className="border-none shadow-md">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-bold">Termômetro de Envolvimento</CardTitle>
+            <p className="text-sm text-muted-foreground">Nível de engajamento da sua base</p>
+          </CardHeader>
+          <CardContent className="space-y-5 pt-4">
+            <div className="grid grid-cols-[1fr_auto] gap-x-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest border-b pb-3">
+              <span>Status de Engajamento</span>
+              <span>Total</span>
             </div>
             {Object.entries(engagementLabels).map(([key, label]) => {
               const count = engagementData[key] || 0;
               const pct = Math.max((count / totalEngagement) * 100, 2);
               return (
-                <div key={key} className="flex items-center gap-4">
-                  <span className="text-sm font-medium w-44 shrink-0">{label}</span>
-                  <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
-                    <div className={`h-full rounded-full ${engagementBarColors[key]}`} style={{ width: `${pct}%` }} />
+                <div key={key} className="group">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-foreground/80">{label}</span>
+                    <Badge variant="outline" className={`font-mono font-bold transition-colors ${engagementBadgeColors[key]}`}>
+                      {count.toLocaleString()}
+                    </Badge>
                   </div>
-                  <span className={`text-xs font-bold border rounded-full px-3 py-0.5 ${engagementBadgeColors[key]}`}>
-                    {count.toLocaleString()}
-                  </span>
+                  <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-1000 ${engagementBarColors[key]}`} 
+                      style={{ width: `${pct}%` }} 
+                    />
+                  </div>
                 </div>
               );
             })}

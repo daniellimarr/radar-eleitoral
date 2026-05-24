@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Loader2 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 import { DemandTable } from "@/components/demands/DemandTable";
 import { DocsDialog } from "@/components/demands/DocsDialog";
@@ -144,20 +144,44 @@ export default function Demands() {
     const { data } = await supabase.storage.from("demand-documents").createSignedUrl(doc.storage_path, 120);
     if (data?.signedUrl) { setPreviewUrl(data.signedUrl); setPreviewMimeType(doc.mime_type || null); }
   };
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-2xl font-bold">Demandas</h1>
-        <div className="flex gap-2">
+    <div className="space-y-8 animate-in fade-in duration-700">
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Demandas</h1>
+          <p className="text-muted-foreground mt-1">Gestão de solicitações e acompanhamento de tarefas.</p>
+        </div>
+        <div className="flex gap-3">
           <ExportButtons tableRef={tableRef} title="Demandas" filename="demandas" />
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nova Demanda</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Nova Demanda</DialogTitle></DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2"><Label>Título *</Label><Input value={form.title} onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} /></div>
+            <DialogTrigger asChild>
+              <Button className="shadow-lg shadow-primary/20 transition-all hover:scale-105">
+                <Plus className="h-4 w-4 mr-2" /> Nova Demanda
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Nova Demanda</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-5 py-4">
+                <div className="space-y-2">
+                  <Label>Título da Demanda *</Label>
+                  <Input 
+                    placeholder="Ex: Reforma da praça central" 
+                    value={form.title} 
+                    onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Descrição Detalhada</Label>
+                  <Textarea 
+                    placeholder="Descreva os detalhes da solicitação..." 
+                    className="min-h-[100px]"
+                    value={form.description} 
+                    onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} 
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>Prioridade</Label>
                   <Select value={form.priority} onValueChange={(v) => setForm(p => ({ ...p, priority: v }))}>
@@ -170,16 +194,25 @@ export default function Demands() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleSave} disabled={loading} className="w-full">{loading ? "Salvando..." : "Cadastrar"}</Button>
+                <Button onClick={handleSave} disabled={loading} className="w-full h-11 text-base font-semibold">
+                  {loading ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
+                  ) : "Criar Demanda"}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-10" placeholder="Pesquisar demanda..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="flex items-center gap-4 bg-card border px-4 py-2 rounded-2xl shadow-sm max-w-md focus-within:ring-2 ring-primary/20 transition-all">
+        <Search className="h-5 w-5 text-muted-foreground" />
+        <Input 
+          className="border-none focus-visible:ring-0 bg-transparent p-0 text-base" 
+          placeholder="Pesquisar por título ou descrição..." 
+          value={search} 
+          onChange={(e) => setSearch(e.target.value)} 
+        />
       </div>
 
       <Card>

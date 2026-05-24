@@ -8,17 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MapPin, Search, RefreshCw, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MapPin, Search, RefreshCw, Loader2, Users, User, Filter, Map as MapIcon } from "lucide-react";
 import { toast } from "sonner";
-
-// Fix default marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-});
-
+import { Badge } from "@/components/ui/badge";
 
 // Fix default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -30,13 +23,13 @@ L.Icon.Default.mergeOptions({
 
 const createPinIcon = (color: string, label?: string) =>
   new L.DivIcon({
-    html: `<div style="position:relative;display:flex;flex-direction:column;align-items:center;">
-      <div style="background:${color};color:white;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);">
+    html: `<div class="marker-container" style="position:relative;display:flex;flex-direction:column;align-items:center;filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+      <div style="background:${color};color:white;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;border:2px solid white;">
         ${label || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'}
       </div>
       <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid ${color};margin-top:-2px;"></div>
     </div>`,
-    className: "",
+    className: "custom-leaflet-marker",
     iconSize: [32, 42],
     iconAnchor: [16, 42],
     popupAnchor: [0, -42],
@@ -258,105 +251,109 @@ export default function Georeferencing() {
   const totalWithGeo = contacts.filter((c) => c.latitude && c.longitude).length;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background">
       {/* Sidebar Filters */}
-      <div className="w-64 border-r bg-card flex flex-col shrink-0">
-        <div className="p-4 border-b">
-          <h2 className="text-base font-bold flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-primary" />
-            Georreferenciamento
+      <aside className="w-80 border-r bg-card/50 backdrop-blur-sm flex flex-col shrink-0 animate-in fade-in slide-in-from-left duration-500">
+        <div className="p-6 border-b space-y-1">
+          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+            <MapIcon className="h-5 w-5 text-primary" />
+            Mapa Territorial
           </h2>
+          <p className="text-sm text-muted-foreground">Localize apoiadores por região.</p>
         </div>
 
-        <ScrollArea className="flex-1 p-3">
-          <div className="space-y-2.5">
-            <div>
-              <label className="text-[10px] font-semibold text-muted-foreground mb-0.5 block uppercase">Nome</label>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar..."
-                  value={searchName}
-                  onChange={(e) => setSearchName(e.target.value)}
-                  className="pl-7 h-9 text-sm"
-                />
+        <ScrollArea className="flex-1 px-6 py-4">
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
+                <Filter className="h-4 w-4" />
+                Filtros de Busca
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Nome ou Apelido</label>
+                  <div className="relative group">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input
+                      placeholder="Buscar por nome..."
+                      value={searchName}
+                      onChange={(e) => setSearchName(e.target.value)}
+                      className="pl-9 bg-background/50 border-muted-foreground/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Categoria</label>
+                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                      <SelectTrigger className="bg-background/50 border-muted-foreground/20">
+                        <SelectValue placeholder="Todas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas as Categorias</SelectItem>
+                        {categories.map((c) => (
+                          <SelectItem key={c} value={c!}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Liderança Responsável</label>
+                    <Select value={selectedLeader} onValueChange={setSelectedLeader}>
+                      <SelectTrigger className="bg-background/50 border-muted-foreground/20">
+                        <SelectValue placeholder="Todas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas as Lideranças</SelectItem>
+                        {leadersList.map((l) => (
+                          <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Localização (Bairro)</label>
+                  <Select value={filterNeighborhood} onValueChange={setFilterNeighborhood}>
+                    <SelectTrigger className="bg-background/50 border-muted-foreground/20">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Bairros</SelectItem>
+                      {neighborhoods.map((n) => (
+                        <SelectItem key={n} value={n!}>{n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="text-[10px] font-semibold text-muted-foreground mb-0.5 block uppercase">Categoria</label>
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Todas" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c} value={c!}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-semibold text-muted-foreground mb-0.5 block uppercase">Liderança</label>
-              <Select value={selectedLeader} onValueChange={setSelectedLeader}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Todas" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {leadersList.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-semibold text-muted-foreground mb-0.5 block uppercase">Sexo</label>
-              <Select value={filterGender} onValueChange={setFilterGender}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Todos" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="Masculino">Masculino</SelectItem>
-                  <SelectItem value="Feminino">Feminino</SelectItem>
-                  <SelectItem value="Outro">Outro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-semibold text-muted-foreground mb-0.5 block uppercase">Bairro</label>
-              <Select value={filterNeighborhood} onValueChange={setFilterNeighborhood}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Todos" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {neighborhoods.map((n) => (
-                    <SelectItem key={n} value={n!}>{n}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-semibold text-muted-foreground mb-0.5 block uppercase">Cidade</label>
-              <Select value={filterCity} onValueChange={setFilterCity}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Todas" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {cities.map((c) => (
-                    <SelectItem key={c} value={c!}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-1.5">
-            <div className="flex items-center gap-2 text-xs">
-              <div className="w-4 h-4 rounded-full bg-[#2563eb] border-2 border-white shadow" />
-              <span className="text-muted-foreground">Liderança</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs">
-              <div className="w-4 h-4 rounded-full bg-[#ec4899] border-2 border-white shadow" />
-              <span className="text-muted-foreground">Eleitor/Contato</span>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
+                <MapPin className="h-4 w-4" />
+                Legenda
+              </div>
+              <div className="p-4 bg-muted/30 rounded-xl border border-border/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-3 h-3 rounded-full bg-[#2563eb] ring-4 ring-blue-500/20" />
+                    <span className="text-sm font-medium">Lideranças</span>
+                  </div>
+                  <Badge variant="secondary" className="font-mono text-[10px]">{geoLeaders.length}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-3 h-3 rounded-full bg-[#ec4899] ring-4 ring-pink-500/20" />
+                    <span className="text-sm font-medium">Eleitores/Apoiadores</span>
+                  </div>
+                  <Badge variant="secondary" className="font-mono text-[10px]">{geoVoters.length}</Badge>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -384,7 +381,7 @@ export default function Georeferencing() {
             Geo Referenciamento é realizado por CEP e por aproximação. O número da localidade não é considerado.
           </p>
         </ScrollArea>
-      </div>
+      </aside>
 
       {/* Map Area */}
       <div className="flex-1 relative">
