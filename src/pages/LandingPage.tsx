@@ -58,18 +58,37 @@ const landingPlans = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
 
-    useEffect(() => {
-      if (!loading && user) {
-        navigate("/dashboard");
-      }
-    }, [user, loading, navigate]);
-  const isLoggedInWithoutSub = false; // Always false since access is free after login
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
+
+  const handleDemoLogin = async () => {
+    setIsDemoLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("setup-demo");
+      if (error) throw error;
+      if (!data?.actionLink) throw new Error("Link de acesso não retornado");
+
+      toast.success("Entrando no modo teste...");
+      window.location.href = data.actionLink;
+    } catch (err: any) {
+      toast.error("Erro ao configurar demo: " + (err.message || "Tente novamente"));
+      setIsDemoLoading(false);
+    }
+  };
+
+  const isLoggedInWithoutSub = false;
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
+
 
   const formatCpf = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -108,7 +127,6 @@ export default function LandingPage() {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-500">
             <button onClick={() => scrollTo("features")} className="hover:text-[#FF6B00] transition-colors">Funcionalidades</button>
-            <button onClick={() => scrollTo("features")} className="hover:text-[#FF6B00] transition-colors">Funcionalidades</button>
             <button onClick={() => scrollTo("benefits")} className="hover:text-[#FF6B00] transition-colors">Benefícios</button>
             <button onClick={() => scrollTo("contact")} className="hover:text-[#FF6B00] transition-colors">Contato</button>
           </div>
@@ -122,15 +140,17 @@ export default function LandingPage() {
                 <Button variant="ghost" onClick={() => navigate("/auth")} className="text-sm font-medium text-gray-600">
                   Entrar
                 </Button>
-                <Button onClick={() => navigate("/auth")}
+                <Button onClick={handleDemoLogin} disabled={isDemoLoading}
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-sm font-semibold px-5 rounded-lg shadow-md shadow-[#FF6B00]/20">
-                  Começar Agora
+                  {isDemoLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Testar Sistema
                 </Button>
               </>
             )}
           </div>
         </div>
       </nav>
+
 
       {/* ── Hero ── */}
       <section className="relative pt-28 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
@@ -157,15 +177,17 @@ export default function LandingPage() {
               </motion.p>
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}
                 className="mt-10 flex flex-col sm:flex-row items-start gap-4">
-                <Button onClick={() => navigate("/auth")} size="lg"
+                <Button onClick={handleDemoLogin} disabled={isDemoLoading} size="lg"
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-base font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#FF6B00]/30 hover:shadow-[#FF6B00]/50 transition-all">
-                  Começar Agora <ArrowRight className="ml-2 h-5 w-5" />
+                  {isDemoLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <ArrowRight className="mr-2 h-5 w-5" />}
+                  Testar Sistema Agora
                 </Button>
-                <Button variant="outline" size="lg" onClick={() => navigate("/demo")}
+                <Button variant="outline" size="lg" onClick={() => navigate("/auth")}
                   className="border-gray-600 text-gray-300 hover:bg-white/5 text-base px-8 py-6 rounded-xl bg-transparent">
-                  <Eye className="mr-2 h-5 w-5" /> Ver Demonstração
+                  Criar Conta
                 </Button>
               </motion.div>
+
             </div>
 
             {/* Dashboard Mockup - Otimização: Substituído por imagem real com lazy loading */}
@@ -298,11 +320,13 @@ export default function LandingPage() {
                 O Radar Eleitoral traz a organização política para uma plataforma moderna. Com o sistema você pode gerenciar contatos, acompanhar demandas, coordenar lideranças e planejar campanhas — tudo em um único painel.
               </motion.p>
               <motion.div variants={fadeUp} custom={3} className="mt-8">
-                <Button onClick={() => navigate("/auth")} size="lg"
+                <Button onClick={handleDemoLogin} disabled={isDemoLoading} size="lg"
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#FF6B00]/25">
-                  Comece Gratuitamente <ArrowRight className="ml-2 h-5 w-5" />
+                  {isDemoLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <ArrowRight className="mr-2 h-5 w-5" />}
+                  Testar Gratuitamente
                 </Button>
               </motion.div>
+
             </motion.div>
           </div>
         </div>
