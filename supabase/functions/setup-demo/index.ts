@@ -175,7 +175,7 @@ Deno.serve(async (req) => {
     ]);
 
     return new Response(
-      JSON.stringify({ email: DEMO_EMAIL, password: DEMO_PASSWORD, message: "Demo configurado com sucesso!" }),
+      JSON.stringify({ email: DEMO_EMAIL, password: demoPassword, message: "Demo configurado com sucesso!" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
