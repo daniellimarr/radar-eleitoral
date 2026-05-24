@@ -81,9 +81,13 @@ export default function LandingPage() {
     }
   };
 
+  const isLoggedInWithoutSub = false;
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
 
 
   const formatCpf = (value: string) => {
