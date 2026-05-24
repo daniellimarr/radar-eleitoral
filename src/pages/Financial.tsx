@@ -107,8 +107,9 @@ export default function Financial() {
     name: cat,
     valor: expenses.filter(e => e.categoria === cat).reduce((s, e) => s + Number(e.valor), 0),
   })).filter(d => d.valor > 0);
-
+  return (
     <div className="space-y-8 animate-in fade-in duration-700">
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Controle Financeiro</h1>

@@ -144,8 +144,9 @@ export default function Demands() {
     const { data } = await supabase.storage.from("demand-documents").createSignedUrl(doc.storage_path, 120);
     if (data?.signedUrl) { setPreviewUrl(data.signedUrl); setPreviewMimeType(doc.mime_type || null); }
   };
-
+  return (
     <div className="space-y-8 animate-in fade-in duration-700">
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Demandas</h1>
