@@ -381,7 +381,7 @@ export default function Georeferencing() {
             Geo Referenciamento é realizado por CEP e por aproximação. O número da localidade não é considerado.
           </p>
         </ScrollArea>
-      </div>
+      </aside>
 
       {/* Map Area */}
       <div className="flex-1 relative">
