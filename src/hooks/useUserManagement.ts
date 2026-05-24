@@ -84,10 +84,7 @@ export function useUserManagement() {
 
   const handleCreateUser = async (formData: any) => {
     const currentActiveCount = users.filter((u) => u.status === "approved").length;
-    if (userLimit !== Infinity && currentActiveCount >= userLimit) {
-      toast.error(`Limite de ${userLimit} usuários atingido. Faça upgrade do seu plano.`);
-      return false;
-    }
+
 
     setSaving(true);
     try {
