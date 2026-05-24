@@ -47,6 +47,7 @@ export default function Contacts() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [leaders, setLeaders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [engagementFilter, setEngagementFilter] = useState<string>("all");
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState(defaultContact);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -129,11 +130,15 @@ export default function Contacts() {
       query = query.ilike("name", `%${search}%`);
     }
 
+    if (engagementFilter !== "all") {
+      query = query.eq("engagement", engagementFilter);
+    }
+
     const { data } = await query;
     setContacts(data || []);
   };
 
-  useEffect(() => { fetchContacts(); }, [tenantId, search]);
+  useEffect(() => { fetchContacts(); }, [tenantId, search, engagementFilter]);
 
   const generateSlug = (name: string) =>
     name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
