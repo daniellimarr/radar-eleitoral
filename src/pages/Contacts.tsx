@@ -49,6 +49,7 @@ export default function Contacts() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [leaders, setLeaders] = useState<any[]>([]);
   const [registrationLinks, setRegistrationLinks] = useState<Record<string, string>>({});
+  const [operatorLeaderIds, setOperatorLeaderIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [engagementFilter, setEngagementFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -114,6 +115,7 @@ export default function Contacts() {
                (l.nickname && l.nickname.toLowerCase() === profile.full_name.toLowerCase())
       );
       setLeaders(matched);
+      setOperatorLeaderIds(matched.map((l: any) => l.id));
       if (matched.length >= 1) {
         setForm((prev) => ({ ...prev, leader_id: matched[0].id }));
       }
@@ -126,6 +128,7 @@ export default function Contacts() {
         .is("deleted_at", null)
         .order("name");
       setLeaders(data || []);
+      setOperatorLeaderIds([]);
     }
   };
 
@@ -149,6 +152,14 @@ export default function Contacts() {
       query = query.eq("engagement", engagementFilter as any);
     }
 
+    if (isOperador && operatorLeaderIds.length > 0) {
+      query = query.or([
+        `registered_by.eq.${user?.id}`,
+        ...operatorLeaderIds.map((leaderId) => `leader_id.eq.${leaderId}`),
+        ...operatorLeaderIds.map((leaderId) => `id.eq.${leaderId}`),
+      ].join(","));
+    }
+
     if (typeFilter === "leaders") {
       query = query.eq("is_leader", true);
     } else if (typeFilter === "contacts") {
@@ -157,7 +168,7 @@ export default function Contacts() {
 
     const { data } = await query;
     setContacts(data || []);
-  }, [tenantId, search, engagementFilter, typeFilter]);
+  }, [tenantId, search, engagementFilter, typeFilter, isOperador, operatorLeaderIds, user?.id]);
 
   const fetchRegistrationLinks = async () => {
     if (!tenantId) return;
