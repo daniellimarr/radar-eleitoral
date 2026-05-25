@@ -18,6 +18,7 @@ export default function RegistrationLinks() {
   const [isOpen, setIsOpen] = useState(false);
   const [slug, setSlug] = useState("");
   const [selectedLeader, setSelectedLeader] = useState("");
+  const [linkType, setLinkType] = useState<"voter" | "leader">("voter");
   const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
