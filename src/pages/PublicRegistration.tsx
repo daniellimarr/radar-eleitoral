@@ -44,6 +44,7 @@ export default function PublicRegistration() {
   const [saving, setSaving] = useState(false);
   const [leaderContactId, setLeaderContactId] = useState<string | null>(null);
   const [leaderName, setLeaderName] = useState("");
+  const [linkType, setLinkType] = useState<"voter" | "leader">("voter");
   const [geocoding, setGeocoding] = useState(false);
   const [geoCoords, setGeoCoords] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
   const [cpfStatus, setCpfStatus] = useState<{ valid: boolean | null; message: string; loading: boolean }>({ valid: null, message: "", loading: false });
