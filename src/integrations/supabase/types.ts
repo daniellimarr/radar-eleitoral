@@ -1084,6 +1084,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           leader_contact_id: string | null
+          link_type: string | null
           max_uses: number | null
           slug: string
           tenant_id: string
@@ -1096,6 +1097,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           leader_contact_id?: string | null
+          link_type?: string | null
           max_uses?: number | null
           slug: string
           tenant_id: string
@@ -1108,6 +1110,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           leader_contact_id?: string | null
+          link_type?: string | null
           max_uses?: number | null
           slug?: string
           tenant_id?: string
@@ -2044,6 +2047,7 @@ export type Database = {
         Returns: {
           leader_contact_id: string
           leader_name: string
+          link_type: string
           tenant_id: string
           tenant_name: string
         }[]
