@@ -61,7 +61,20 @@ export default function Contacts() {
   const isOperador = hasRole("operador");
 
   const handleSubmit = async () => {
-    const success = await saveContact({ ...form, ...geoCoords }, editingId);
+    let finalLat = geoCoords.latitude;
+    let finalLon = geoCoords.longitude;
+
+    if (!finalLat || !finalLon) {
+      setGeocoding(true);
+      const result = await geocodeByCep(form.cep);
+      if (result?.latitude) {
+        finalLat = result.latitude;
+        finalLon = result.longitude;
+      }
+      setGeocoding(false);
+    }
+
+    const success = await saveContact({ ...form, latitude: finalLat, longitude: finalLon }, editingId);
     if (success) {
       setIsOpen(false);
       setForm(defaultContact);

@@ -168,7 +168,21 @@ export default function PublicRegistration() {
     if (!cleanedCpf || cleanedCpf.length !== 11) { toast.error("CPF é obrigatório"); return; }
     if (cpfStatus.valid === false) { toast.error("CPF inválido"); return; }
     if (cpfStatus.loading) { toast.error("Aguarde a validação do CPF"); return; }
+    
     setSaving(true);
+    
+    // Final check for coordinates if missing
+    let finalLat = geoCoords.latitude;
+    let finalLon = geoCoords.longitude;
+    
+    if (!finalLat || !finalLon) {
+      const result = await geocodeByCep(form.cep);
+      if (result?.latitude) {
+        finalLat = result.latitude;
+        finalLon = result.longitude;
+      }
+    }
+
     const { error } = await supabase.from("contacts").insert({
       name: form.name,
       nickname: form.nickname || null,
@@ -191,8 +205,8 @@ export default function PublicRegistration() {
       tenant_id: tenantId,
       leader_id: leaderContactId,
       is_leader: false,
-      latitude: geoCoords.latitude,
-      longitude: geoCoords.longitude,
+      latitude: finalLat,
+      longitude: finalLon,
     });
     if (error) toast.error(error.message);
     else setSubmitted(true);
