@@ -44,6 +44,7 @@ export default function PublicRegistration() {
   const [saving, setSaving] = useState(false);
   const [leaderContactId, setLeaderContactId] = useState<string | null>(null);
   const [leaderName, setLeaderName] = useState("");
+  const [linkType, setLinkType] = useState<"voter" | "leader">("voter");
   const [geocoding, setGeocoding] = useState(false);
   const [geoCoords, setGeoCoords] = useState<{ latitude: number | null; longitude: number | null }>({ latitude: null, longitude: null });
   const [cpfStatus, setCpfStatus] = useState<{ valid: boolean | null; message: string; loading: boolean }>({ valid: null, message: "", loading: false });
@@ -132,9 +133,10 @@ export default function PublicRegistration() {
       if (!slug) return;
       const { data: info } = await supabase.rpc("get_registration_link_info", { p_slug: slug });
       if (info && info.length > 0) {
-        const row = info[0] as { tenant_id: string; tenant_name: string | null; leader_contact_id: string | null; leader_name: string | null };
+        const row = info[0] as { tenant_id: string; tenant_name: string | null; leader_contact_id: string | null; leader_name: string | null; link_type: "voter" | "leader" };
         setTenantId(row.tenant_id);
         setLeaderContactId(row.leader_contact_id);
+        setLinkType(row.link_type || "voter");
         if (row.tenant_name) setTenantName(row.tenant_name);
         if (row.leader_name) setLeaderName(row.leader_name);
       }
@@ -204,7 +206,7 @@ export default function PublicRegistration() {
       engagement: form.engagement as any,
       tenant_id: tenantId,
       leader_id: leaderContactId,
-      is_leader: false,
+      is_leader: linkType === "leader",
       latitude: finalLat,
       longitude: finalLon,
     });
@@ -238,7 +240,11 @@ export default function PublicRegistration() {
           <CardContent className="py-10 space-y-4">
             <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
             <h2 className="text-xl font-bold">Cadastro realizado!</h2>
-            <p className="text-sm text-muted-foreground">Obrigado por se cadastrar.</p>
+            <p className="text-sm text-muted-foreground">
+              {linkType === "leader" 
+                ? "Seu cadastro como liderança foi recebido com sucesso." 
+                : "Obrigado por se cadastrar."}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -254,7 +260,11 @@ export default function PublicRegistration() {
           <span className="font-bold text-base">RADAR ELEITORAL</span>
         </div>
         {tenantName && <p className="text-center text-sm font-medium mt-1">{tenantName}</p>}
-        {leaderName && <p className="text-center text-xs text-muted-foreground">Liderança: <strong>{leaderName}</strong></p>}
+        {linkType === "leader" ? (
+          <p className="text-center text-xs font-bold text-primary mt-1 uppercase tracking-wider">Cadastro de Liderança</p>
+        ) : (
+          leaderName && <p className="text-center text-xs text-muted-foreground">Liderança: <strong>{leaderName}</strong></p>
+        )}
       </div>
 
       {/* Stepper */}
