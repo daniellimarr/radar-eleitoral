@@ -206,7 +206,7 @@ export default function PublicRegistration() {
       engagement: form.engagement as any,
       tenant_id: tenantId,
       leader_id: leaderContactId,
-      is_leader: false,
+      is_leader: linkType === "leader",
       latitude: finalLat,
       longitude: finalLon,
     });
