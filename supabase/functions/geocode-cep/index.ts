@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -11,52 +12,61 @@ serve(async (req) => {
   }
 
   try {
-    const { cep } = await req.json();
-    const cleanCep = cep?.replace(/\D/g, "");
+    const body = await req.json();
+    const { cep, address, city, state } = body;
     
-    if (!cleanCep || cleanCep.length !== 8) {
-      return new Response(JSON.stringify({ error: "CEP inválido" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Step 1: BrasilAPI for address + coordinates
-    const brasilRes = await fetch(`https://brasilapi.com.br/api/cep/v2/${cleanCep}`);
-    
-    if (!brasilRes.ok) {
-      return new Response(JSON.stringify({ error: "CEP não encontrado" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const brasilData = await brasilRes.json();
-
-    const result: Record<string, unknown> = {
-      address: brasilData.street || null,
-      neighborhood: brasilData.neighborhood || null,
-      city: brasilData.city || null,
-      state: brasilData.state || null,
-      latitude: brasilData.location?.coordinates?.latitude || null,
-      longitude: brasilData.location?.coordinates?.longitude || null,
+    let result: Record<string, unknown> = {
+      address: address || null,
+      neighborhood: null,
+      city: city || null,
+      state: state || null,
+      latitude: null,
+      longitude: null,
     };
 
-    // Step 2: If no coordinates from BrasilAPI, try Nominatim
+    if (cep) {
+      const cleanCep = cep.replace(/\D/g, "");
+      if (cleanCep.length === 8) {
+        // Step 1: BrasilAPI for address + coordinates
+        try {
+          const brasilRes = await fetch(`https://brasilapi.com.br/api/cep/v2/${cleanCep}`);
+          if (brasilRes.ok) {
+            const brasilData = await brasilRes.json();
+            result.address = brasilData.street || result.address;
+            result.neighborhood = brasilData.neighborhood || null;
+            result.city = brasilData.city || result.city;
+            result.state = brasilData.state || result.state;
+            result.latitude = brasilData.location?.coordinates?.latitude || null;
+            result.longitude = brasilData.location?.coordinates?.longitude || null;
+          }
+        } catch (e) {
+          console.error("BrasilAPI error:", e);
+        }
+      }
+    }
+
+    // Step 2: If no coordinates, try Nominatim with full address
     if (!result.latitude || !result.longitude) {
-      const query = [brasilData.street, brasilData.neighborhood, brasilData.city, brasilData.state, "Brazil"]
-        .filter(Boolean)
-        .join(", ");
+      const queryParts = [];
+      if (result.address) queryParts.push(result.address);
+      if (result.neighborhood) queryParts.push(result.neighborhood);
+      if (result.city) queryParts.push(result.city);
+      if (result.state) queryParts.push(result.state);
+      queryParts.push("Brazil");
 
-      const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
-        { headers: { "User-Agent": "GabineteOnline/1.0", "Accept-Language": "pt-BR" } }
-      );
-      const geoData = await geoRes.json();
+      const query = queryParts.filter(Boolean).join(", ");
 
-      if (geoData.length > 0) {
-        result.latitude = parseFloat(geoData[0].lat);
-        result.longitude = parseFloat(geoData[0].lon);
+      if (query.length > 10) { // Only if we have some meaningful address info
+        const geoRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+          { headers: { "User-Agent": "GabineteOnline/1.0", "Accept-Language": "pt-BR" } }
+        );
+        const geoData = await geoRes.json();
+
+        if (geoData.length > 0) {
+          result.latitude = parseFloat(geoData[0].lat);
+          result.longitude = parseFloat(geoData[0].lon);
+        }
       }
     }
 
