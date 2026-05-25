@@ -133,9 +133,10 @@ export default function PublicRegistration() {
       if (!slug) return;
       const { data: info } = await supabase.rpc("get_registration_link_info", { p_slug: slug });
       if (info && info.length > 0) {
-        const row = info[0] as { tenant_id: string; tenant_name: string | null; leader_contact_id: string | null; leader_name: string | null };
+        const row = info[0] as { tenant_id: string; tenant_name: string | null; leader_contact_id: string | null; leader_name: string | null; link_type: "voter" | "leader" };
         setTenantId(row.tenant_id);
         setLeaderContactId(row.leader_contact_id);
+        setLinkType(row.link_type || "voter");
         if (row.tenant_name) setTenantName(row.tenant_name);
         if (row.leader_name) setLeaderName(row.leader_name);
       }
