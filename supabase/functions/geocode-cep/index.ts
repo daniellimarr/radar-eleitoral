@@ -49,10 +49,13 @@ serve(async (req) => {
     if (!result.latitude || !result.longitude) {
       const tryNominatim = async (url: string) => {
         try {
+          console.log("Nominatim request:", url);
           const res = await fetch(url, {
-            headers: { "User-Agent": "RadarEleitoral/1.0", "Accept-Language": "pt-BR" },
+            headers: { "User-Agent": "RadarEleitoral/1.0 (contato@radareleitoral.com.br)", "Accept-Language": "pt-BR" },
           });
-          const data = await res.json();
+          const text = await res.text();
+          console.log("Nominatim status:", res.status, "body length:", text.length);
+          const data = JSON.parse(text);
           if (Array.isArray(data) && data.length > 0) {
             return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
           }
@@ -61,6 +64,7 @@ serve(async (req) => {
         }
         return null;
       };
+
 
       // 2a: Structured search (most reliable)
       if (result.address && result.city && result.state) {
