@@ -45,30 +45,68 @@ serve(async (req) => {
       }
     }
 
-    // Step 2: If no coordinates, try Nominatim
+    // Step 2: If no coordinates, try Nominatim with progressively broader queries
     if (!result.latitude || !result.longitude) {
-      const queryParts = [];
-      if (result.address) queryParts.push(result.address);
-      if (result.neighborhood) queryParts.push(result.neighborhood);
-      if (result.city) queryParts.push(result.city);
-      if (result.state) queryParts.push(result.state);
-      queryParts.push("Brazil");
+      const tryNominatim = async (url: string) => {
+        try {
+          const res = await fetch(url, {
+            headers: { "User-Agent": "RadarEleitoral/1.0", "Accept-Language": "pt-BR" },
+          });
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+          }
+        } catch (e) {
+          console.error("Nominatim error:", e);
+        }
+        return null;
+      };
 
-      const query = queryParts.filter(Boolean).join(", ");
+      // 2a: Structured search (most reliable)
+      if (result.address && result.city && result.state) {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&street=${encodeURIComponent(
+          String(result.address)
+        )}&city=${encodeURIComponent(String(result.city))}&state=${encodeURIComponent(
+          String(result.state)
+        )}&country=Brazil&limit=1`;
+        const coords = await tryNominatim(url);
+        if (coords) {
+          result.latitude = coords.lat;
+          result.longitude = coords.lon;
+        }
+      }
 
-      if (query.length > 5) {
-        const geoRes = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
-          { headers: { "User-Agent": "RadarEleitoral/1.0", "Accept-Language": "pt-BR" } }
-        );
-        const geoData = await geoRes.json();
+      // 2b: Free-text fallback with neighborhood
+      if (!result.latitude || !result.longitude) {
+        const parts = [result.address, result.neighborhood, result.city, result.state, "Brazil"]
+          .filter(Boolean)
+          .join(", ");
+        if (parts.length > 5) {
+          const coords = await tryNominatim(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(parts)}&limit=1`
+          );
+          if (coords) {
+            result.latitude = coords.lat;
+            result.longitude = coords.lon;
+          }
+        }
+      }
 
-        if (geoData.length > 0) {
-          result.latitude = parseFloat(geoData[0].lat);
-          result.longitude = parseFloat(geoData[0].lon);
+      // 2c: City fallback (always returns something so user sees a pin)
+      if (!result.latitude || !result.longitude) {
+        const cityQuery = [result.city, result.state, "Brazil"].filter(Boolean).join(", ");
+        if (cityQuery.length > 5) {
+          const coords = await tryNominatim(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityQuery)}&limit=1`
+          );
+          if (coords) {
+            result.latitude = coords.lat;
+            result.longitude = coords.lon;
+          }
         }
       }
     }
+
 
     // If ID is provided, update the contact in the database
     if (id && result.latitude && result.longitude) {
