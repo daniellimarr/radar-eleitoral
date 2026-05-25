@@ -240,7 +240,11 @@ export default function PublicRegistration() {
           <CardContent className="py-10 space-y-4">
             <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
             <h2 className="text-xl font-bold">Cadastro realizado!</h2>
-            <p className="text-sm text-muted-foreground">Obrigado por se cadastrar.</p>
+            <p className="text-sm text-muted-foreground">
+              {linkType === "leader" 
+                ? "Seu cadastro como liderança foi recebido com sucesso." 
+                : "Obrigado por se cadastrar."}
+            </p>
           </CardContent>
         </Card>
       </div>
