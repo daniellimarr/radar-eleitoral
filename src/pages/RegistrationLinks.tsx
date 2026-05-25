@@ -86,7 +86,8 @@ export default function RegistrationLinks() {
       tenant_id: tenantId,
       slug,
       coordinator_id: user?.id,
-      leader_contact_id: selectedLeader || null,
+      leader_contact_id: linkType === "voter" ? selectedLeader : null,
+      link_type: linkType,
     });
     if (error) toast.error(error.message);
     else { toast.success("Link criado!"); setIsOpen(false); setSlug(""); setSelectedLeader(""); fetchData(); }
