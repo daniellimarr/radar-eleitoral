@@ -56,7 +56,10 @@ export default function RegistrationLinks() {
 
   const handleCreate = async () => {
     if (!tenantId || !slug) { toast.error("Slug é obrigatório"); return; }
-    if (!selectedLeader || selectedLeader === "none") { toast.error("Selecione uma liderança"); return; }
+    if (linkType === "voter" && (!selectedLeader || selectedLeader === "none")) { 
+      toast.error("Selecione uma liderança para links de eleitores"); 
+      return; 
+    }
     setLoading(true);
     // Check if slug already exists
     const { data: existing } = await supabase
