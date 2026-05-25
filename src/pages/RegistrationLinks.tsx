@@ -71,7 +71,8 @@ export default function RegistrationLinks() {
       if (existing.tenant_id === tenantId) {
         const { error } = await supabase.from("registration_links").update({
           coordinator_id: user?.id,
-          leader_contact_id: selectedLeader || null,
+          leader_contact_id: linkType === "voter" ? selectedLeader : null,
+          link_type: linkType,
         }).eq("id", existing.id);
         if (error) toast.error(error.message);
         else { toast.success("Link atualizado!"); setIsOpen(false); setSlug(""); setSelectedLeader(""); fetchData(); }
