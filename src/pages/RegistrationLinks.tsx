@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Copy, Trash2 } from "lucide-react";
+import { Plus, Copy, Trash2, Link2, UserPlus, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function RegistrationLinks() {
   const { tenantId, user } = useAuth();
@@ -60,6 +61,7 @@ export default function RegistrationLinks() {
       toast.error("Selecione uma liderança para links de eleitores"); 
       return; 
     }
+    
     setLoading(true);
     // Check if slug already exists
     const { data: existing } = await supabase
@@ -67,6 +69,7 @@ export default function RegistrationLinks() {
       .select("id, tenant_id")
       .eq("slug", slug)
       .maybeSingle();
+
     if (existing) {
       if (existing.tenant_id === tenantId) {
         const { error } = await supabase.from("registration_links").update({
@@ -82,6 +85,7 @@ export default function RegistrationLinks() {
       setLoading(false);
       return;
     }
+
     const { error } = await supabase.from("registration_links").insert({
       tenant_id: tenantId,
       slug,
@@ -96,7 +100,6 @@ export default function RegistrationLinks() {
 
   const getBaseUrl = () => {
     const origin = window.location.origin;
-    // If running in Lovable preview, use the published URL instead
     if (origin.includes("lovableproject.com") || origin.includes("lovable.app/builder") || origin.includes("id-preview--")) {
       return "https://radar-eleitoral.lovable.app";
     }
@@ -116,23 +119,55 @@ export default function RegistrationLinks() {
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Novo Link</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Criar Link de Cadastro</DialogTitle></DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label>Liderança *</Label>
-                <Select value={selectedLeader} onValueChange={handleLeaderChange}>
-                  <SelectTrigger><SelectValue placeholder="Selecione uma liderança" /></SelectTrigger>
+                <Label>Tipo de Link *</Label>
+                <Select value={linkType} onValueChange={(v: "voter" | "leader") => {
+                  setLinkType(v);
+                  if (v === "leader") {
+                    setSelectedLeader("none");
+                    setSlug("cadastro-liderança");
+                  } else {
+                    setSlug("");
+                    setSelectedLeader("");
+                  }
+                }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {leaders.map((l) => (
-                      <SelectItem key={l.id} value={l.id}>{l.nickname || l.name}</SelectItem>
-                    ))}
+                    <SelectItem value="voter">Cadastro de Eleitores (vinculado a uma liderança)</SelectItem>
+                    <SelectItem value="leader">Autocadastro de Lideranças</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">O link será gerado com o nome da liderança.</p>
               </div>
+
+              {linkType === "voter" && (
+                <div className="space-y-2">
+                  <Label>Liderança *</Label>
+                  <Select value={selectedLeader} onValueChange={handleLeaderChange}>
+                    <SelectTrigger><SelectValue placeholder="Selecione uma liderança" /></SelectTrigger>
+                    <SelectContent>
+                      {leaders.map((l) => (
+                        <SelectItem key={l.id} value={l.id}>{l.nickname || l.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">O link será gerado com o nome da liderança.</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Identificador do Link (Slug) *</Label>
+                <Input 
+                  value={slug} 
+                  onChange={(e) => setSlug(generateSlug(e.target.value))} 
+                  placeholder="ex: lider-joao-silva"
+                />
+              </div>
+
               {slug && (
                 <div className="space-y-2">
                   <Label>Link gerado</Label>
-                  <p className="text-sm font-mono bg-muted p-2 rounded">{getBaseUrl()}/cadastro/{slug}</p>
+                  <p className="text-sm font-mono bg-muted p-2 rounded break-all">{getBaseUrl()}/cadastro/{slug}</p>
                 </div>
               )}
               <Button onClick={handleCreate} disabled={loading} className="w-full">{loading ? "Criando..." : "Criar Link"}</Button>
@@ -147,7 +182,8 @@ export default function RegistrationLinks() {
             <TableHeader>
               <TableRow>
                 <TableHead>Link</TableHead>
-                <TableHead>Liderança</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Liderança / Responsável</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Criado em</TableHead>
                 <TableHead className="w-24">Ações</TableHead>
@@ -155,11 +191,18 @@ export default function RegistrationLinks() {
             </TableHeader>
             <TableBody>
               {links.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum link</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum link gerado</TableCell></TableRow>
               ) : links.map((l) => (
                 <TableRow key={l.id}>
                   <TableCell className="font-mono text-sm">/cadastro/{l.slug}</TableCell>
-                  <TableCell>{l.leader ? (l.leader.nickname || l.leader.name) : "—"}</TableCell>
+                  <TableCell>
+                    {l.link_type === "leader" ? (
+                      <Badge variant="secondary" className="gap-1"><UserPlus className="h-3 w-3" /> Liderança</Badge>
+                    ) : (
+                      <Badge variant="outline" className="gap-1"><Users className="h-3 w-3" /> Eleitor</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>{l.leader ? (l.leader.nickname || l.leader.name) : "Autocadastro"}</TableCell>
                   <TableCell>{l.is_active ? "✅ Ativo" : "❌ Inativo"}</TableCell>
                   <TableCell>{new Date(l.created_at).toLocaleDateString("pt-BR")}</TableCell>
                   <TableCell>
