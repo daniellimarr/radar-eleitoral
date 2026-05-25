@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,7 +14,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { cep, address, city, state } = body;
+    const { id, cep, address, city, state } = body;
     
     let result: Record<string, unknown> = {
       address: address || null,
@@ -27,7 +28,6 @@ serve(async (req) => {
     if (cep) {
       const cleanCep = cep.replace(/\D/g, "");
       if (cleanCep.length === 8) {
-        // Step 1: BrasilAPI for address + coordinates
         try {
           const brasilRes = await fetch(`https://brasilapi.com.br/api/cep/v2/${cleanCep}`);
           if (brasilRes.ok) {
@@ -45,7 +45,7 @@ serve(async (req) => {
       }
     }
 
-    // Step 2: If no coordinates, try Nominatim with full address
+    // Step 2: If no coordinates, try Nominatim
     if (!result.latitude || !result.longitude) {
       const queryParts = [];
       if (result.address) queryParts.push(result.address);
@@ -56,10 +56,10 @@ serve(async (req) => {
 
       const query = queryParts.filter(Boolean).join(", ");
 
-      if (query.length > 10) { // Only if we have some meaningful address info
+      if (query.length > 5) {
         const geoRes = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
-          { headers: { "User-Agent": "GabineteOnline/1.0", "Accept-Language": "pt-BR" } }
+          { headers: { "User-Agent": "RadarEleitoral/1.0", "Accept-Language": "pt-BR" } }
         );
         const geoData = await geoRes.json();
 
@@ -67,6 +67,30 @@ serve(async (req) => {
           result.latitude = parseFloat(geoData[0].lat);
           result.longitude = parseFloat(geoData[0].lon);
         }
+      }
+    }
+
+    // If ID is provided, update the contact in the database
+    if (id && result.latitude && result.longitude) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      const { error: updateError } = await supabase
+        .from('contacts')
+        .update({ 
+          latitude: result.latitude, 
+          longitude: result.longitude,
+          // Update address/neighborhood if they were null
+          address: address || result.address,
+          neighborhood: result.neighborhood
+        })
+        .eq('id', id);
+
+      if (updateError) {
+        console.error("Error updating contact coordinates:", updateError);
+      } else {
+        console.log(`Successfully updated coordinates for contact ${id}`);
       }
     }
 
