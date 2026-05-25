@@ -354,7 +354,7 @@ export default function Georeferencing() {
               <Marker
                 key={leader.id}
                 position={[leader.latitude!, leader.longitude!]}
-                icon={voters.length > 0 ? clusterIcon(voters.length, "#2563eb") : leaderIcon}
+                icon={leaderIcon}
               >
                 <Popup maxWidth={350} minWidth={280}>
                   <LeaderPopupContent leader={leader} voters={voters} />
