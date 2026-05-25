@@ -260,7 +260,11 @@ export default function PublicRegistration() {
           <span className="font-bold text-base">RADAR ELEITORAL</span>
         </div>
         {tenantName && <p className="text-center text-sm font-medium mt-1">{tenantName}</p>}
-        {leaderName && <p className="text-center text-xs text-muted-foreground">Liderança: <strong>{leaderName}</strong></p>}
+        {linkType === "leader" ? (
+          <p className="text-center text-xs font-bold text-primary mt-1 uppercase tracking-wider">Cadastro de Liderança</p>
+        ) : (
+          leaderName && <p className="text-center text-xs text-muted-foreground">Liderança: <strong>{leaderName}</strong></p>
+        )}
       </div>
 
       {/* Stepper */}
