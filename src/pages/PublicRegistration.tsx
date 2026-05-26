@@ -355,9 +355,9 @@ export default function PublicRegistration() {
                     onChange={(e) => update("gender", e.target.value)}
                     className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   >
-                    <option value="" disabled>Selecione</option>
+                    <option value="" disabled translate="no">Selecione</option>
                     {genderOptions.map((o) => (
-                      <option key={o.value} value={o.value}>
+                      <option key={o.value} value={o.value} translate="no">
                         {o.label}
                       </option>
                     ))}
@@ -437,7 +437,7 @@ export default function PublicRegistration() {
                   className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 >
                   {engagementOptions.map((o) => (
-                    <option key={o.value} value={o.value}>
+                    <option key={o.value} value={o.value} translate="no">
                       {o.label}
                     </option>
                   ))}
