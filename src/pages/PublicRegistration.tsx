@@ -350,12 +350,18 @@ export default function PublicRegistration() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Sexo</Label>
-                  <Select value={form.gender} onValueChange={(v) => update("gender", v)}>
-                    <SelectTrigger className="h-11"><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>
-                      {genderOptions.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={form.gender || ""}
+                    onChange={(e) => update("gender", e.target.value)}
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="" disabled>Selecione</option>
+                    {genderOptions.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label>Nascimento</Label>
