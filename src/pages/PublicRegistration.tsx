@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 import { toast } from "sonner";
 import { CheckCircle, Loader2, CheckCircle2, XCircle, User, MapPin, Vote } from "lucide-react";
@@ -100,8 +100,15 @@ export default function PublicRegistration() {
     setCpfStatus({ valid: true, message: "CPF válido", loading: false });
   };
 
-  const [form, setForm] = useState({
-    name: "", nickname: "", cpf: "", gender: "", birth_date: "",
+  const [form, setForm] = useState<{
+    name: string; nickname: string; cpf: string; gender: string | undefined; birth_date: string;
+    phone: string; has_whatsapp: boolean;
+    cep: string; address: string; address_number: string; neighborhood: string;
+    city: string; state: string;
+    voting_zone: string; voting_section: string; voting_location: string;
+    engagement: string;
+  }>({
+    name: "", nickname: "", cpf: "", gender: undefined, birth_date: "",
     phone: "", has_whatsapp: false,
     cep: "", address: "", address_number: "", neighborhood: "",
     city: "Boa Vista", state: "RR",
@@ -343,12 +350,18 @@ export default function PublicRegistration() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Sexo</Label>
-                  <Select value={form.gender} onValueChange={(v) => update("gender", v)}>
-                    <SelectTrigger className="h-11"><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>
-                      {genderOptions.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={form.gender || ""}
+                    onChange={(e) => update("gender", e.target.value)}
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="" disabled>Selecione</option>
+                    {genderOptions.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label>Nascimento</Label>
@@ -418,12 +431,17 @@ export default function PublicRegistration() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Envolvimento</Label>
-                <Select value={form.engagement} onValueChange={(v) => update("engagement", v)}>
-                  <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {engagementOptions.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <select
+                  value={form.engagement}
+                  onChange={(e) => update("engagement", e.target.value)}
+                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                >
+                  {engagementOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
