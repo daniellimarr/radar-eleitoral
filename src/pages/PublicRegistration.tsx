@@ -431,12 +431,17 @@ export default function PublicRegistration() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Envolvimento</Label>
-                <Select value={form.engagement} onValueChange={(v) => update("engagement", v)}>
-                  <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {engagementOptions.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <select
+                  value={form.engagement}
+                  onChange={(e) => update("engagement", e.target.value)}
+                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                >
+                  {engagementOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
