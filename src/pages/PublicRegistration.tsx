@@ -100,8 +100,15 @@ export default function PublicRegistration() {
     setCpfStatus({ valid: true, message: "CPF válido", loading: false });
   };
 
-  const [form, setForm] = useState({
-    name: "", nickname: "", cpf: "", gender: "", birth_date: "",
+  const [form, setForm] = useState<{
+    name: string; nickname: string; cpf: string; gender: string | undefined; birth_date: string;
+    phone: string; has_whatsapp: boolean;
+    cep: string; address: string; address_number: string; neighborhood: string;
+    city: string; state: string;
+    voting_zone: string; voting_section: string; voting_location: string;
+    engagement: string;
+  }>({
+    name: "", nickname: "", cpf: "", gender: undefined, birth_date: "",
     phone: "", has_whatsapp: false,
     cep: "", address: "", address_number: "", neighborhood: "",
     city: "Boa Vista", state: "RR",
