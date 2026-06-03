@@ -100,24 +100,41 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
           </div>
         )}
 
+        {/* Developer Mode Toggle */}
+        {isDeveloper && (
+          <div className="px-4 py-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={`w-full justify-start gap-2 text-xs h-8 ${devMode ? 'bg-amber-50 text-amber-600 border-amber-200' : ''}`}
+              onClick={() => setDevMode(!devMode)}
+            >
+              <Shield className="h-3.5 w-3.5" />
+              {!collapsed && (devMode ? "Modo Dev: Ativo" : "Modo Dev: Restrito")}
+            </Button>
+          </div>
+        )}
+
         {/* Main Menu */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Principal</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {visibleMainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {(visibleMainItems.length > 0) && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Principal</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {visibleMainItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                      <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {/* Coordinator Menu */}
         {isCoordinator && visibleCoordinatorItems.length > 0 && (
