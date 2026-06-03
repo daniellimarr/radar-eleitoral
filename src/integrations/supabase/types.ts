@@ -2083,6 +2083,7 @@ export type Database = {
         | "coordenador"
         | "assessor"
         | "operador"
+        | "developer"
       demand_status: "aberta" | "em_andamento" | "concluida" | "cancelada"
       engagement_level:
         | "nao_trabalhado"
@@ -2225,6 +2226,7 @@ export const Constants = {
         "coordenador",
         "assessor",
         "operador",
+        "developer",
       ],
       demand_status: ["aberta", "em_andamento", "concluida", "cancelada"],
       engagement_level: [
