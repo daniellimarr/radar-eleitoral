@@ -269,8 +269,10 @@ export default function PublicRegistration() {
         {tenantName && <p className="text-center text-sm font-medium mt-1">{tenantName}</p>}
         {linkType === "leader" ? (
           <p className="text-center text-xs font-bold text-primary mt-1 uppercase tracking-wider">Cadastro de Liderança</p>
+        ) : leaderName ? (
+          <p className="text-center text-xs text-muted-foreground">Liderança: <strong>{leaderName}</strong></p>
         ) : (
-          leaderName && <p className="text-center text-xs text-muted-foreground">Liderança: <strong>{leaderName}</strong></p>
+          <p className="text-center text-xs font-bold text-primary mt-1 uppercase tracking-wider">Cadastro de Eleitor</p>
         )}
       </div>
 

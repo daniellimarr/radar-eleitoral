@@ -19,7 +19,7 @@ export default function RegistrationLinks() {
   const [isOpen, setIsOpen] = useState(false);
   const [slug, setSlug] = useState("");
   const [selectedLeader, setSelectedLeader] = useState("");
-  const [linkType, setLinkType] = useState<"voter" | "leader">("voter");
+  const [linkType, setLinkType] = useState<"voter" | "leader" | "voter_general">("voter");
   const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
@@ -62,6 +62,7 @@ export default function RegistrationLinks() {
       return; 
     }
     
+    
     setLoading(true);
     // Check if slug already exists
     const { data: existing } = await supabase
@@ -75,7 +76,7 @@ export default function RegistrationLinks() {
         const { error } = await supabase.from("registration_links").update({
           coordinator_id: user?.id,
           leader_contact_id: linkType === "voter" ? selectedLeader : null,
-          link_type: linkType,
+          link_type: linkType === "leader" ? "leader" : "voter",
         }).eq("id", existing.id);
         if (error) toast.error(error.message);
         else { toast.success("Link atualizado!"); setIsOpen(false); setSlug(""); setSelectedLeader(""); fetchData(); }
@@ -91,7 +92,7 @@ export default function RegistrationLinks() {
       slug,
       coordinator_id: user?.id,
       leader_contact_id: linkType === "voter" ? selectedLeader : null,
-      link_type: linkType,
+      link_type: linkType === "leader" ? "leader" : "voter",
     });
     if (error) toast.error(error.message);
     else { toast.success("Link criado!"); setIsOpen(false); setSlug(""); setSelectedLeader(""); fetchData(); }
@@ -122,11 +123,14 @@ export default function RegistrationLinks() {
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
                 <Label>Tipo de Link *</Label>
-                <Select value={linkType} onValueChange={(v: "voter" | "leader") => {
+                <Select value={linkType} onValueChange={(v: "voter" | "leader" | "voter_general") => {
                   setLinkType(v);
                   if (v === "leader") {
                     setSelectedLeader("none");
-                    setSlug("cadastro-liderança");
+                    setSlug("cadastro-lideranca");
+                  } else if (v === "voter_general") {
+                    setSelectedLeader("none");
+                    setSlug("cadastro-eleitor");
                   } else {
                     setSlug("");
                     setSelectedLeader("");
@@ -134,6 +138,7 @@ export default function RegistrationLinks() {
                 }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="voter_general">Cadastro Geral de Eleitores (sem liderança)</SelectItem>
                     <SelectItem value="voter">Cadastro de Eleitores (vinculado a uma liderança)</SelectItem>
                     <SelectItem value="leader">Autocadastro de Lideranças</SelectItem>
                   </SelectContent>
@@ -198,11 +203,13 @@ export default function RegistrationLinks() {
                   <TableCell>
                     {l.link_type === "leader" ? (
                       <Badge variant="secondary" className="gap-1"><UserPlus className="h-3 w-3" /> Liderança</Badge>
+                    ) : l.leader_contact_id ? (
+                      <Badge variant="outline" className="gap-1"><Users className="h-3 w-3" /> Eleitor (Lid.)</Badge>
                     ) : (
-                      <Badge variant="outline" className="gap-1"><Users className="h-3 w-3" /> Eleitor</Badge>
+                      <Badge variant="default" className="gap-1"><Users className="h-3 w-3" /> Eleitor Geral</Badge>
                     )}
                   </TableCell>
-                  <TableCell>{l.leader ? (l.leader.nickname || l.leader.name) : "Autocadastro"}</TableCell>
+                  <TableCell>{l.leader ? (l.leader.nickname || l.leader.name) : "Geral / Autocadastro"}</TableCell>
                   <TableCell>{l.is_active ? "✅ Ativo" : "❌ Inativo"}</TableCell>
                   <TableCell>{new Date(l.created_at).toLocaleDateString("pt-BR")}</TableCell>
                   <TableCell>
