@@ -57,15 +57,24 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { profile, hasRole, hasPermission, signOut } = useAuth();
+  const { profile, roles, hasRole, hasPermission, signOut } = useAuth();
+  const [devMode, setDevMode] = React.useState(false);
 
   const isActive = (path: string) => location.pathname === path;
+  const isDeveloper = hasRole("developer");
   const isSuperAdmin = hasRole("super_admin");
-  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin;
+  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin || (isDeveloper && devMode);
   const isCoordinator = hasRole("coordenador") || isAdmin;
 
-  const visibleMainItems = mainItems.filter((item) => hasPermission(item.module));
-  const visibleCoordinatorItems = coordinatorItems.filter((item) => hasPermission(item.module));
+  const visibleMainItems = mainItems.filter((item) => {
+    if (isDeveloper && !devMode) return false;
+    return hasPermission(item.module);
+  });
+
+  const visibleCoordinatorItems = coordinatorItems.filter((item) => {
+    if (isDeveloper && !devMode) return false;
+    return hasPermission(item.module);
+  });
 
   return (
     <Sidebar ref={ref} collapsible="icon">
