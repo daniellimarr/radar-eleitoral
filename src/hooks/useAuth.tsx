@@ -142,8 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasRole = (role: string) => roles.includes(role);
   
   const hasPermission = (module: string) => {
-    // Super admins and admin_gabinete always have access to everything
-    if (roles.includes("super_admin") || roles.includes("admin_gabinete")) return true;
+    // Super admins, developers and admin_gabinete always have access to everything
+    if (roles.includes("super_admin") || roles.includes("developer") || roles.includes("admin_gabinete")) return true;
     // If user has no permissions set at all, allow everything (backwards compat)
     if (userPermissions.length === 0 && !permissionsLoading) return true;
     return userPermissions.includes(module);

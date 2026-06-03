@@ -57,15 +57,24 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { profile, hasRole, hasPermission, signOut } = useAuth();
+  const { profile, roles, hasRole, hasPermission, signOut } = useAuth();
+  const [devMode, setDevMode] = React.useState(false);
 
   const isActive = (path: string) => location.pathname === path;
+  const isDeveloper = hasRole("developer");
   const isSuperAdmin = hasRole("super_admin");
-  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin;
+  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin || (isDeveloper && devMode);
   const isCoordinator = hasRole("coordenador") || isAdmin;
 
-  const visibleMainItems = mainItems.filter((item) => hasPermission(item.module));
-  const visibleCoordinatorItems = coordinatorItems.filter((item) => hasPermission(item.module));
+  const visibleMainItems = mainItems.filter((item) => {
+    if (isDeveloper && !devMode) return false;
+    return hasPermission(item.module);
+  });
+
+  const visibleCoordinatorItems = coordinatorItems.filter((item) => {
+    if (isDeveloper && !devMode) return false;
+    return hasPermission(item.module);
+  });
 
   return (
     <Sidebar ref={ref} collapsible="icon">
@@ -91,24 +100,41 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
           </div>
         )}
 
+        {/* Developer Mode Toggle */}
+        {isDeveloper && (
+          <div className="px-4 py-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={`w-full justify-start gap-2 text-xs h-8 ${devMode ? 'bg-amber-50 text-amber-600 border-amber-200' : ''}`}
+              onClick={() => setDevMode(!devMode)}
+            >
+              <Shield className="h-3.5 w-3.5" />
+              {!collapsed && (devMode ? "Modo Dev: Ativo" : "Modo Dev: Restrito")}
+            </Button>
+          </div>
+        )}
+
         {/* Main Menu */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Principal</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {visibleMainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {(visibleMainItems.length > 0) && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Principal</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {visibleMainItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                      <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-accent-foreground font-medium">
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {/* Coordinator Menu */}
         {isCoordinator && visibleCoordinatorItems.length > 0 && (

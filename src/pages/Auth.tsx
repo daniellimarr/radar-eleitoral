@@ -29,7 +29,18 @@ export default function Auth() {
     if (error) {
       toast.error(error.message);
     } else {
-      navigate("/dashboard");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+        const userRoles = roles?.map(r => r.role) || [];
+        if (userRoles.includes("super_admin") || userRoles.includes("developer")) {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
+      } else {
+        navigate("/dashboard");
+      }
     }
     setIsLoading(false);
   };
