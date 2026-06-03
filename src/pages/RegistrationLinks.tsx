@@ -19,7 +19,7 @@ export default function RegistrationLinks() {
   const [isOpen, setIsOpen] = useState(false);
   const [slug, setSlug] = useState("");
   const [selectedLeader, setSelectedLeader] = useState("");
-  const [linkType, setLinkType] = useState<"voter" | "leader">("voter");
+  const [linkType, setLinkType] = useState<"voter" | "leader" | "voter_general">("voter");
   const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
@@ -61,6 +61,7 @@ export default function RegistrationLinks() {
       toast.error("Selecione uma liderança para links de eleitores"); 
       return; 
     }
+    
     
     setLoading(true);
     // Check if slug already exists
