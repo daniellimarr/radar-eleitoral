@@ -36,6 +36,18 @@ export default function Planos() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
 
+  // Auto-abre o checkout se veio da landing com plano pré-selecionado
+  useEffect(() => {
+    const pendingPlan = sessionStorage.getItem("pendingPlan");
+    if (pendingPlan && user && ["mensal", "trimestral", "anual"].includes(pendingPlan)) {
+      sessionStorage.removeItem("pendingPlan");
+      setSelectedPlanKey(pendingPlan);
+      setCustomerEmail(user.email || "");
+      setCpfDialogOpen(true);
+    }
+  }, [user]);
+
+
   const formatCpf = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
     if (digits.length <= 3) return digits;
