@@ -2069,6 +2069,7 @@ export type Database = {
       decrypt_sensitive: { Args: { val: string }; Returns: string }
       encrypt_sensitive: { Args: { val: string }; Returns: string }
       encryption_key: { Args: never; Returns: string }
+      expire_overdue_subscriptions: { Args: never; Returns: undefined }
       get_leader_name_for_link: {
         Args: { p_slug: string }
         Returns: {

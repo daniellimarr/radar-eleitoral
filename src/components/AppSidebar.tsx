@@ -1,7 +1,7 @@
 import {
   Home, Users, FileText, Calendar, Car, Package, MapPin, Settings,
   BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield,
-  Flag, Megaphone, Database, FolderDown, Building2
+  Flag, Megaphone, Database, FolderDown, Building2, KeyRound
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -42,6 +42,7 @@ const adminItems = [
   { title: "Gestão de Gabinetes", url: "/admin/tenants", icon: Building2 },
   { title: "Gestão de Planos", url: "/admin/plans", icon: Package },
   { title: "Gestão de Usuários", url: "/admin/users", icon: Users },
+  { title: "Liberação de Acesso", url: "/admin/access", icon: KeyRound },
   { title: "Assinaturas", url: "/admin/subscriptions", icon: FileText },
   { title: "Ambiente Asaas", url: "/admin/asaas-env", icon: Shield },
   { title: "Relatórios e Auditoria", url: "/reports", icon: BarChart3 },
