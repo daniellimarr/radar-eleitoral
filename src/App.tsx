@@ -34,6 +34,7 @@ import PlanManagement from "@/pages/PlanManagement";
 import Planos from "@/pages/Planos";
 import Assinatura from "@/pages/Assinatura";
 import AsaasEnvCheck from "@/pages/AsaasEnvCheck";
+import AdminAccessManagement from "@/pages/AdminAccessManagement";
 import Checkout from "@/pages/Checkout";
 import PagamentoConfirmado from "@/pages/PagamentoConfirmado";
 
