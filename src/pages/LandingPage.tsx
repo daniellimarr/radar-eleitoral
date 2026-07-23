@@ -181,7 +181,7 @@ export default function LandingPage() {
               </Button>
             ) : (
               <>
-                <Button variant="ghost" onClick={() => navigate(user ? "/dashboard" : "/checkout")} className="text-sm font-medium text-gray-600">
+                <Button variant="ghost" onClick={() => navigate("/auth")} className="text-sm font-medium text-gray-600">
                   Entrar
                 </Button>
                 <Button onClick={() => navigate(user ? "/dashboard" : "/checkout")}
