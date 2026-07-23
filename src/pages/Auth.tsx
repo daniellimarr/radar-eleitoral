@@ -29,11 +29,8 @@ export default function Auth() {
     if (error) {
       toast.error(error.message);
     } else {
-      const pendingPlan = sessionStorage.getItem("pendingPlan");
       const { data: { user } } = await supabase.auth.getUser();
-      if (pendingPlan) {
-        navigate("/assinatura");
-      } else if (user) {
+      if (user) {
         const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
         const userRoles = roles?.map(r => r.role) || [];
         if (userRoles.includes("super_admin") || userRoles.includes("developer")) {

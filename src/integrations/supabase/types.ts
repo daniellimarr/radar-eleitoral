@@ -989,6 +989,39 @@ export type Database = {
           },
         ]
       }
+      pending_signups: {
+        Row: {
+          asaas_customer_id: string | null
+          asaas_subscription_id: string
+          cpf: string
+          created_at: string
+          email: string
+          name: string
+          phone: string | null
+          plan_key: string
+        }
+        Insert: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id: string
+          cpf: string
+          created_at?: string
+          email: string
+          name: string
+          phone?: string | null
+          plan_key: string
+        }
+        Update: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string
+          cpf?: string
+          created_at?: string
+          email?: string
+          name?: string
+          phone?: string | null
+          plan_key?: string
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           contact_limit: number
