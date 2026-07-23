@@ -105,18 +105,9 @@ export default function LandingPage() {
   const handleSubscribe = (planName: string) => {
     const planKey = planKeyMap[planName];
     if (!planKey) return;
-
-    if (!user) {
-      sessionStorage.setItem("pendingPlan", planKey);
-      toast.info("Faça login ou cadastre-se para concluir a assinatura");
-      navigate("/auth");
-      return;
-    }
-
-    setSelectedPlanKey(planKey);
-    setCustomerEmail(user?.email || "");
-    setCpfDialogOpen(true);
+    navigate(`/checkout?plano=${planKey}`);
   };
+
 
 
   const ensureAsaasCustomer = async (cpfValue: string, emailValue: string) => {
