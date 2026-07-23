@@ -43,6 +43,7 @@ const adminItems = [
   { title: "Gestão de Planos", url: "/admin/plans", icon: Package },
   { title: "Gestão de Usuários", url: "/admin/users", icon: Users },
   { title: "Assinaturas", url: "/admin/subscriptions", icon: FileText },
+  { title: "Ambiente Asaas", url: "/admin/asaas-env", icon: Shield },
   { title: "Relatórios e Auditoria", url: "/reports", icon: BarChart3 },
 ];
 
