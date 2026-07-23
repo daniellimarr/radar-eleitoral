@@ -34,6 +34,8 @@ import PlanManagement from "@/pages/PlanManagement";
 import Planos from "@/pages/Planos";
 import Assinatura from "@/pages/Assinatura";
 import AsaasEnvCheck from "@/pages/AsaasEnvCheck";
+import Checkout from "@/pages/Checkout";
+import PagamentoConfirmado from "@/pages/PagamentoConfirmado";
 
 import Demo from "@/pages/Demo";
 import NotFound from "@/pages/NotFound";
@@ -59,6 +61,9 @@ function App() {
             <Route path="/cadastro/:slug" element={<PublicRegistration />} />
             <Route path="/planos" element={<LandingPage />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/pagamento-confirmado" element={<PagamentoConfirmado />} />
+            
             
             
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
