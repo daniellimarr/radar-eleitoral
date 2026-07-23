@@ -57,24 +57,19 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { profile, roles, hasRole, hasPermission, signOut } = useAuth();
-  const [devMode, setDevMode] = React.useState(false);
+  const { profile, hasRole, hasPermission, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
   const isDeveloper = hasRole("developer");
   const isSuperAdmin = hasRole("super_admin");
-  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin || (isDeveloper && devMode);
+  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin;
   const isCoordinator = hasRole("coordenador") || isAdmin;
 
-  const visibleMainItems = mainItems.filter((item) => {
-    if (isDeveloper && !devMode) return false;
-    return hasPermission(item.module);
-  });
-
-  const visibleCoordinatorItems = coordinatorItems.filter((item) => {
-    if (isDeveloper && !devMode) return false;
-    return hasPermission(item.module);
-  });
+  // Developers are restricted: no access to tenant business data (contacts, campaigns, etc.)
+  // They only see platform administration sections.
+  const visibleMainItems = isDeveloper ? [] : mainItems.filter((item) => hasPermission(item.module));
+  const visibleCoordinatorItems = isDeveloper ? [] : coordinatorItems.filter((item) => hasPermission(item.module));
+  const showAdminSection = isSuperAdmin || isDeveloper;
 
   return (
     <Sidebar ref={ref} collapsible="icon">
@@ -100,18 +95,13 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
           </div>
         )}
 
-        {/* Developer Mode Toggle */}
-        {isDeveloper && (
+        {/* Developer Mode Indicator */}
+        {isDeveloper && !collapsed && (
           <div className="px-4 py-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={`w-full justify-start gap-2 text-xs h-8 ${devMode ? 'bg-amber-50 text-amber-600 border-amber-200' : ''}`}
-              onClick={() => setDevMode(!devMode)}
-            >
+            <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-700">
               <Shield className="h-3.5 w-3.5" />
-              {!collapsed && (devMode ? "Modo Dev: Ativo" : "Modo Dev: Restrito")}
-            </Button>
+              <span>Modo Desenvolvedor</span>
+            </div>
           </div>
         )}
 
@@ -167,7 +157,7 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
         )}
 
         {/* Admin Menu - Super Admin only */}
-        {isSuperAdmin && (
+        {showAdminSection && (
           <SidebarGroup>
             <Collapsible defaultOpen>
               <CollapsibleTrigger className="w-full">
