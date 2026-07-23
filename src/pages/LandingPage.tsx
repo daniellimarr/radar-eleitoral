@@ -69,9 +69,15 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (user) {
-      navigate("/dashboard", { replace: true });
+      const pendingPlan = sessionStorage.getItem("pendingPlan");
+      if (pendingPlan) {
+        navigate("/assinatura", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     }
   }, [user, navigate]);
+
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
   const [cpf, setCpf] = useState("");
@@ -101,8 +107,9 @@ export default function LandingPage() {
     if (!planKey) return;
 
     if (!user) {
-      toast.error("Faça login para assinar um plano");
-      navigate("/auth", { state: { returnTo: "/" } });
+      sessionStorage.setItem("pendingPlan", planKey);
+      toast.info("Faça login ou cadastre-se para concluir a assinatura");
+      navigate("/auth");
       return;
     }
 
@@ -110,6 +117,7 @@ export default function LandingPage() {
     setCustomerEmail(user?.email || "");
     setCpfDialogOpen(true);
   };
+
 
   const ensureAsaasCustomer = async (cpfValue: string, emailValue: string) => {
     const { data, error } = await supabase.functions.invoke("asaas-create-customer", {

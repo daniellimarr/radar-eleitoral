@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import logoImg from "@/assets/logo-radar-eleitoral.png";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +35,18 @@ export default function Planos() {
   const [cpf, setCpf] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
+
+  // Auto-abre o checkout se veio da landing com plano pré-selecionado
+  useEffect(() => {
+    const pendingPlan = sessionStorage.getItem("pendingPlan");
+    if (pendingPlan && user && ["mensal", "trimestral", "anual"].includes(pendingPlan)) {
+      sessionStorage.removeItem("pendingPlan");
+      setSelectedPlanKey(pendingPlan);
+      setCustomerEmail(user.email || "");
+      setCpfDialogOpen(true);
+    }
+  }, [user]);
+
 
   const formatCpf = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
