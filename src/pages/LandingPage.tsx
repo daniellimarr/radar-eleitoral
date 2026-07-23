@@ -181,10 +181,10 @@ export default function LandingPage() {
               </Button>
             ) : (
               <>
-                <Button variant="ghost" onClick={() => navigate("/auth")} className="text-sm font-medium text-gray-600">
+                <Button variant="ghost" onClick={() => navigate(user ? "/dashboard" : "/checkout")} className="text-sm font-medium text-gray-600">
                   Entrar
                 </Button>
-                <Button onClick={() => navigate("/auth")}
+                <Button onClick={() => navigate(user ? "/dashboard" : "/checkout")}
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-sm font-semibold px-5 rounded-lg shadow-md shadow-[#FF6B00]/20">
                   Começar Agora
                 </Button>
@@ -219,7 +219,7 @@ export default function LandingPage() {
               </motion.p>
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}
                 className="mt-10 flex flex-col sm:flex-row items-start gap-4">
-                <Button onClick={() => navigate("/auth")} size="lg"
+                <Button onClick={() => navigate(user ? "/dashboard" : "/checkout")} size="lg"
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white text-base font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#FF6B00]/30 hover:shadow-[#FF6B00]/50 transition-all">
                   Começar Agora <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -386,7 +386,7 @@ export default function LandingPage() {
                 O Radar Eleitoral traz a organização política para uma plataforma moderna. Com o sistema você pode gerenciar contatos, acompanhar demandas, coordenar lideranças e planejar campanhas — tudo em um único painel.
               </motion.p>
               <motion.div variants={fadeUp} custom={3} className="mt-8">
-                <Button onClick={() => navigate("/auth")} size="lg"
+                <Button onClick={() => navigate(user ? "/dashboard" : "/checkout")} size="lg"
                   className="bg-[#FF6B00] hover:bg-[#e55f00] text-white font-bold px-8 py-6 rounded-xl shadow-lg shadow-[#FF6B00]/25">
                   Comece Gratuitamente <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -557,7 +557,7 @@ export default function LandingPage() {
               Tenha controle total da sua estratégia política com o Radar Eleitoral.
             </motion.p>
             <motion.div variants={fadeUp} custom={2} className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button onClick={() => navigate("/auth")} size="lg"
+              <Button onClick={() => navigate(user ? "/dashboard" : "/checkout")} size="lg"
                 className="bg-white text-[#FF6B00] hover:bg-gray-100 text-lg font-bold px-10 py-7 rounded-xl shadow-xl transition-all">
                 Começar Agora <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -591,7 +591,7 @@ export default function LandingPage() {
                 <li><button onClick={() => scrollTo("features")} className="hover:text-white transition-colors">Funcionalidades</button></li>
                 <li><button onClick={() => scrollTo("pricing")} className="hover:text-white transition-colors">Planos</button></li>
                 <li><button onClick={() => scrollTo("contact")} className="hover:text-white transition-colors">Contato</button></li>
-                <li><button onClick={() => navigate("/auth")} className="hover:text-white transition-colors">Sobre</button></li>
+                <li><button onClick={() => navigate(user ? "/dashboard" : "/checkout")} className="hover:text-white transition-colors">Sobre</button></li>
               </ul>
             </div>
             <div>
