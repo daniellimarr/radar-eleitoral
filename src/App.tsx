@@ -33,6 +33,7 @@ import AdminSubscriptions from "@/pages/AdminSubscriptions";
 import PlanManagement from "@/pages/PlanManagement";
 import Planos from "@/pages/Planos";
 import Assinatura from "@/pages/Assinatura";
+import AsaasEnvCheck from "@/pages/AsaasEnvCheck";
 
 import Demo from "@/pages/Demo";
 import NotFound from "@/pages/NotFound";
@@ -84,6 +85,7 @@ function App() {
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="/assinatura" element={<ProtectedRoute><Planos /></ProtectedRoute>} />
+            <Route path="/admin/asaas-env" element={<ProtectedRoute><AsaasEnvCheck /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
