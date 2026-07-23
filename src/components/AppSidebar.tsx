@@ -57,24 +57,19 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { profile, roles, hasRole, hasPermission, signOut } = useAuth();
-  const [devMode, setDevMode] = React.useState(false);
+  const { profile, hasRole, hasPermission, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
   const isDeveloper = hasRole("developer");
   const isSuperAdmin = hasRole("super_admin");
-  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin || (isDeveloper && devMode);
+  const isAdmin = hasRole("admin_gabinete") || isSuperAdmin;
   const isCoordinator = hasRole("coordenador") || isAdmin;
 
-  const visibleMainItems = mainItems.filter((item) => {
-    if (isDeveloper && !devMode) return false;
-    return hasPermission(item.module);
-  });
-
-  const visibleCoordinatorItems = coordinatorItems.filter((item) => {
-    if (isDeveloper && !devMode) return false;
-    return hasPermission(item.module);
-  });
+  // Developers are restricted: no access to tenant business data (contacts, campaigns, etc.)
+  // They only see platform administration sections.
+  const visibleMainItems = isDeveloper ? [] : mainItems.filter((item) => hasPermission(item.module));
+  const visibleCoordinatorItems = isDeveloper ? [] : coordinatorItems.filter((item) => hasPermission(item.module));
+  const showAdminSection = isSuperAdmin || isDeveloper;
 
   return (
     <Sidebar ref={ref} collapsible="icon">
