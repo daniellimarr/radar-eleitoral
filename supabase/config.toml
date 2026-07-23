@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.get-tenant-emails]
 verify_jwt = false
+
+[functions.public-checkout]
+verify_jwt = false
