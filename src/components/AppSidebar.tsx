@@ -157,7 +157,7 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
         )}
 
         {/* Admin Menu - Super Admin only */}
-        {isSuperAdmin && (
+        {showAdminSection && (
           <SidebarGroup>
             <Collapsible defaultOpen>
               <CollapsibleTrigger className="w-full">
