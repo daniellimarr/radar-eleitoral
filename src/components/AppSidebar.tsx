@@ -95,18 +95,13 @@ export const AppSidebar = React.forwardRef<HTMLDivElement>(function AppSidebar(_
           </div>
         )}
 
-        {/* Developer Mode Toggle */}
-        {isDeveloper && (
+        {/* Developer Mode Indicator */}
+        {isDeveloper && !collapsed && (
           <div className="px-4 py-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={`w-full justify-start gap-2 text-xs h-8 ${devMode ? 'bg-amber-50 text-amber-600 border-amber-200' : ''}`}
-              onClick={() => setDevMode(!devMode)}
-            >
+            <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-700">
               <Shield className="h-3.5 w-3.5" />
-              {!collapsed && (devMode ? "Modo Dev: Ativo" : "Modo Dev: Restrito")}
-            </Button>
+              <span>Modo Desenvolvedor</span>
+            </div>
           </div>
         )}
 
