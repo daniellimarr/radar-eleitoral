@@ -107,8 +107,9 @@ export default function LandingPage() {
     if (!planKey) return;
 
     if (!user) {
-      toast.error("Faça login para assinar um plano");
-      navigate("/auth", { state: { returnTo: "/" } });
+      sessionStorage.setItem("pendingPlan", planKey);
+      toast.info("Faça login ou cadastre-se para concluir a assinatura");
+      navigate("/auth");
       return;
     }
 
@@ -116,6 +117,7 @@ export default function LandingPage() {
     setCustomerEmail(user?.email || "");
     setCpfDialogOpen(true);
   };
+
 
   const ensureAsaasCustomer = async (cpfValue: string, emailValue: string) => {
     const { data, error } = await supabase.functions.invoke("asaas-create-customer", {
