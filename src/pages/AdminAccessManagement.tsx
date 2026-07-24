@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { KeyRound, ShieldCheck, ShieldX, Clock, Loader2, Search } from "lucide-react";
+import { KeyRound, ShieldCheck, ShieldX, Clock, Loader2, Search, RefreshCw, Copy } from "lucide-react";
 
 interface Plan {
   id: string;
@@ -72,6 +72,11 @@ export default function AdminAccessManagement() {
   const [target, setTarget] = useState<Row | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [expiresAt, setExpiresAt] = useState<string>("");
+
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetTarget, setResetTarget] = useState<Row | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -237,6 +242,36 @@ export default function AdminAccessManagement() {
     } catch (e: any) {
       toast({ title: "Erro ao revogar", description: e.message, variant: "destructive" });
     }
+  };
+
+  const openResetPassword = (r: Row) => {
+    setResetTarget(r);
+    setTempPassword(null);
+    setResetOpen(true);
+  };
+
+  const handleGenerateTempPassword = async () => {
+    if (!resetTarget) return;
+    setResetLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-temp-password", {
+        body: { user_id: resetTarget.user_id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setTempPassword(data.temp_password);
+      toast({ title: "Senha temporária gerada", description: "Compartilhe com o usuário de forma segura." });
+    } catch (e: any) {
+      toast({ title: "Erro ao gerar senha", description: e.message, variant: "destructive" });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const copyTempPassword = async () => {
+    if (!tempPassword) return;
+    await navigator.clipboard.writeText(tempPassword);
+    toast({ title: "Senha copiada" });
   };
 
   const filtered = useMemo(() => {
