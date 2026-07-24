@@ -1,5 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { Contact } from "@/types";
+
+type ContactInsert = Database["public"]["Tables"]["contacts"]["Insert"];
+type ContactUpdate = Database["public"]["Tables"]["contacts"]["Update"];
 
 const CONTACT_DATE_FIELDS = new Set(["birth_date"]);
 const CONTACT_UUID_FIELDS = new Set(["leader_id", "tenant_id", "registered_by"]);
@@ -89,16 +93,33 @@ export const contactService = {
     if (editingId) {
       const { data, error } = await supabase
         .from("contacts")
-        .update(databasePayload)
+        .update(databasePayload as ContactUpdate)
         .eq("id", editingId)
         .select()
         .single();
       if (error) throw error;
       return data;
     } else {
+      const name = databasePayload.name;
+      const tenantId = databasePayload.tenant_id;
+
+      if (typeof name !== "string" || !name.trim()) {
+        throw new Error("Nome do contato é obrigatório.");
+      }
+
+      if (typeof tenantId !== "string" || !tenantId.trim()) {
+        throw new Error("Gabinete não identificado para salvar o contato.");
+      }
+
+      const insertPayload = {
+        ...databasePayload,
+        name,
+        tenant_id: tenantId,
+      } as ContactInsert;
+
       const { data, error } = await supabase
         .from("contacts")
-        .insert(databasePayload)
+        .insert(insertPayload)
         .select()
         .single();
       if (error) throw error;
