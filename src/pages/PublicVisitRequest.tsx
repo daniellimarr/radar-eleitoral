@@ -29,6 +29,8 @@ export default function PublicVisitRequest() {
   const [selectedTime, setSelectedTime] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [protocol, setProtocol] = useState<string>("");
+  const [confirmedDate, setConfirmedDate] = useState<string>("");
   const [form, setForm] = useState({
     requester_name: "",
     requester_phone: "",
