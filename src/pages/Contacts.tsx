@@ -13,8 +13,29 @@ import { ContactTable } from "@/components/features/contacts/ContactTable";
 import { ImportContactsDialog } from "@/components/features/contacts/ImportContactsDialog";
 import { Contact, EngagementLevel } from "@/types";
 
-const defaultContact = {
-  name: "", nickname: "", gender: "", birth_date: "",
+interface ContactFormState {
+  name: string;
+  nickname: string;
+  gender: string;
+  birth_date: string | null;
+  phone: string;
+  has_whatsapp: boolean;
+  cep: string;
+  address: string;
+  address_number: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  voting_zone: string;
+  voting_section: string;
+  voting_location: string;
+  engagement: EngagementLevel;
+  is_leader: boolean;
+  leader_id: string | null;
+}
+
+const defaultContact: ContactFormState = {
+  name: "", nickname: "", gender: "", birth_date: null,
   phone: "", has_whatsapp: false, cep: "", address: "",
   address_number: "", neighborhood: "", city: "Boa Vista", state: "RR",
   voting_zone: "", voting_section: "", voting_location: "",
@@ -75,7 +96,7 @@ export default function Contacts() {
       setGeocoding(false);
     }
 
-    const success = await saveContact({ ...form, latitude: finalLat, longitude: finalLon }, editingId);
+    const success = await saveContact({ ...form, birth_date: form.birth_date || null, latitude: finalLat, longitude: finalLon }, editingId);
     if (success) {
       setIsOpen(false);
       setForm(defaultContact);
@@ -86,7 +107,7 @@ export default function Contacts() {
   const handleEdit = (contact: Contact) => {
     setForm({
       name: contact.name || "", nickname: contact.nickname || "",
-      gender: contact.gender || "", birth_date: contact.birth_date || "",
+      gender: contact.gender || "", birth_date: contact.birth_date || null,
       phone: contact.phone || "", has_whatsapp: contact.has_whatsapp || false,
       cep: contact.cep || "", address: contact.address || "",
       address_number: contact.address_number || "", neighborhood: contact.neighborhood || "",
@@ -95,7 +116,7 @@ export default function Contacts() {
       voting_location: contact.voting_location || "",
       engagement: contact.engagement || "nao_trabalhado",
       is_leader: contact.is_leader || false,
-      leader_id: contact.leader_id || "",
+      leader_id: contact.leader_id || null,
     });
     setEditingId(contact.id);
     setIsOpen(true);

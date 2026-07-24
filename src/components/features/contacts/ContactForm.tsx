@@ -87,7 +87,7 @@ export function ContactForm({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label>Dt. nasc.</Label>
-            <Input type="date" value={form.birth_date} onChange={(e) => updateField("birth_date", e.target.value)} />
+            <Input type="date" value={form.birth_date || ""} onChange={(e) => updateField("birth_date", e.target.value || null)} />
           </div>
           <div className="flex items-center gap-2 pt-6">
             <Checkbox checked={form.is_leader} onCheckedChange={(c) => updateField("is_leader", c)} id="leader" />
