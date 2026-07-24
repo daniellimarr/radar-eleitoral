@@ -19,6 +19,7 @@ import Materials from "@/pages/Materials";
 import VisitRequests from "@/pages/VisitRequests";
 import RegistrationLinks from "@/pages/RegistrationLinks";
 import PublicRegistration from "@/pages/PublicRegistration";
+import PublicVisitRequest from "@/pages/PublicVisitRequest";
 import Georeferencing from "@/pages/Georeferencing";
 import UserManagement from "@/pages/UserManagement";
 import Campaigns from "@/pages/Campaigns";
