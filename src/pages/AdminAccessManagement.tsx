@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { KeyRound, ShieldCheck, ShieldX, Clock, Loader2, Search } from "lucide-react";
+import { KeyRound, ShieldCheck, ShieldX, Clock, Loader2, Search, RefreshCw, Copy } from "lucide-react";
 
 interface Plan {
   id: string;
@@ -72,6 +72,11 @@ export default function AdminAccessManagement() {
   const [target, setTarget] = useState<Row | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [expiresAt, setExpiresAt] = useState<string>("");
+
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetTarget, setResetTarget] = useState<Row | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -239,6 +244,36 @@ export default function AdminAccessManagement() {
     }
   };
 
+  const openResetPassword = (r: Row) => {
+    setResetTarget(r);
+    setTempPassword(null);
+    setResetOpen(true);
+  };
+
+  const handleGenerateTempPassword = async () => {
+    if (!resetTarget) return;
+    setResetLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-temp-password", {
+        body: { user_id: resetTarget.user_id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setTempPassword(data.temp_password);
+      toast({ title: "Senha temporária gerada", description: "Compartilhe com o usuário de forma segura." });
+    } catch (e: any) {
+      toast({ title: "Erro ao gerar senha", description: e.message, variant: "destructive" });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const copyTempPassword = async () => {
+    if (!tempPassword) return;
+    await navigator.clipboard.writeText(tempPassword);
+    toast({ title: "Senha copiada" });
+  };
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return rows;
@@ -323,6 +358,9 @@ export default function AdminAccessManagement() {
                           <ShieldX className="h-3.5 w-3.5 mr-1" />Revogar
                         </Button>
                       )}
+                      <Button size="sm" variant="secondary" onClick={() => openResetPassword(r)}>
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" />Resetar senha
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -366,6 +404,47 @@ export default function AdminAccessManagement() {
             <Button onClick={handleLiberar} disabled={saving}>
               {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</> : "Liberar acesso"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={resetOpen} onOpenChange={(o) => { setResetOpen(o); if (!o) setTempPassword(null); }}>
+        <DialogContent onEscapeKeyDown={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Resetar senha do gabinete</DialogTitle>
+            <DialogDescription>
+              {resetTarget?.full_name || resetTarget?.email} — uma senha temporária será gerada. No próximo login o usuário será obrigado a criar uma nova senha permanente.
+            </DialogDescription>
+          </DialogHeader>
+
+          {tempPassword ? (
+            <div className="space-y-3 py-2">
+              <Label>Senha temporária</Label>
+              <div className="flex gap-2">
+                <Input readOnly value={tempPassword} className="font-mono" />
+                <Button type="button" variant="outline" onClick={copyTempPassword}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Copie e envie ao usuário por um canal seguro. Esta senha não será exibida novamente.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-2">
+              Ao confirmar, uma nova senha temporária será criada e a senha atual será invalidada.
+            </p>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetOpen(false)} disabled={resetLoading}>
+              {tempPassword ? "Fechar" : "Cancelar"}
+            </Button>
+            {!tempPassword && (
+              <Button onClick={handleGenerateTempPassword} disabled={resetLoading}>
+                {resetLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Gerando...</> : "Gerar senha temporária"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -39,6 +39,7 @@ import Checkout from "@/pages/Checkout";
 import PagamentoConfirmado from "@/pages/PagamentoConfirmado";
 
 import Demo from "@/pages/Demo";
+import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ function App() {
             <Route path="/demo" element={<Demo />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/pagamento-confirmado" element={<PagamentoConfirmado />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             
             
             

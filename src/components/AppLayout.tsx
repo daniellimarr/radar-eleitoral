@@ -68,6 +68,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return <Navigate to="/auth" replace />;
   }
 
+  // Force password change flow (developer-issued temp password)
+  if (profile?.must_change_password && location.pathname !== "/reset-password") {
+    return <Navigate to="/reset-password" replace />;
+  }
+
   const isSuperAdmin = roles.includes("super_admin");
   const isAdminRole = isSuperAdmin || roles.includes("admin_gabinete");
   if (profileStatus && profileStatus !== "approved" && !isAdminRole) {
