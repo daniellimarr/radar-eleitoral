@@ -2138,6 +2138,7 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      is_developer: { Args: { _user_id: string }; Returns: boolean }
       safe_uuid: { Args: { val: string }; Returns: string }
       tenant_has_active_registration_link: {
         Args: { p_tenant_id: string }
