@@ -2089,6 +2089,37 @@ export type Database = {
           tenant_name: string
         }[]
       }
+      get_tenant_leaders: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          address: string
+          address_number: string
+          birth_date: string
+          cep: string
+          city: string
+          created_at: string
+          deleted_at: string
+          engagement: Database["public"]["Enums"]["engagement_level"]
+          gender: string
+          has_whatsapp: boolean
+          id: string
+          is_leader: boolean
+          latitude: number
+          leader_id: string
+          longitude: number
+          name: string
+          neighborhood: string
+          nickname: string
+          phone: string
+          registered_by: string
+          state: string
+          tenant_id: string
+          updated_at: string
+          voting_location: string
+          voting_section: string
+          voting_zone: string
+        }[]
+      }
       get_user_leader_contact_ids: {
         Args: { _user_id: string }
         Returns: {
