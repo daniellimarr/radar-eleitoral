@@ -1,6 +1,23 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Contact } from "@/types";
 
+const CONTACT_DATE_FIELDS = new Set(["birth_date"]);
+const CONTACT_UUID_FIELDS = new Set(["leader_id", "tenant_id", "registered_by"]);
+
+function normalizeNullableDatabaseFields(payload: Record<string, unknown>) {
+  return Object.entries(payload).reduce<Record<string, unknown>>((acc, [key, value]) => {
+    if (value === undefined) return acc;
+
+    if (typeof value === "string" && value.trim() === "") {
+      acc[key] = CONTACT_DATE_FIELDS.has(key) || CONTACT_UUID_FIELDS.has(key) ? null : value;
+      return acc;
+    }
+
+    acc[key] = value;
+    return acc;
+  }, {});
+}
+
 export const contactService = {
   async fetchContacts(tenantId: string, search?: string) {
     let query = supabase
@@ -66,11 +83,13 @@ export const contactService = {
     return data || [];
   },
 
-  async saveContact(payload: any, editingId?: string | null) {
+  async saveContact(payload: Record<string, unknown>, editingId?: string | null) {
+    const databasePayload = normalizeNullableDatabaseFields(payload);
+
     if (editingId) {
       const { data, error } = await supabase
         .from("contacts")
-        .update(payload)
+        .update(databasePayload)
         .eq("id", editingId)
         .select()
         .single();
@@ -79,7 +98,7 @@ export const contactService = {
     } else {
       const { data, error } = await supabase
         .from("contacts")
-        .insert(payload)
+        .insert(databasePayload)
         .select()
         .single();
       if (error) throw error;
