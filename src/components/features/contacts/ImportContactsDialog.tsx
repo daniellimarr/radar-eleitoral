@@ -141,6 +141,7 @@ export function ImportContactsDialog() {
     const batchSize = 50;
     for (let i = 0; i < preview.length; i += batchSize) {
       const batch = preview.slice(i, i + batchSize).map(r => ({
+        name: String(r.name),
         ...r,
         tenant_id: effectiveTenantId,
         registered_by: user.id,
