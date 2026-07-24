@@ -110,7 +110,7 @@ export function ContactForm({
             <Input value={form.phone} onChange={(e) => updateField("phone", e.target.value)} />
           </div>
           <div className="flex items-center gap-2 pt-6">
-            <Checkbox checked={form.has_whatsapp} onCheckedChange={(c) => updateField("has_whatsapp", c)} id="whats" />
+            <Checkbox checked={!!form.has_whatsapp} onCheckedChange={(c) => updateField("has_whatsapp", c === true)} id="whats" />
             <Label htmlFor="whats">Whats?</Label>
           </div>
         </div>
