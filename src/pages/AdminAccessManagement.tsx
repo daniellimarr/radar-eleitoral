@@ -358,6 +358,9 @@ export default function AdminAccessManagement() {
                           <ShieldX className="h-3.5 w-3.5 mr-1" />Revogar
                         </Button>
                       )}
+                      <Button size="sm" variant="secondary" onClick={() => openResetPassword(r)}>
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" />Resetar senha
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
