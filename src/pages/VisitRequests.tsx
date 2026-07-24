@@ -358,6 +358,7 @@ export default function VisitRequests() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Card>
