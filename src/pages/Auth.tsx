@@ -127,6 +127,35 @@ export default function Auth() {
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? "Entrando..." : "Entrar"}
                     </Button>
+                    <div className="text-center">
+                      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+                        <DialogTrigger asChild>
+                          <button type="button" className="text-sm text-primary hover:underline">
+                            Esqueci minha senha
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Recuperar senha</DialogTitle>
+                            <DialogDescription>
+                              Informe seu e-mail e enviaremos um link para redefinir sua senha.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <form onSubmit={handleForgotPassword} className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="forgot-email">E-mail</Label>
+                              <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required autoFocus />
+                            </div>
+                            <DialogFooter>
+                              <Button type="button" variant="outline" onClick={() => setForgotOpen(false)} disabled={forgotLoading}>Cancelar</Button>
+                              <Button type="submit" disabled={forgotLoading}>
+                                {forgotLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enviando...</> : "Enviar link"}
+                              </Button>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
