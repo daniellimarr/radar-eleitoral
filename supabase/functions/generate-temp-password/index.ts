@@ -47,9 +47,8 @@ Deno.serve(async (req) => {
       .from("user_roles")
       .select("role")
       .eq("user_id", caller.id)
-      .in("role", ["super_admin", "developer"])
-      .maybeSingle();
-    if (!roleData) throw new Error("Only super_admin can reset passwords");
+      .in("role", ["super_admin", "developer"]);
+    if (!roleData || roleData.length === 0) throw new Error("Only super_admin can reset passwords");
 
     const { user_id } = await req.json();
     if (!user_id) throw new Error("user_id required");
