@@ -221,8 +221,14 @@ export default function VisitRequests() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">Solicitações de Visita / Reunião</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={handleCopyPublicLink} disabled={creatingLink}>
+            <Link2 className="h-4 w-4 mr-2" />
+            {creatingLink ? "Gerando..." : (publicSlug ? "Copiar link público" : "Gerar link público")}
+            <Copy className="h-3 w-3 ml-2 opacity-60" />
+          </Button>
         <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) { setSelectedDate(undefined); setSelectedTime(""); } }}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nova Solicitação</Button></DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
