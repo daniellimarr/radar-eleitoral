@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isAuthorizedAdmin } from "./authorize.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,12 +44,8 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    const { data: roleData } = await adminClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", caller.id)
-      .in("role", ["super_admin", "developer"]);
-    if (!roleData || roleData.length === 0) throw new Error("Only super_admin can reset passwords");
+    const authorized = await isAuthorizedAdmin(adminClient, caller.id);
+    if (!authorized) throw new Error("Only super_admin can reset passwords");
 
     const { user_id } = await req.json();
     if (!user_id) throw new Error("user_id required");
