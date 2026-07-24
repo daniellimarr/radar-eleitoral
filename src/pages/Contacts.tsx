@@ -10,6 +10,7 @@ import ExportButtons from "@/components/ExportButtons";
 import { geocodeByCep } from "@/lib/geocoding";
 import { ContactForm } from "@/components/features/contacts/ContactForm";
 import { ContactTable } from "@/components/features/contacts/ContactTable";
+import { ImportContactsDialog } from "@/components/features/contacts/ImportContactsDialog";
 import { Contact, EngagementLevel } from "@/types";
 
 const defaultContact = {
@@ -151,7 +152,9 @@ export default function Contacts() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              <ImportContactsDialog />
               <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
+
             </div>
           </div>
         </CardHeader>
