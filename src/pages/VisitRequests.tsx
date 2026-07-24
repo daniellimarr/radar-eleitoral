@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Plus, Clock, MapPin, Search } from "lucide-react";
+import { Plus, Clock, MapPin, Search, Link2, Copy } from "lucide-react";
 import { format, isSameDay, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
