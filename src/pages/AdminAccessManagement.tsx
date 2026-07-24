@@ -406,6 +406,8 @@ export default function AdminAccessManagement() {
             </Button>
           </DialogFooter>
         </DialogContent>
+      </Dialog>
+
       <Dialog open={resetOpen} onOpenChange={(o) => { setResetOpen(o); if (!o) setTempPassword(null); }}>
         <DialogContent onEscapeKeyDown={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
