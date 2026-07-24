@@ -152,7 +152,9 @@ export default function Contacts() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              <ImportContactsDialog />
               <ExportButtons tableRef={tableRef} title="Contatos" filename="contatos" />
+
             </div>
           </div>
         </CardHeader>
