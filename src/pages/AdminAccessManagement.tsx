@@ -406,6 +406,45 @@ export default function AdminAccessManagement() {
             </Button>
           </DialogFooter>
         </DialogContent>
+      <Dialog open={resetOpen} onOpenChange={(o) => { setResetOpen(o); if (!o) setTempPassword(null); }}>
+        <DialogContent onEscapeKeyDown={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Resetar senha do gabinete</DialogTitle>
+            <DialogDescription>
+              {resetTarget?.full_name || resetTarget?.email} — uma senha temporária será gerada. No próximo login o usuário será obrigado a criar uma nova senha permanente.
+            </DialogDescription>
+          </DialogHeader>
+
+          {tempPassword ? (
+            <div className="space-y-3 py-2">
+              <Label>Senha temporária</Label>
+              <div className="flex gap-2">
+                <Input readOnly value={tempPassword} className="font-mono" />
+                <Button type="button" variant="outline" onClick={copyTempPassword}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Copie e envie ao usuário por um canal seguro. Esta senha não será exibida novamente.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-2">
+              Ao confirmar, uma nova senha temporária será criada e a senha atual será invalidada.
+            </p>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetOpen(false)} disabled={resetLoading}>
+              {tempPassword ? "Fechar" : "Cancelar"}
+            </Button>
+            {!tempPassword && (
+              <Button onClick={handleGenerateTempPassword} disabled={resetLoading}>
+                {resetLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Gerando...</> : "Gerar senha temporária"}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
     </div>
   );
