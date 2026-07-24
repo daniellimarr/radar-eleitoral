@@ -62,6 +62,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/cadastro/:slug" element={<PublicRegistration />} />
+            <Route path="/agendar" element={<Navigate to="/agendar/cadastro-geral" replace />} />
             <Route path="/agendar/:slug" element={<PublicVisitRequest />} />
             <Route path="/planos" element={<LandingPage />} />
             <Route path="/demo" element={<Demo />} />
