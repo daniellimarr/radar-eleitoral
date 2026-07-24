@@ -14,22 +14,20 @@ export function useLeaders() {
     if (!tenantId) return;
     setLoading(true);
     try {
-      const data = await contactService.fetchLeaders(tenantId, false);
-      // We need more info for the ranking page than just id/name, so we use fetchContacts filtered by is_leader
-      // Actually, let's use a more complete fetch for the ranking
-      const fullLeaders = await contactService.fetchContacts(tenantId);
-      const filteredLeaders = fullLeaders.filter(l => l.is_leader) as Contact[];
-      setLeaders(filteredLeaders);
+      const fullLeaders = await contactService.fetchLeadersFull(tenantId);
+      setLeaders(fullLeaders as Contact[]);
 
-      if (filteredLeaders.length > 0) {
-        const leaderIds = filteredLeaders.map(l => l.id);
+      if (fullLeaders.length > 0) {
+        const leaderIds = fullLeaders.map((l: any) => l.id);
         const counts = await contactService.fetchVoterCounts(tenantId, leaderIds);
         setVoterCounts(counts);
+      } else {
+        setVoterCounts({});
       }
     } catch (error: any) {
       toast.error(error.message);
     } finally {
-      setLoading(true);
+      setLoading(false);
     }
   }, [tenantId]);
 

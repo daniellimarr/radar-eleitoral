@@ -54,6 +54,18 @@ export const contactService = {
     }
   },
 
+  async fetchLeadersFull(tenantId: string) {
+    const { data, error } = await supabase
+      .from("contacts_decrypted")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .eq("is_leader", true)
+      .is("deleted_at", null)
+      .order("name");
+    if (error) throw error;
+    return data || [];
+  },
+
   async saveContact(payload: any, editingId?: string | null) {
     if (editingId) {
       const { data, error } = await supabase
