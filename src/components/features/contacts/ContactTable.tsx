@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { Contact } from "@/types";
 import { RefObject } from "react";
+import { WhatsAppLink } from "@/components/shared/WhatsAppLink";
 
 interface ContactTableProps {
   contacts: Contact[];
@@ -37,7 +38,7 @@ export function ContactTable({ contacts, onEdit, onDelete, tableRef }: ContactTa
                 <div className="font-medium">{contact.name}</div>
                 {contact.nickname && <div className="text-xs text-muted-foreground">{contact.nickname}</div>}
               </TableCell>
-              <TableCell>{contact.phone}</TableCell>
+              <TableCell><WhatsAppLink phone={contact.phone} /></TableCell>
               <TableCell className="capitalize">{contact.engagement?.replace("_", " ")}</TableCell>
               <TableCell>{contact.neighborhood}</TableCell>
               <TableCell>

@@ -8,6 +8,7 @@ import { Trophy, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Users } from "
 import ExportButtons from "@/components/ExportButtons";
 import { useLeaders } from "@/hooks/useLeaders";
 import { contactService } from "@/services/contactService";
+import { WhatsAppLink } from "@/components/shared/WhatsAppLink";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -113,7 +114,7 @@ export default function Leaders() {
                     <TableCell className="font-bold">{i + 1}</TableCell>
                     <TableCell className="font-medium">{l.name}</TableCell>
                     <TableCell>{l.city}</TableCell>
-                    <TableCell>{l.phone}</TableCell>
+                    <TableCell><WhatsAppLink phone={l.phone} /></TableCell>
                     <TableCell>
                       <div className="space-y-1 min-w-[120px]">
                         <div className="flex items-center justify-between text-xs">
@@ -179,7 +180,7 @@ export default function Leaders() {
                                 {voters[l.id].map((v) => (
                                   <TableRow key={v.id}>
                                     <TableCell>{v.name}</TableCell>
-                                    <TableCell>{v.phone}</TableCell>
+                                    <TableCell><WhatsAppLink phone={v.phone} /></TableCell>
                                     <TableCell>{v.city}</TableCell>
                                     <TableCell>
                                       <Badge variant="outline">{v.engagement?.replace("_", " ")}</Badge>
