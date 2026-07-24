@@ -76,13 +76,10 @@ export const contactService = {
   },
 
   async fetchLeadersFull(tenantId: string) {
-    const { data, error } = await supabase
-      .from("contacts_decrypted")
-      .select("*")
-      .eq("tenant_id", tenantId)
-      .eq("is_leader", true)
-      .is("deleted_at", null)
-      .order("name");
+    const { data, error } = await supabase.rpc("get_tenant_leaders", {
+      p_tenant_id: tenantId,
+    });
+
     if (error) throw error;
     return data || [];
   },
