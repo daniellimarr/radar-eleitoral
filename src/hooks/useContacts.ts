@@ -37,11 +37,18 @@ export function useContacts() {
         throw new Error(`Limite de ${contactLimit.toLocaleString()} contatos atingido.`);
       }
 
-      const sanitizedPayload = { 
-        ...form, 
-        tenant_id: effectiveTenantId, 
+      const DATE_FIELDS = ["birth_date"];
+      const UUID_FIELDS = ["leader_id"];
+      const cleaned: any = { ...form };
+      for (const k of Object.keys(cleaned)) {
+        if (cleaned[k] === "") {
+          if (DATE_FIELDS.includes(k) || UUID_FIELDS.includes(k)) cleaned[k] = null;
+        }
+      }
+      const sanitizedPayload = {
+        ...cleaned,
+        tenant_id: effectiveTenantId,
         registered_by: user.id,
-        leader_id: form.leader_id === "" ? null : form.leader_id 
       };
       const saved = await contactService.saveContact(sanitizedPayload, editingId);
       
