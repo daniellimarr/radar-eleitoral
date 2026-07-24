@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Plus, Clock, MapPin, Search } from "lucide-react";
+import { Plus, Clock, MapPin, Search, Link2, Copy } from "lucide-react";
 import { format, isSameDay, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -45,6 +45,8 @@ export default function VisitRequests() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string>("");
+  const [publicSlug, setPublicSlug] = useState<string | null>(null);
+  const [creatingLink, setCreatingLink] = useState(false);
   const [form, setForm] = useState({
     title: "", description: "", location: "", cep: "",
     address: "", neighborhood: "", city: "", state: "",
@@ -54,6 +56,42 @@ export default function VisitRequests() {
   const [loading, setLoading] = useState(false);
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
+
+  const fetchPublicSlug = async () => {
+    if (!tenantId) return;
+    const { data } = await supabase
+      .from("registration_links")
+      .select("slug")
+      .eq("tenant_id", tenantId)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (data && data[0]) setPublicSlug(data[0].slug);
+  };
+
+  useEffect(() => { fetchPublicSlug(); }, [tenantId]);
+
+  const ensurePublicLink = async () => {
+    if (publicSlug || !tenantId) return publicSlug;
+    setCreatingLink(true);
+    const slug = `agenda-${Math.random().toString(36).slice(2, 8)}`;
+    const { data, error } = await supabase.from("registration_links").insert({
+      tenant_id: tenantId, slug, link_type: "general", is_active: true, created_by: user?.id,
+    } as any).select("slug").single();
+    setCreatingLink(false);
+    if (error) { toast.error("Erro ao gerar link: " + error.message); return null; }
+    setPublicSlug(data.slug);
+    return data.slug;
+  };
+
+  const handleCopyPublicLink = async () => {
+    const slug = publicSlug || (await ensurePublicLink());
+    if (!slug) return;
+    const url = `${window.location.origin}/agendar/${slug}`;
+    await navigator.clipboard.writeText(url);
+    toast.success("Link copiado! " + url);
+  };
+
 
   const handleCepSearch = async () => {
     if (!form.cep) return;
@@ -183,8 +221,14 @@ export default function VisitRequests() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">Solicitações de Visita / Reunião</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={handleCopyPublicLink} disabled={creatingLink}>
+            <Link2 className="h-4 w-4 mr-2" />
+            {creatingLink ? "Gerando..." : (publicSlug ? "Copiar link público" : "Gerar link público")}
+            <Copy className="h-3 w-3 ml-2 opacity-60" />
+          </Button>
         <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) { setSelectedDate(undefined); setSelectedTime(""); } }}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nova Solicitação</Button></DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -314,6 +358,7 @@ export default function VisitRequests() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Card>

@@ -1445,8 +1445,11 @@ export type Database = {
           needs_banners: boolean | null
           needs_political_material: boolean | null
           needs_sound: boolean | null
-          requested_by: string
+          requested_by: string | null
           requested_date: string | null
+          requester_email: string | null
+          requester_name: string | null
+          requester_phone: string | null
           status: string | null
           tenant_id: string
           title: string
@@ -1463,8 +1466,11 @@ export type Database = {
           needs_banners?: boolean | null
           needs_political_material?: boolean | null
           needs_sound?: boolean | null
-          requested_by: string
+          requested_by?: string | null
           requested_date?: string | null
+          requester_email?: string | null
+          requester_name?: string | null
+          requester_phone?: string | null
           status?: string | null
           tenant_id: string
           title: string
@@ -1481,8 +1487,11 @@ export type Database = {
           needs_banners?: boolean | null
           needs_political_material?: boolean | null
           needs_sound?: boolean | null
-          requested_by?: string
+          requested_by?: string | null
           requested_date?: string | null
+          requester_email?: string | null
+          requester_name?: string | null
+          requester_phone?: string | null
           status?: string | null
           tenant_id?: string
           title?: string
@@ -2087,6 +2096,12 @@ export type Database = {
           link_type: string
           tenant_id: string
           tenant_name: string
+        }[]
+      }
+      get_tenant_busy_slots: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          slot: string
         }[]
       }
       get_tenant_leaders: {
