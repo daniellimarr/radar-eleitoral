@@ -116,7 +116,7 @@ export default function Contacts() {
       voting_location: contact.voting_location || "",
       engagement: contact.engagement || "nao_trabalhado",
       is_leader: contact.is_leader || false,
-      leader_id: contact.leader_id || "",
+      leader_id: contact.leader_id || null,
     });
     setEditingId(contact.id);
     setIsOpen(true);
