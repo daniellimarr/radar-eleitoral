@@ -90,7 +90,7 @@ export function ContactForm({
             <Input type="date" value={form.birth_date || ""} onChange={(e) => updateField("birth_date", e.target.value || null)} />
           </div>
           <div className="flex items-center gap-2 pt-6">
-            <Checkbox checked={form.is_leader} onCheckedChange={(c) => updateField("is_leader", c)} id="leader" />
+            <Checkbox checked={!!form.is_leader} onCheckedChange={(c) => updateField("is_leader", c === true)} id="leader" />
             <Label htmlFor="leader">Liderança</Label>
           </div>
           <div className="space-y-2">
@@ -110,7 +110,7 @@ export function ContactForm({
             <Input value={form.phone} onChange={(e) => updateField("phone", e.target.value)} />
           </div>
           <div className="flex items-center gap-2 pt-6">
-            <Checkbox checked={form.has_whatsapp} onCheckedChange={(c) => updateField("has_whatsapp", c)} id="whats" />
+            <Checkbox checked={!!form.has_whatsapp} onCheckedChange={(c) => updateField("has_whatsapp", c === true)} id="whats" />
             <Label htmlFor="whats">Whats?</Label>
           </div>
         </div>
