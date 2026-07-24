@@ -29,6 +29,8 @@ export default function PublicVisitRequest() {
   const [selectedTime, setSelectedTime] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [protocol, setProtocol] = useState<string>("");
+  const [confirmedDate, setConfirmedDate] = useState<string>("");
   const [form, setForm] = useState({
     requester_name: "",
     requester_phone: "",
@@ -93,7 +95,7 @@ export default function PublicVisitRequest() {
 
     setSubmitting(true);
     const requested_date = `${format(selectedDate, "yyyy-MM-dd")}T${selectedTime}:00`;
-    const { error } = await supabase.from("visit_requests").insert({
+    const { data: inserted, error } = await supabase.from("visit_requests").insert({
       tenant_id: linkInfo.tenant_id,
       requested_by: null,
       title: form.title,
@@ -104,9 +106,12 @@ export default function PublicVisitRequest() {
       requester_phone: form.requester_phone,
       requester_email: form.requester_email || null,
       status: "pendente",
-    } as any);
+    } as any).select("id").single();
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
+    const id = (inserted as any)?.id as string | undefined;
+    setProtocol(id ? id.replace(/-/g, "").slice(0, 8).toUpperCase() : "");
+    setConfirmedDate(format(selectedDate, "dd/MM/yyyy", { locale: ptBR }) + " às " + selectedTime);
     setSuccess(true);
   };
 
@@ -121,6 +126,16 @@ export default function PublicVisitRequest() {
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto" />
             <h1 className="text-2xl font-bold">Solicitação enviada!</h1>
             <p className="text-muted-foreground">Sua solicitação foi encaminhada para a equipe. Entraremos em contato para confirmar.</p>
+            {protocol && (
+              <div className="rounded-lg border bg-muted/50 p-4 space-y-1">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Número do protocolo</p>
+                <p className="text-2xl font-mono font-bold text-primary">{protocol}</p>
+                {confirmedDate && (
+                  <p className="text-sm text-muted-foreground pt-2">Data solicitada: <span className="font-medium text-foreground">{confirmedDate}</span></p>
+                )}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">Guarde este número para acompanhar sua solicitação.</p>
           </CardContent>
         </Card>
       </div>
