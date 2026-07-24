@@ -126,6 +126,16 @@ export default function PublicVisitRequest() {
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto" />
             <h1 className="text-2xl font-bold">Solicitação enviada!</h1>
             <p className="text-muted-foreground">Sua solicitação foi encaminhada para a equipe. Entraremos em contato para confirmar.</p>
+            {protocol && (
+              <div className="rounded-lg border bg-muted/50 p-4 space-y-1">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Número do protocolo</p>
+                <p className="text-2xl font-mono font-bold text-primary">{protocol}</p>
+                {confirmedDate && (
+                  <p className="text-sm text-muted-foreground pt-2">Data solicitada: <span className="font-medium text-foreground">{confirmedDate}</span></p>
+                )}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">Guarde este número para acompanhar sua solicitação.</p>
           </CardContent>
         </Card>
       </div>
