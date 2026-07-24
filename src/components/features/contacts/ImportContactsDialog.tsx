@@ -147,7 +147,7 @@ export function ImportContactsDialog() {
         registered_by: user.id,
         city: r.city || "Boa Vista",
         state: r.state || "RR",
-        engagement: "nao_trabalhado",
+        engagement: "nao_trabalhado" as const,
       }));
       const { error, data } = await supabase.from("contacts").insert(batch).select("id");
       if (error) { fail += batch.length; console.error(error); }
