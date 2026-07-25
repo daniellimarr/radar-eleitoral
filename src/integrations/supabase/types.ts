@@ -993,6 +993,107 @@ export type Database = {
           },
         ]
       }
+      nps_responses: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          main_topic: string | null
+          neighborhood: string | null
+          respondent_name: string | null
+          score: number
+          survey_id: string
+          tenant_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          main_topic?: string | null
+          neighborhood?: string | null
+          respondent_name?: string | null
+          score: number
+          survey_id: string
+          tenant_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          main_topic?: string | null
+          neighborhood?: string | null
+          respondent_name?: string | null
+          score?: number
+          survey_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nps_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "nps_surveys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nps_responses_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nps_surveys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          slug: string
+          start_date: string | null
+          status: string
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          slug: string
+          start_date?: string | null
+          status?: string
+          tenant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          slug?: string
+          start_date?: string | null
+          status?: string
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nps_surveys_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
