@@ -46,15 +46,25 @@ export default function PublicVisitRequest() {
     uf: "",
   });
   const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState<string>("");
+  const [apiUf, setApiUf] = useState<string>("");
+  const [apiCity, setApiCity] = useState<string>("");
 
   const handleCepChange = (raw: string) => {
     const masked = formatCep(raw);
+    const digits = masked.replace(/\D/g, "");
     setForm((p) => ({ ...p, cep: masked }));
-    if (masked.replace(/\D/g, "").length === 8) {
+    setCepError("");
+    if (digits.length > 0 && digits.length < 8) {
+      setCepError("CEP deve ter 8 dígitos");
+    }
+    if (digits.length === 8) {
       setCepLoading(true);
       lookupCep(masked).then((addr) => {
         setCepLoading(false);
-        if (!addr) { toast.error("CEP não encontrado"); return; }
+        if (!addr) { setCepError("CEP não encontrado"); toast.error("CEP não encontrado"); return; }
+        setApiUf(addr.uf);
+        setApiCity(addr.city);
         setForm((p) => ({
           ...p,
           cep: addr.cep,
@@ -119,6 +129,14 @@ export default function PublicVisitRequest() {
     if (!form.title) return toast.error("Informe o assunto");
     if (!selectedDate || !selectedTime) return toast.error("Selecione data e horário");
     if (bookedForSelected.has(selectedTime)) return toast.error("Horário já reservado");
+
+    const cepDigits = form.cep.replace(/\D/g, "");
+    if (form.cep && cepDigits.length !== 8) return toast.error("CEP deve ter 8 dígitos");
+    const ufNorm = normalizeUf(form.uf);
+    if (ufNorm && ufNorm.length !== 2) return toast.error("UF inválida");
+    if (apiUf && ufNorm && apiUf !== ufNorm) {
+      return toast.error(`UF (${ufNorm}) não confere com o CEP informado (${apiUf}). Verifique o endereço.`);
+    }
 
     setSubmitting(true);
     const requested_date = `${format(selectedDate, "yyyy-MM-dd")}T${selectedTime}:00`;
@@ -203,7 +221,8 @@ export default function PublicVisitRequest() {
             <div className="grid md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>CEP {cepLoading && <span className="text-xs text-muted-foreground">(buscando...)</span>}</Label>
-                <Input value={form.cep} onChange={(e) => handleCepChange(e.target.value)} placeholder="00000-000" inputMode="numeric" maxLength={9} />
+                <Input value={form.cep} onChange={(e) => handleCepChange(e.target.value)} placeholder="00000-000" inputMode="numeric" maxLength={9} aria-invalid={!!cepError} />
+                {cepError && <p className="text-xs text-destructive">{cepError}</p>}
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Rua / Logradouro</Label>
@@ -226,7 +245,10 @@ export default function PublicVisitRequest() {
             </div>
             <div className="space-y-2 md:w-40">
               <Label>UF</Label>
-              <Input value={form.uf} onChange={(e) => setForm(p => ({...p, uf: normalizeUf(e.target.value)}))} maxLength={2} placeholder="RR" />
+              <Input value={form.uf} onChange={(e) => setForm(p => ({...p, uf: normalizeUf(e.target.value)}))} maxLength={2} placeholder="RR" aria-invalid={!!(apiUf && form.uf && apiUf !== normalizeUf(form.uf))} />
+              {apiUf && form.uf && apiUf !== normalizeUf(form.uf) && (
+                <p className="text-xs text-destructive">UF diverge do CEP ({apiUf}{apiCity ? ` – ${apiCity}` : ""}).</p>
+              )}
             </div>
           </CardContent>
         </Card>
