@@ -109,26 +109,51 @@ export default function VisitRequests() {
   };
 
 
+  const runCepLookup = async (cepValue: string) => {
+    const digits = cepValue.replace(/\D/g, "");
+    if (digits.length !== 8) {
+      setCepError("CEP deve ter 8 dígitos");
+      return;
+    }
+    setCepError("");
+    setCepLoading(true);
+    const result = await geocodeByCep(digits);
+    setCepLoading(false);
+    if (!result) {
+      setCepError("CEP não encontrado");
+      toast.error("CEP não encontrado");
+      return;
+    }
+    const uf = normalizeUf(result.state || "");
+    setApiUf(uf);
+    setApiCity(result.city || "");
+    const fullAddress = [result.address, result.neighborhood, result.city, uf].filter(Boolean).join(", ");
+    setForm(p => ({
+      ...p,
+      address: result.address || "",
+      neighborhood: result.neighborhood || "",
+      city: result.city || "",
+      state: uf,
+      location: fullAddress,
+    }));
+    if (result.latitude && result.longitude) {
+      setLocationCoords({ lat: result.latitude, lng: result.longitude });
+    }
+  };
+
+  const handleCepChange = (raw: string) => {
+    const masked = formatCep(raw);
+    setForm(p => ({ ...p, cep: masked }));
+    const digits = masked.replace(/\D/g, "");
+    setCepError(digits.length > 0 && digits.length < 8 ? "CEP deve ter 8 dígitos" : "");
+    if (digits.length === 8) runCepLookup(masked);
+  };
+
   const handleCepSearch = async () => {
     if (!form.cep) return;
-    setCepLoading(true);
-    const result = await geocodeByCep(form.cep);
-    if (result) {
-      const fullAddress = [result.address, result.neighborhood, result.city, result.state].filter(Boolean).join(", ");
-      setForm(p => ({
-        ...p,
-        address: result.address || "",
-        neighborhood: result.neighborhood || "",
-        city: result.city || "",
-        state: result.state || "",
-        location: fullAddress,
-      }));
-      if (result.latitude && result.longitude) {
-        setLocationCoords({ lat: result.latitude, lng: result.longitude });
-      }
-    }
-    setCepLoading(false);
+    await runCepLookup(form.cep);
   };
+
 
   const fetchRequests = async () => {
     if (!tenantId) return;
