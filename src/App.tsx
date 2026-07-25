@@ -21,6 +21,7 @@ import RegistrationLinks from "@/pages/RegistrationLinks";
 import PublicRegistration from "@/pages/PublicRegistration";
 import PublicVisitRequest from "@/pages/PublicVisitRequest";
 import Georeferencing from "@/pages/Georeferencing";
+import ElectoralMap from "@/pages/ElectoralMap";
 import UserManagement from "@/pages/UserManagement";
 import Campaigns from "@/pages/Campaigns";
 import Marketing from "@/pages/Marketing";
