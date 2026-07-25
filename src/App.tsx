@@ -88,6 +88,7 @@ function App() {
             <Route path="/visit-requests" element={<ProtectedRoute><VisitRequests /></ProtectedRoute>} />
             <Route path="/registration-links" element={<ProtectedRoute><RegistrationLinks /></ProtectedRoute>} />
             <Route path="/map" element={<ProtectedRoute><Georeferencing /></ProtectedRoute>} />
+            <Route path="/electoral-map" element={<ProtectedRoute><ElectoralMap /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             <Route path="/admin/tenants" element={<ProtectedRoute><TenantManagement /></ProtectedRoute>} />
             <Route path="/admin/plans" element={<ProtectedRoute><PlanManagement /></ProtectedRoute>} />
