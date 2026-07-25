@@ -251,7 +251,7 @@ export default function Demo() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full max-w-full overflow-x-hidden bg-background">
         <Sidebar collapsible="icon">
           <SidebarContent>
             <div className="p-4 flex items-center gap-2">
@@ -355,7 +355,7 @@ export default function Demo() {
             </div>
           </div>
 
-          <header className="h-14 border-b flex items-center justify-between px-4 bg-card">
+          <header className="h-14 border-b flex items-center justify-between gap-2 px-3 sm:px-4 bg-card">
             <div className="flex items-center gap-2">
               <SidebarTrigger />
               <h2 className="text-sm font-semibold text-muted-foreground">
@@ -372,7 +372,7 @@ export default function Demo() {
             </div>
           </header>
 
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 min-w-0 w-full overflow-x-hidden p-3 sm:p-4 lg:p-6">
             {activeTab === "dashboard" && <DemoDashboard />}
             {activeTab === "contacts" && <DemoContacts />}
             {activeTab === "demands" && <DemoDemands />}

@@ -460,9 +460,9 @@ export default function Chat() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-12rem)]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:h-[calc(100vh-12rem)]">
         {/* Sidebar: Conversations + New chat */}
-        <Card className="md:col-span-1 flex flex-col">
+        <Card className="md:col-span-1 flex flex-col max-h-[45vh] md:max-h-none">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Conversas</CardTitle>
           </CardHeader>
