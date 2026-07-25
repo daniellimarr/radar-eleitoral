@@ -84,12 +84,23 @@ export default function VisitRequests() {
     return data.slug;
   };
 
+  const buildShareMessage = (url: string) =>
+    `Olá! 👋 Agende sua visita com o Deyvid Duarte de forma rápida e prática. Escolha a melhor data e horário aqui: ${url}`;
+
   const handleCopyPublicLink = async () => {
     const slug = publicSlug || (await ensurePublicLink());
     if (!slug) return;
     const url = `${window.location.origin}/agendar/${slug}`;
-    await navigator.clipboard.writeText(url);
-    toast.success("Link copiado! " + url);
+    await navigator.clipboard.writeText(buildShareMessage(url));
+    toast.success("Mensagem copiada com o link!");
+  };
+
+  const handleShareWhatsApp = async () => {
+    const slug = publicSlug || (await ensurePublicLink());
+    if (!slug) return;
+    const url = `${window.location.origin}/agendar/${slug}`;
+    const msg = encodeURIComponent(buildShareMessage(url));
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
 
