@@ -107,9 +107,33 @@ export default function RegistrationLinks() {
     return origin;
   };
 
+  const buildUrl = (slug: string) => `${getBaseUrl()}/cadastro/${slug}`;
+
+  const buildMessage = (link: any) => {
+    const url = buildUrl(link.slug);
+    if (link.link_type === "leader") {
+      return `Olá! 👋 Quer fazer parte da nossa equipe de lideranças do Deyvid Duarte? Faça seu cadastro rápido aqui: ${url}`;
+    }
+    const leaderName = link.leader?.nickname || link.leader?.name;
+    if (leaderName) {
+      return `Olá! 👋 ${leaderName} está te convidando para apoiar o Deyvid Duarte. Faça seu cadastro rápido aqui: ${url}`;
+    }
+    return `Olá! 👋 Faça seu cadastro de apoio ao Deyvid Duarte de forma rápida e prática aqui: ${url}`;
+  };
+
   const copyLink = (slug: string) => {
-    navigator.clipboard.writeText(`${getBaseUrl()}/cadastro/${slug}`);
+    navigator.clipboard.writeText(buildUrl(slug));
     toast.success("Link copiado!");
+  };
+
+  const copyMessage = (link: any) => {
+    navigator.clipboard.writeText(buildMessage(link));
+    toast.success("Mensagem copiada!");
+  };
+
+  const shareWhatsApp = (link: any) => {
+    const msg = encodeURIComponent(buildMessage(link));
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
   return (
