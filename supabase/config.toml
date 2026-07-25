@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.generate-temp-password]
 verify_jwt = false
+
+[functions.import-tse]
+verify_jwt = false
