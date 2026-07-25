@@ -48,6 +48,7 @@ const adminItems = [
   { title: "Liberação de Acesso", url: "/admin/access", icon: KeyRound },
   { title: "Assinaturas", url: "/admin/subscriptions", icon: FileText },
   { title: "Ambiente Asaas", url: "/admin/asaas-env", icon: Shield },
+  { title: "Verificação de DNS", url: "/admin/dns", icon: Globe },
   { title: "Relatórios e Auditoria", url: "/reports", icon: BarChart3 },
 ];
 
