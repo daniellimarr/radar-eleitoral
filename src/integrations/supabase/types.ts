@@ -2355,6 +2355,10 @@ export type Database = {
         Returns: boolean
       }
       is_developer: { Args: { _user_id: string }; Returns: boolean }
+      is_nps_survey_open: {
+        Args: { p_survey_id: string; p_tenant_id: string }
+        Returns: boolean
+      }
       safe_uuid: { Args: { val: string }; Returns: string }
       tenant_has_active_registration_link: {
         Args: { p_tenant_id: string }
