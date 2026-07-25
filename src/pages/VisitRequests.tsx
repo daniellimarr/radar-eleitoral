@@ -372,16 +372,33 @@ export default function VisitRequests() {
               {/* CEP + Endereço + Mapa */}
               <div className="space-y-3">
                 <Label className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Localização</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="CEP (ex: 69301-000)"
-                    value={form.cep}
-                    onChange={(e) => setForm(p => ({ ...p, cep: e.target.value }))}
-                    className="max-w-[180px]"
-                  />
+                <div className="flex gap-2 items-start">
+                  <div className="max-w-[180px] w-full space-y-1">
+                    <Input
+                      placeholder="CEP (ex: 69301-000)"
+                      value={form.cep}
+                      onChange={(e) => handleCepChange(e.target.value)}
+                      inputMode="numeric"
+                      maxLength={9}
+                      aria-invalid={!!cepError}
+                    />
+                    {cepError && <p className="text-xs text-destructive">{cepError}</p>}
+                  </div>
                   <Button type="button" variant="outline" size="sm" onClick={handleCepSearch} disabled={cepLoading}>
                     <Search className="h-4 w-4 mr-1" /> {cepLoading ? "Buscando..." : "Buscar"}
                   </Button>
+                  <div className="w-24 space-y-1">
+                    <Input
+                      placeholder="UF"
+                      value={form.state}
+                      onChange={(e) => setForm(p => ({ ...p, state: normalizeUf(e.target.value) }))}
+                      maxLength={2}
+                      aria-invalid={!!(apiUf && form.state && apiUf !== normalizeUf(form.state))}
+                    />
+                    {apiUf && form.state && apiUf !== normalizeUf(form.state) && (
+                      <p className="text-xs text-destructive">Diverge do CEP ({apiUf}{apiCity ? ` – ${apiCity}` : ""})</p>
+                    )}
+                  </div>
                 </div>
                 <Input
                   placeholder="Endereço completo"
