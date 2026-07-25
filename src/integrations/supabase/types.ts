@@ -2276,6 +2276,19 @@ export type Database = {
           leader_name: string
         }[]
       }
+      get_public_nps_survey: {
+        Args: { p_slug: string }
+        Returns: {
+          description: string
+          end_date: string
+          id: string
+          slug: string
+          start_date: string
+          status: string
+          tenant_id: string
+          title: string
+        }[]
+      }
       get_registration_link_info: {
         Args: { p_slug: string }
         Returns: {
