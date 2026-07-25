@@ -109,7 +109,9 @@ function App() {
             <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="/assinatura" element={<ProtectedRoute><Planos /></ProtectedRoute>} />
             <Route path="/admin/asaas-env" element={<ProtectedRoute><AsaasEnvCheck /></ProtectedRoute>} />
+            <Route path="/admin/dns" element={<ProtectedRoute><DnsCheck /></ProtectedRoute>} />
             <Route path="/admin/access" element={<ProtectedRoute><AdminAccessManagement /></ProtectedRoute>} />
+            
             
             <Route path="*" element={<NotFound />} />
           </Routes>
