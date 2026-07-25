@@ -12,6 +12,7 @@ import { Clock, CheckCircle2, CalendarDays } from "lucide-react";
 import { format, isSameDay, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { formatCep, lookupCep, toTitleCase, normalizeUf, buildFullAddress } from "@/lib/addressNormalize";
 
 const TIME_SLOTS = [
   "08:00","08:30","09:00","09:30","10:00","10:30",
