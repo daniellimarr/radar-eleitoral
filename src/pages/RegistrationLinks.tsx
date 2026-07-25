@@ -99,15 +99,11 @@ export default function RegistrationLinks() {
     setLoading(false);
   };
 
-  const getBaseUrl = () => {
-    const origin = window.location.origin;
-    if (origin.includes("lovableproject.com") || origin.includes("lovable.app/builder") || origin.includes("id-preview--")) {
-      return "https://radar-eleitoral.lovable.app";
-    }
-    return origin;
-  };
+  const PUBLIC_BASE_URL = "https://radar-eleitoral.lovable.app";
 
-  const buildUrl = (slug: string) => `${getBaseUrl()}/cadastro/${slug}`;
+  const getBaseUrl = () => PUBLIC_BASE_URL;
+
+  const buildUrl = (slug: string) => `${PUBLIC_BASE_URL}/cadastro/${slug}`;
 
   const buildMessage = (link: any) => {
     const url = buildUrl(link.slug);
