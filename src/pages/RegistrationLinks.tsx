@@ -238,8 +238,10 @@ export default function RegistrationLinks() {
                   <TableCell>{new Date(l.created_at).toLocaleDateString("pt-BR")}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => copyLink(l.slug)}><Copy className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={async () => { await supabase.from("registration_links").delete().eq("id", l.id); fetchData(); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => copyLink(l.slug)} title="Copiar link"><Copy className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => copyMessage(l)} title="Copiar mensagem"><Share2 className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => shareWhatsApp(l)} title="Compartilhar no WhatsApp"><MessageCircle className="h-4 w-4 text-green-600" /></Button>
+                      <Button variant="ghost" size="icon" onClick={async () => { await supabase.from("registration_links").delete().eq("id", l.id); fetchData(); }} title="Excluir"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
