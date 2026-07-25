@@ -130,6 +130,14 @@ export default function PublicVisitRequest() {
     if (!selectedDate || !selectedTime) return toast.error("Selecione data e horário");
     if (bookedForSelected.has(selectedTime)) return toast.error("Horário já reservado");
 
+    const cepDigits = form.cep.replace(/\D/g, "");
+    if (form.cep && cepDigits.length !== 8) return toast.error("CEP deve ter 8 dígitos");
+    const ufNorm = normalizeUf(form.uf);
+    if (ufNorm && ufNorm.length !== 2) return toast.error("UF inválida");
+    if (apiUf && ufNorm && apiUf !== ufNorm) {
+      return toast.error(`UF (${ufNorm}) não confere com o CEP informado (${apiUf}). Verifique o endereço.`);
+    }
+
     setSubmitting(true);
     const requested_date = `${format(selectedDate, "yyyy-MM-dd")}T${selectedTime}:00`;
     const requestId = crypto.randomUUID();
