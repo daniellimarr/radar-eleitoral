@@ -133,6 +133,12 @@ export default function Appointments() {
     else { toast.success("Solicitação rejeitada"); fetchData(); }
   };
 
+  // Considera confirmado tanto compromissos ("confirmado") quanto visitas aprovadas ("aprovada")
+  const isConfirmedStatus = (status?: string | null) =>
+    ["confirmado", "confirmada", "aprovada", "aprovado", "realizado", "realizada"].includes(
+      (status || "").toLowerCase().trim()
+    );
+
   const pendingVisitRequests = useMemo(
     () => visitRequests.filter(v => !["aprovada", "rejeitada", "cancelada", "confirmado"].includes((v.status || "").toLowerCase())),
     [visitRequests]
