@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Plus, Clock, MapPin, Search, Link2, Copy } from "lucide-react";
+import { Plus, Clock, MapPin, Search, Link2, Copy, MessageCircle } from "lucide-react";
 import { format, isSameDay, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -84,12 +84,23 @@ export default function VisitRequests() {
     return data.slug;
   };
 
+  const buildShareMessage = (url: string) =>
+    `Olá! 👋 Agende sua visita com o Deyvid Duarte de forma rápida e prática. Escolha a melhor data e horário aqui: ${url}`;
+
   const handleCopyPublicLink = async () => {
     const slug = publicSlug || (await ensurePublicLink());
     if (!slug) return;
     const url = `${window.location.origin}/agendar/${slug}`;
-    await navigator.clipboard.writeText(url);
-    toast.success("Link copiado! " + url);
+    await navigator.clipboard.writeText(buildShareMessage(url));
+    toast.success("Mensagem copiada com o link!");
+  };
+
+  const handleShareWhatsApp = async () => {
+    const slug = publicSlug || (await ensurePublicLink());
+    if (!slug) return;
+    const url = `${window.location.origin}/agendar/${slug}`;
+    const msg = encodeURIComponent(buildShareMessage(url));
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
 
@@ -226,8 +237,17 @@ export default function VisitRequests() {
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={handleCopyPublicLink} disabled={creatingLink}>
             <Link2 className="h-4 w-4 mr-2" />
-            {creatingLink ? "Gerando..." : (publicSlug ? "Copiar link público" : "Gerar link público")}
+            {creatingLink ? "Gerando..." : (publicSlug ? "Copiar mensagem" : "Gerar link público")}
             <Copy className="h-3 w-3 ml-2 opacity-60" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleShareWhatsApp}
+            disabled={creatingLink}
+            className="text-green-600 border-green-600 hover:bg-green-50 hover:text-green-700"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Compartilhar no WhatsApp
           </Button>
         <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) { setSelectedDate(undefined); setSelectedTime(""); } }}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nova Solicitação</Button></DialogTrigger>
