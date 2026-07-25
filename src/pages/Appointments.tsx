@@ -542,7 +542,7 @@ export default function Appointments() {
                           <div className="flex gap-1">
                             {event.location && (
                               <a
-href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location)}`}
+href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-info hover:text-info/70"
@@ -680,7 +680,7 @@ href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(e
                           <div className="flex gap-1">
                             {event.location && (
                               <a
-                                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location)}`}
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-info hover:text-info/70"
