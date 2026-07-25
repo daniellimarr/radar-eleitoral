@@ -155,6 +155,27 @@ export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved 
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="nps-slug">Link personalizado</Label>
+            <div className="flex items-center gap-1 rounded-md border border-input bg-muted/40 px-2">
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {window.location.origin.replace(/^https?:\/\//, "")}/p/
+              </span>
+              <Input
+                id="nps-slug"
+                className="border-0 bg-transparent px-1 focus-visible:ring-0"
+                value={form.slug}
+                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value.toLowerCase() }))}
+                onBlur={(e) => setForm((f) => ({ ...f, slug: sanitizeSlug(e.target.value) }))}
+                placeholder="voto2026"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Deixe em branco para gerar um link curto automático. Use apenas letras, números e hífen.
+            </p>
+          </div>
+
+
+          <div className="space-y-2">
             <Label htmlFor="nps-desc">Descrição</Label>
             <Textarea
               id="nps-desc"
