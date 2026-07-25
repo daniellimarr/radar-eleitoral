@@ -57,10 +57,12 @@ export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved 
             start_date: survey.start_date ?? "",
             end_date: survey.end_date ?? "",
             status: survey.status,
+            slug: survey.slug,
           }
         : EMPTY,
     );
   }, [open, survey]);
+
 
   const handleSave = async () => {
     if (!form.title.trim()) {
