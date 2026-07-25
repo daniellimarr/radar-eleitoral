@@ -39,6 +39,7 @@ import PlanManagement from "@/pages/PlanManagement";
 import Planos from "@/pages/Planos";
 import Assinatura from "@/pages/Assinatura";
 import AsaasEnvCheck from "@/pages/AsaasEnvCheck";
+import DnsCheck from "@/pages/DnsCheck";
 import AdminAccessManagement from "@/pages/AdminAccessManagement";
 import Checkout from "@/pages/Checkout";
 import PagamentoConfirmado from "@/pages/PagamentoConfirmado";
@@ -108,7 +109,9 @@ function App() {
             <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="/assinatura" element={<ProtectedRoute><Planos /></ProtectedRoute>} />
             <Route path="/admin/asaas-env" element={<ProtectedRoute><AsaasEnvCheck /></ProtectedRoute>} />
+            <Route path="/admin/dns" element={<ProtectedRoute><DnsCheck /></ProtectedRoute>} />
             <Route path="/admin/access" element={<ProtectedRoute><AdminAccessManagement /></ProtectedRoute>} />
+            
             
             <Route path="*" element={<NotFound />} />
           </Routes>
