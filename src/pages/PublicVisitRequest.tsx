@@ -46,15 +46,25 @@ export default function PublicVisitRequest() {
     uf: "",
   });
   const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState<string>("");
+  const [apiUf, setApiUf] = useState<string>("");
+  const [apiCity, setApiCity] = useState<string>("");
 
   const handleCepChange = (raw: string) => {
     const masked = formatCep(raw);
+    const digits = masked.replace(/\D/g, "");
     setForm((p) => ({ ...p, cep: masked }));
-    if (masked.replace(/\D/g, "").length === 8) {
+    setCepError("");
+    if (digits.length > 0 && digits.length < 8) {
+      setCepError("CEP deve ter 8 dígitos");
+    }
+    if (digits.length === 8) {
       setCepLoading(true);
       lookupCep(masked).then((addr) => {
         setCepLoading(false);
-        if (!addr) { toast.error("CEP não encontrado"); return; }
+        if (!addr) { setCepError("CEP não encontrado"); toast.error("CEP não encontrado"); return; }
+        setApiUf(addr.uf);
+        setApiCity(addr.city);
         setForm((p) => ({
           ...p,
           cep: addr.cep,
