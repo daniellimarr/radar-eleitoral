@@ -106,15 +106,18 @@ export default function RegistrationLinks() {
 
   const buildUrl = (slug: string) => `${PUBLIC_BASE_URL}/cadastro/${slug}`;
 
-  const buildMessage = (link: any) => {
-    if (link.link_type === "leader") {
-      return `Olá! 👋 Quer fazer parte da nossa equipe de lideranças do Deyvid Duarte? Faça seu cadastro rápido aqui: ${SHARE_URL}`;
-    }
-    const leaderName = link.leader?.nickname || link.leader?.name;
-    if (leaderName) {
-      return `Olá! 👋 ${leaderName} está te convidando para apoiar o Deyvid Duarte. Faça seu cadastro rápido aqui: ${SHARE_URL}`;
-    }
-    return `Olá! 👋 Faça seu cadastro de apoio ao Deyvid Duarte de forma rápida e prática aqui: ${SHARE_URL}`;
+  const buildMessage = (_link: any) => {
+    return `Olá! 👋
+
+Eu sou *Deyvid Duarte*, pré-candidato a Deputado Estadual.
+
+Quero convidar você para uma conversa. Tenho reservado um tempo para visitar pessoas, conhecer diferentes realidades e compartilhar um pouco da minha trajetória e do que acredito para o futuro do nosso estado.
+
+Se você gostaria de receber uma visita ou agendar uma reunião comigo, é só acessar o link abaixo, escolher o melhor dia e horário e fazer seu cadastro.
+
+🔗 ${SHARE_URL}
+
+Será uma alegria conversar com você. Até breve! 🤝`;
   };
 
   const copyLink = (slug: string) => {
