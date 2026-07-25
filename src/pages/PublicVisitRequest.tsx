@@ -95,7 +95,9 @@ export default function PublicVisitRequest() {
 
     setSubmitting(true);
     const requested_date = `${format(selectedDate, "yyyy-MM-dd")}T${selectedTime}:00`;
-    const { data: inserted, error } = await supabase.from("visit_requests").insert({
+    const requestId = crypto.randomUUID();
+    const { error } = await supabase.from("visit_requests").insert({
+      id: requestId,
       tenant_id: linkInfo.tenant_id,
       requested_by: null,
       title: form.title,
@@ -106,11 +108,10 @@ export default function PublicVisitRequest() {
       requester_phone: form.requester_phone,
       requester_email: form.requester_email || null,
       status: "pendente",
-    } as any).select("id").single();
+    } as any);
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
-    const id = (inserted as any)?.id as string | undefined;
-    setProtocol(id ? id.replace(/-/g, "").slice(0, 8).toUpperCase() : "");
+    setProtocol(requestId.replace(/-/g, "").slice(0, 8).toUpperCase());
     setConfirmedDate(format(selectedDate, "dd/MM/yyyy", { locale: ptBR }) + " às " + selectedTime);
     setSuccess(true);
   };
