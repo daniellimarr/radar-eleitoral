@@ -10,6 +10,7 @@ import { Save } from "lucide-react";
 import {
   NPS_STATUS_LABELS,
   buildSlug,
+  sanitizeSlug,
   type NpsStatus,
   type NpsSurvey,
 } from "@/components/features/nps/npsTopics";
@@ -28,6 +29,7 @@ interface FormState {
   start_date: string;
   end_date: string;
   status: NpsStatus;
+  slug: string;
 }
 
 const EMPTY: FormState = {
@@ -36,7 +38,9 @@ const EMPTY: FormState = {
   start_date: "",
   end_date: "",
   status: "rascunho",
+  slug: "",
 };
+
 
 /** Formulário de criação/edição de pesquisa NPS. */
 export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved }: NpsSurveyDialogProps) {
