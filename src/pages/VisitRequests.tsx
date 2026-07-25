@@ -17,6 +17,7 @@ import { format, isSameDay, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { geocodeByCep } from "@/lib/geocoding";
+import { formatCep, normalizeUf } from "@/lib/addressNormalize";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -58,6 +59,10 @@ export default function VisitRequests() {
   const [loading, setLoading] = useState(false);
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState("");
+  const [apiUf, setApiUf] = useState("");
+  const [apiCity, setApiCity] = useState("");
+
 
   const fetchPublicSlug = async () => {
     if (!tenantId) return;
@@ -104,26 +109,51 @@ export default function VisitRequests() {
   };
 
 
+  const runCepLookup = async (cepValue: string) => {
+    const digits = cepValue.replace(/\D/g, "");
+    if (digits.length !== 8) {
+      setCepError("CEP deve ter 8 dígitos");
+      return;
+    }
+    setCepError("");
+    setCepLoading(true);
+    const result = await geocodeByCep(digits);
+    setCepLoading(false);
+    if (!result) {
+      setCepError("CEP não encontrado");
+      toast.error("CEP não encontrado");
+      return;
+    }
+    const uf = normalizeUf(result.state || "");
+    setApiUf(uf);
+    setApiCity(result.city || "");
+    const fullAddress = [result.address, result.neighborhood, result.city, uf].filter(Boolean).join(", ");
+    setForm(p => ({
+      ...p,
+      address: result.address || "",
+      neighborhood: result.neighborhood || "",
+      city: result.city || "",
+      state: uf,
+      location: fullAddress,
+    }));
+    if (result.latitude && result.longitude) {
+      setLocationCoords({ lat: result.latitude, lng: result.longitude });
+    }
+  };
+
+  const handleCepChange = (raw: string) => {
+    const masked = formatCep(raw);
+    setForm(p => ({ ...p, cep: masked }));
+    const digits = masked.replace(/\D/g, "");
+    setCepError(digits.length > 0 && digits.length < 8 ? "CEP deve ter 8 dígitos" : "");
+    if (digits.length === 8) runCepLookup(masked);
+  };
+
   const handleCepSearch = async () => {
     if (!form.cep) return;
-    setCepLoading(true);
-    const result = await geocodeByCep(form.cep);
-    if (result) {
-      const fullAddress = [result.address, result.neighborhood, result.city, result.state].filter(Boolean).join(", ");
-      setForm(p => ({
-        ...p,
-        address: result.address || "",
-        neighborhood: result.neighborhood || "",
-        city: result.city || "",
-        state: result.state || "",
-        location: fullAddress,
-      }));
-      if (result.latitude && result.longitude) {
-        setLocationCoords({ lat: result.latitude, lng: result.longitude });
-      }
-    }
-    setCepLoading(false);
+    await runCepLookup(form.cep);
   };
+
 
   const fetchRequests = async () => {
     if (!tenantId) return;
@@ -183,6 +213,15 @@ export default function VisitRequests() {
     if (!tenantId || !form.title) { toast.error("Título é obrigatório"); return; }
     if (!selectedDate) { toast.error("Selecione uma data"); return; }
     if (!selectedTime) { toast.error("Selecione um horário"); return; }
+
+    const cepDigits = form.cep.replace(/\D/g, "");
+    if (form.cep && cepDigits.length !== 8) { toast.error("CEP deve ter 8 dígitos"); return; }
+    const ufNorm = normalizeUf(form.state);
+    if (ufNorm && ufNorm.length !== 2) { toast.error("UF inválida"); return; }
+    if (apiUf && ufNorm && apiUf !== ufNorm) {
+      toast.error(`UF (${ufNorm}) não confere com o CEP informado (${apiUf}).`);
+      return;
+    }
 
     // Build the datetime
     const dateStr = format(selectedDate, "yyyy-MM-dd");
@@ -333,16 +372,33 @@ export default function VisitRequests() {
               {/* CEP + Endereço + Mapa */}
               <div className="space-y-3">
                 <Label className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Localização</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="CEP (ex: 69301-000)"
-                    value={form.cep}
-                    onChange={(e) => setForm(p => ({ ...p, cep: e.target.value }))}
-                    className="max-w-[180px]"
-                  />
+                <div className="flex gap-2 items-start">
+                  <div className="max-w-[180px] w-full space-y-1">
+                    <Input
+                      placeholder="CEP (ex: 69301-000)"
+                      value={form.cep}
+                      onChange={(e) => handleCepChange(e.target.value)}
+                      inputMode="numeric"
+                      maxLength={9}
+                      aria-invalid={!!cepError}
+                    />
+                    {cepError && <p className="text-xs text-destructive">{cepError}</p>}
+                  </div>
                   <Button type="button" variant="outline" size="sm" onClick={handleCepSearch} disabled={cepLoading}>
                     <Search className="h-4 w-4 mr-1" /> {cepLoading ? "Buscando..." : "Buscar"}
                   </Button>
+                  <div className="w-24 space-y-1">
+                    <Input
+                      placeholder="UF"
+                      value={form.state}
+                      onChange={(e) => setForm(p => ({ ...p, state: normalizeUf(e.target.value) }))}
+                      maxLength={2}
+                      aria-invalid={!!(apiUf && form.state && apiUf !== normalizeUf(form.state))}
+                    />
+                    {apiUf && form.state && apiUf !== normalizeUf(form.state) && (
+                      <p className="text-xs text-destructive">Diverge do CEP ({apiUf}{apiCity ? ` – ${apiCity}` : ""})</p>
+                    )}
+                  </div>
                 </div>
                 <Input
                   placeholder="Endereço completo"
