@@ -114,7 +114,7 @@ export default function RegistrationLinks() {
     if (leaderName) {
       return `Olá! 👋 ${leaderName} está te convidando para apoiar o Deyvid Duarte. Faça seu cadastro rápido aqui: ${SHARE_URL}`;
     }
-    return `Olá! 👋 Faça seu cadastro de apoio ao Deyvid Duarte de forma rápida e prática aqui: ${url}`;
+    return `Olá! 👋 Faça seu cadastro de apoio ao Deyvid Duarte de forma rápida e prática aqui: ${SHARE_URL}`;
   };
 
   const copyLink = (slug: string) => {
