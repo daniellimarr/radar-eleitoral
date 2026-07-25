@@ -237,8 +237,17 @@ export default function VisitRequests() {
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={handleCopyPublicLink} disabled={creatingLink}>
             <Link2 className="h-4 w-4 mr-2" />
-            {creatingLink ? "Gerando..." : (publicSlug ? "Copiar link público" : "Gerar link público")}
+            {creatingLink ? "Gerando..." : (publicSlug ? "Copiar mensagem" : "Gerar link público")}
             <Copy className="h-3 w-3 ml-2 opacity-60" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleShareWhatsApp}
+            disabled={creatingLink}
+            className="text-green-600 border-green-600 hover:bg-green-50 hover:text-green-700"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Compartilhar no WhatsApp
           </Button>
         <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) { setSelectedDate(undefined); setSelectedTime(""); } }}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Nova Solicitação</Button></DialogTrigger>
