@@ -25,17 +25,14 @@ export default function PublicNpsSurvey() {
     let active = true;
     const load = async () => {
       if (!slug) return;
-      const { data, error } = await supabase
-        .from("nps_surveys")
-        .select("id, tenant_id, title, description, slug, start_date, end_date, status, created_at")
-        .eq("slug", slug)
-        .eq("status", "ativa")
-        .limit(1);
+      const { data, error } = await supabase.rpc("get_public_nps_survey", { p_slug: slug });
       if (!active) return;
       if (error) {
         toast.error("Não foi possível carregar a pesquisa.");
       }
-      setSurvey((data?.[0] as NpsSurvey) ?? null);
+      const rows = (data ?? []) as unknown as NpsSurvey[];
+      setSurvey(rows[0] ?? null);
+
       setLoading(false);
     };
     void load();
