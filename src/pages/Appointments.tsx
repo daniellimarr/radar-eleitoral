@@ -15,6 +15,7 @@ import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, Chec
 import { EventDetailsDialog, type AppointmentEvent } from "@/components/features/appointments/EventDetailsDialog";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { MapsLink } from "@/components/shared/MapsLink";
 
 const WEEKDAYS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
@@ -545,15 +546,13 @@ export default function Appointments() {
                         <TableCell>
                           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             {event.location && (
-                              <a
-href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <MapsLink
+                                address={event.location}
                                 className="text-info hover:text-info/70"
                                 title="Rota GPS"
                               >
                                 <MapPin className="h-4 w-4" />
-                              </a>
+                              </MapsLink>
                             )}
                             <button className="text-success hover:text-success/70" title="Confirmar" onClick={() => handleConfirm(event.id, event.type)}>
                               <CheckCircle2 className="h-4 w-4" />
@@ -683,15 +682,13 @@ href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(even
                         <TableCell>
                           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             {event.location && (
-                              <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <MapsLink
+                                address={event.location}
                                 className="text-info hover:text-info/70"
                                 title="Rota GPS"
                               >
                                 <MapPin className="h-4 w-4" />
-                              </a>
+                              </MapsLink>
                             )}
                             <button className="text-success hover:text-success/70" title="Confirmar" onClick={() => handleConfirm(event.id, event.type)}>
                               <CheckCircle2 className="h-4 w-4" />
