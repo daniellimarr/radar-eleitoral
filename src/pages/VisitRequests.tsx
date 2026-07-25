@@ -59,6 +59,10 @@ export default function VisitRequests() {
   const [loading, setLoading] = useState(false);
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState("");
+  const [apiUf, setApiUf] = useState("");
+  const [apiCity, setApiCity] = useState("");
+
 
   const fetchPublicSlug = async () => {
     if (!tenantId) return;
