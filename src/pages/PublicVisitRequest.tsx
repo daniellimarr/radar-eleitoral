@@ -196,7 +196,38 @@ export default function PublicVisitRequest() {
             <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={form.requester_email} onChange={(e) => setForm(p => ({...p, requester_email: e.target.value}))} /></div>
             <div className="space-y-2"><Label>Assunto *</Label><Input value={form.title} onChange={(e) => setForm(p => ({...p, title: e.target.value}))} placeholder="Ex: Reunião sobre projeto do bairro" /></div>
             <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={(e) => setForm(p => ({...p, description: e.target.value}))} rows={3} /></div>
-            <div className="space-y-2"><Label>Local sugerido</Label><Input value={form.location} onChange={(e) => setForm(p => ({...p, location: e.target.value}))} placeholder="Endereço ou referência" /></div>
+            <div className="space-y-2">
+              <Label>Endereço da visita</Label>
+              <p className="text-xs text-muted-foreground">Informe o CEP para preenchermos automaticamente. Ajuda a localizar corretamente no mapa.</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>CEP {cepLoading && <span className="text-xs text-muted-foreground">(buscando...)</span>}</Label>
+                <Input value={form.cep} onChange={(e) => handleCepChange(e.target.value)} placeholder="00000-000" inputMode="numeric" maxLength={9} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Rua / Logradouro</Label>
+                <Input value={form.street} onChange={(e) => setForm(p => ({...p, street: e.target.value}))} onBlur={(e) => setForm(p => ({...p, street: toTitleCase(e.target.value)}))} />
+              </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input value={form.number} onChange={(e) => setForm(p => ({...p, number: e.target.value.trim()}))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input value={form.neighborhood} onChange={(e) => setForm(p => ({...p, neighborhood: e.target.value}))} onBlur={(e) => setForm(p => ({...p, neighborhood: toTitleCase(e.target.value)}))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input value={form.city} onChange={(e) => setForm(p => ({...p, city: e.target.value}))} onBlur={(e) => setForm(p => ({...p, city: toTitleCase(e.target.value)}))} />
+              </div>
+            </div>
+            <div className="space-y-2 md:w-40">
+              <Label>UF</Label>
+              <Input value={form.uf} onChange={(e) => setForm(p => ({...p, uf: normalizeUf(e.target.value)}))} maxLength={2} placeholder="RR" />
+            </div>
           </CardContent>
         </Card>
 
