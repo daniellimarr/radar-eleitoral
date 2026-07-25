@@ -63,6 +63,7 @@ export function useContacts() {
       queryClient.invalidateQueries({ queryKey: ["leaders"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["operator-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["electoral-map"] });
     },
     onError: (error: any) => {
       toast.error(error.message);
