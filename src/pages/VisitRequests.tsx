@@ -39,6 +39,8 @@ const TIME_SLOTS = [
   "20:00",
 ];
 
+const PUBLIC_AGENDA_URL = "https://radar-eleitoral.lovable.app/agendar/cadastro-geral";
+
 export default function VisitRequests() {
   const { tenantId, user } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
@@ -90,16 +92,14 @@ export default function VisitRequests() {
   const handleCopyPublicLink = async () => {
     const slug = publicSlug || (await ensurePublicLink());
     if (!slug) return;
-    const url = `${window.location.origin}/agendar/${slug}`;
-    await navigator.clipboard.writeText(buildShareMessage(url));
+    await navigator.clipboard.writeText(buildShareMessage(PUBLIC_AGENDA_URL));
     toast.success("Mensagem copiada com o link!");
   };
 
   const handleShareWhatsApp = async () => {
     const slug = publicSlug || (await ensurePublicLink());
     if (!slug) return;
-    const url = `${window.location.origin}/agendar/${slug}`;
-    const msg = encodeURIComponent(buildShareMessage(url));
+    const msg = encodeURIComponent(buildShareMessage(PUBLIC_AGENDA_URL));
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
