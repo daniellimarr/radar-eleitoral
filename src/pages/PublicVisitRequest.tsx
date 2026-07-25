@@ -245,7 +245,10 @@ export default function PublicVisitRequest() {
             </div>
             <div className="space-y-2 md:w-40">
               <Label>UF</Label>
-              <Input value={form.uf} onChange={(e) => setForm(p => ({...p, uf: normalizeUf(e.target.value)}))} maxLength={2} placeholder="RR" />
+              <Input value={form.uf} onChange={(e) => setForm(p => ({...p, uf: normalizeUf(e.target.value)}))} maxLength={2} placeholder="RR" aria-invalid={!!(apiUf && form.uf && apiUf !== normalizeUf(form.uf))} />
+              {apiUf && form.uf && apiUf !== normalizeUf(form.uf) && (
+                <p className="text-xs text-destructive">UF diverge do CEP ({apiUf}{apiCity ? ` – ${apiCity}` : ""}).</p>
+              )}
             </div>
           </CardContent>
         </Card>
