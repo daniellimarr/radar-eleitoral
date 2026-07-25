@@ -38,8 +38,34 @@ export default function PublicVisitRequest() {
     requester_email: "",
     title: "",
     description: "",
-    location: "",
+    cep: "",
+    street: "",
+    number: "",
+    neighborhood: "",
+    city: "",
+    uf: "",
   });
+  const [cepLoading, setCepLoading] = useState(false);
+
+  const handleCepChange = (raw: string) => {
+    const masked = formatCep(raw);
+    setForm((p) => ({ ...p, cep: masked }));
+    if (masked.replace(/\D/g, "").length === 8) {
+      setCepLoading(true);
+      lookupCep(masked).then((addr) => {
+        setCepLoading(false);
+        if (!addr) { toast.error("CEP não encontrado"); return; }
+        setForm((p) => ({
+          ...p,
+          cep: addr.cep,
+          street: p.street || addr.street,
+          neighborhood: p.neighborhood || addr.neighborhood,
+          city: p.city || addr.city,
+          uf: p.uf || addr.uf,
+        }));
+      });
+    }
+  };
 
   useEffect(() => {
     (async () => {
