@@ -241,6 +241,62 @@ export default function Appointments() {
         ))}
       </div>
 
+      {/* Solicitações de visita pendentes */}
+      {pendingVisitRequests.length > 0 && (
+        <Card className="border-warning/50">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-warning">
+                Solicitações pendentes de confirmação ({pendingVisitRequests.length})
+              </h3>
+            </div>
+            <div className="border border-border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-warning/10">
+                    <TableHead>Solicitante</TableHead>
+                    <TableHead>Contato</TableHead>
+                    <TableHead>Data/Hora</TableHead>
+                    <TableHead>Assunto</TableHead>
+                    <TableHead>Local</TableHead>
+                    <TableHead>Observação</TableHead>
+                    <TableHead className="w-32 text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingVisitRequests.map(v => (
+                    <TableRow key={v.id}>
+                      <TableCell className="text-xs font-medium uppercase">{v.requester_name || "-"}</TableCell>
+                      <TableCell className="text-xs">
+                        {v.requester_phone || v.requester_email || "-"}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {v.requested_date
+                          ? (() => { try { return format(new Date(v.requested_date), "dd/MM/yyyy HH:mm"); } catch { return "-"; } })()
+                          : "-"}
+                      </TableCell>
+                      <TableCell className="text-xs uppercase font-medium">{v.title || "-"}</TableCell>
+                      <TableCell className="text-xs">{v.location || "-"}</TableCell>
+                      <TableCell className="text-xs max-w-[220px] truncate">{v.description || v.notes || ""}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-1 justify-end">
+                          <Button size="sm" className="h-7 bg-success text-success-foreground hover:bg-success/90" onClick={() => handleConfirm(v.id, "visit")}>
+                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Aprovar
+                          </Button>
+                          <Button size="sm" variant="destructive" className="h-7" onClick={() => handleReject(v.id)}>
+                            <X className="h-3.5 w-3.5 mr-1" /> Rejeitar
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <Card>
         <CardContent className="p-4 space-y-4">
