@@ -47,7 +47,7 @@ export default function AsaasEnvCheck() {
 
   return (
     <div className="container mx-auto max-w-3xl py-8 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Verificação do Ambiente Asaas</h1>
           <p className="text-muted-foreground text-sm">

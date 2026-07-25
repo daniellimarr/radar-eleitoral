@@ -249,7 +249,7 @@ export default function Appointments() {
       {pendingVisitRequests.length > 0 && (
         <Card className="border-warning/50">
           <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-lg font-bold text-warning">
                 Solicitações pendentes de confirmação ({pendingVisitRequests.length})
               </h3>
