@@ -91,8 +91,18 @@ export default function VisitRequests() {
     return data.slug;
   };
 
-  const buildShareMessage = (url: string) =>
-    `Olá! 👋 Agende sua visita com o Deyvid Duarte de forma rápida e prática. Escolha a melhor data e horário aqui: ${url}`;
+  const buildShareMessage = (_url: string) =>
+    `Olá! 👋
+
+Eu sou *Deyvid Duarte*, pré-candidato a Deputado Estadual.
+
+Quero convidar você para uma conversa. Tenho reservado um tempo para visitar pessoas, conhecer diferentes realidades e compartilhar um pouco da minha trajetória e do que acredito para o futuro do nosso estado.
+
+Se você gostaria de receber uma visita ou agendar uma reunião comigo, é só acessar o link abaixo, escolher o melhor dia e horário e fazer seu cadastro.
+
+🔗 https://radar-eleitoral.lovable.app/agendar/cadastro-geral
+
+Será uma alegria conversar com você. Até breve! 🤝`;
 
   const handleCopyPublicLink = async () => {
     const slug = publicSlug || (await ensurePublicLink());
