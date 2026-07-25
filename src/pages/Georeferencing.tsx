@@ -213,9 +213,9 @@ export default function Georeferencing() {
   const totalWithGeo = contacts.filter((c) => c.latitude && c.longitude).length;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-7rem)] gap-3 lg:gap-0 overflow-hidden">
       {/* Sidebar Filters */}
-      <div className="w-64 border-r bg-card flex flex-col shrink-0">
+      <div className="w-full lg:w-64 border rounded-lg lg:rounded-none lg:border-0 lg:border-r bg-card flex flex-col shrink-0 max-h-[50vh] lg:max-h-none">
         <div className="p-4 border-b">
           <h2 className="text-base font-bold flex items-center gap-2">
             <MapPin className="h-5 w-5 text-primary" />
@@ -322,7 +322,7 @@ export default function Georeferencing() {
       </div>
 
       {/* Map Area */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative min-h-[420px] h-[60vh] lg:h-auto rounded-lg lg:rounded-none overflow-hidden border lg:border-0">
         <div className="absolute top-3 left-3 z-[1000] bg-card/95 backdrop-blur rounded-lg px-4 py-2 shadow-md border">
           <p className="text-sm">
             TOTAL DE CONTATOS: <strong>{filteredContacts.length}</strong>

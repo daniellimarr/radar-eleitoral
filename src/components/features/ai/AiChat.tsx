@@ -104,7 +104,7 @@ export function AiChat() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-      <Card className="flex h-[calc(100vh-19rem)] min-h-[520px] flex-col">
+      <Card className="flex h-[calc(100svh-16rem)] min-h-[440px] flex-col sm:h-[calc(100vh-19rem)] sm:min-h-[520px]">
         <CardHeader className="flex-row items-center justify-between gap-3 space-y-0 border-b">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Consultor IA Eleitoral" width={40} height={40} className="h-10 w-10" loading="lazy" />
