@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-import { MapsLink } from "@/components/shared/MapsLink";
   CalendarDays, Clock, MapPin, User, Phone, Mail, FileText,
   Armchair, Megaphone, Image as ImageIcon, Volume2, CheckCircle2, X,
 } from "lucide-react";
+import { MapsLink } from "@/components/shared/MapsLink";
 
 export interface AppointmentEvent {
   id: string;
