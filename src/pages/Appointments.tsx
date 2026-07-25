@@ -539,8 +539,8 @@ export default function Appointments() {
                           {event.title}
                         </TableCell>
                         <TableCell>
-                          <span className={`text-xs font-semibold uppercase ${event.status === "confirmado" ? "text-success" : "text-warning"}`}>
-                            {event.status === "confirmado" ? "CONFIRMADO" : "A CONFIRMAR"}
+                          <span className={`text-xs font-semibold uppercase ${isConfirmedStatus(event.status) ? "text-success" : "text-warning"}`}>
+                            {isConfirmedStatus(event.status) ? "CONFIRMADO" : "A CONFIRMAR"}
                           </span>
                         </TableCell>
                         <TableCell className="text-xs uppercase">
