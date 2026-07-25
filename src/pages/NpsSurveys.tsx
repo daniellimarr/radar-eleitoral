@@ -39,8 +39,9 @@ export default function NpsSurveys() {
     queryClient.invalidateQueries({ queryKey: ["nps-responses"] });
   };
 
-  // Link curto (/p/:slug) — a rota /pesquisa/:slug continua válida para links antigos.
-  const publicUrl = (slug: string) => `${window.location.origin}/p/${slug}`;
+  // Sempre o domínio publicado: a URL de preview exige login do Lovable.
+  const publicUrl = (slug: string) => `https://radar-eleitoral.lovable.app/p/${slug}`;
+
 
 
   const shareMessage = (survey: NpsSurvey) =>
