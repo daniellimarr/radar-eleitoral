@@ -10,6 +10,7 @@ import { Save } from "lucide-react";
 import {
   NPS_STATUS_LABELS,
   buildSlug,
+  sanitizeSlug,
   type NpsStatus,
   type NpsSurvey,
 } from "@/components/features/nps/npsTopics";
@@ -28,6 +29,7 @@ interface FormState {
   start_date: string;
   end_date: string;
   status: NpsStatus;
+  slug: string;
 }
 
 const EMPTY: FormState = {
@@ -36,7 +38,9 @@ const EMPTY: FormState = {
   start_date: "",
   end_date: "",
   status: "rascunho",
+  slug: "",
 };
+
 
 /** Formulário de criação/edição de pesquisa NPS. */
 export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved }: NpsSurveyDialogProps) {
@@ -53,10 +57,12 @@ export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved 
             start_date: survey.start_date ?? "",
             end_date: survey.end_date ?? "",
             status: survey.status,
+            slug: survey.slug,
           }
         : EMPTY,
     );
   }, [open, survey]);
+
 
   const handleSave = async () => {
     if (!form.title.trim()) {
@@ -74,6 +80,27 @@ export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved 
 
     setSaving(true);
     try {
+      // Slug personalizado é sanitizado; se ficar vazio, geramos um curto automático.
+      const desired = sanitizeSlug(form.slug) || buildSlug(form.title);
+      if (desired.length < 3) {
+        toast.error("O link personalizado precisa ter ao menos 3 caracteres.");
+        setSaving(false);
+        return;
+      }
+
+      // Checagem de disponibilidade: o slug é público e precisa ser único.
+      const { data: taken, error: checkError } = await supabase
+        .from("nps_surveys")
+        .select("id")
+        .eq("slug", desired)
+        .limit(1);
+      if (checkError) throw checkError;
+      if (taken?.length && taken[0].id !== survey?.id) {
+        toast.error("Esse link já está em uso. Escolha outro.");
+        setSaving(false);
+        return;
+      }
+
       // Datas vazias precisam virar null: string vazia quebra colunas date no Postgres.
       const payload = {
         tenant_id: tenantId,
@@ -82,6 +109,7 @@ export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved 
         start_date: form.start_date || null,
         end_date: form.end_date || null,
         status: form.status,
+        slug: desired,
       };
 
       if (survey) {
@@ -89,12 +117,11 @@ export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved 
         if (error) throw error;
         toast.success("Pesquisa atualizada!");
       } else {
-        const { error } = await supabase
-          .from("nps_surveys")
-          .insert({ ...payload, slug: buildSlug(form.title) });
+        const { error } = await supabase.from("nps_surveys").insert(payload);
         if (error) throw error;
         toast.success("Pesquisa criada!");
       }
+
       onSaved();
       onOpenChange(false);
     } catch (err) {
@@ -126,6 +153,27 @@ export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved 
               placeholder="Ex: Pesquisa de Intenção de Voto — Outubro 2026"
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nps-slug">Link personalizado</Label>
+            <div className="flex items-center gap-1 rounded-md border border-input bg-muted/40 px-2">
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {window.location.origin.replace(/^https?:\/\//, "")}/p/
+              </span>
+              <Input
+                id="nps-slug"
+                className="border-0 bg-transparent px-1 focus-visible:ring-0"
+                value={form.slug}
+                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value.toLowerCase() }))}
+                onBlur={(e) => setForm((f) => ({ ...f, slug: sanitizeSlug(e.target.value) }))}
+                placeholder="voto2026"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Deixe em branco para gerar um link curto automático. Use apenas letras, números e hífen.
+            </p>
+          </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="nps-desc">Descrição</Label>

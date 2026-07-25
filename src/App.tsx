@@ -69,6 +69,9 @@ function App() {
             <Route path="/agendar" element={<Navigate to="/agendar/cadastro-geral" replace />} />
             <Route path="/agendar/:slug" element={<PublicVisitRequest />} />
             <Route path="/pesquisa/:slug" element={<PublicNpsSurvey />} />
+            {/* Alias curto para compartilhamento em WhatsApp/SMS */}
+            <Route path="/p/:slug" element={<PublicNpsSurvey />} />
+
             <Route path="/planos" element={<LandingPage />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/checkout" element={<Checkout />} />

@@ -39,7 +39,9 @@ export default function NpsSurveys() {
     queryClient.invalidateQueries({ queryKey: ["nps-responses"] });
   };
 
-  const publicUrl = (slug: string) => `${window.location.origin}/pesquisa/${slug}`;
+  // Link curto (/p/:slug) — a rota /pesquisa/:slug continua válida para links antigos.
+  const publicUrl = (slug: string) => `${window.location.origin}/p/${slug}`;
+
 
   const shareMessage = (survey: NpsSurvey) =>
     `Olá! 👋 Sua opinião é muito importante para nós.\n\n` +
