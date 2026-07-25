@@ -102,14 +102,12 @@ export function EventDetailsDialog({ event, open, onOpenChange, onConfirm, onRej
             <Row icon={Clock} label="Término previsto" value={end} />
             <Row icon={MapPin} label="Local" value={event.location} />
             {event.location && (
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <MapsLink
+                address={event.location}
                 className="text-xs text-primary underline ml-7"
-              >
+>
                 Abrir no Google Maps
-              </a>
+              </MapsLink>
             )}
           </div>
 

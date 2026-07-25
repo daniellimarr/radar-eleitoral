@@ -545,15 +545,13 @@ export default function Appointments() {
                         <TableCell>
                           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             {event.location && (
-                              <a
-href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <MapsLink
+                                address={event.location}
                                 className="text-info hover:text-info/70"
                                 title="Rota GPS"
                               >
                                 <MapPin className="h-4 w-4" />
-                              </a>
+                              </MapsLink>
                             )}
                             <button className="text-success hover:text-success/70" title="Confirmar" onClick={() => handleConfirm(event.id, event.type)}>
                               <CheckCircle2 className="h-4 w-4" />
@@ -683,15 +681,13 @@ href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(even
                         <TableCell>
                           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             {event.location && (
-                              <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <MapsLink
+                                address={event.location}
                                 className="text-info hover:text-info/70"
                                 title="Rota GPS"
                               >
                                 <MapPin className="h-4 w-4" />
-                              </a>
+                              </MapsLink>
                             )}
                             <button className="text-success hover:text-success/70" title="Confirmar" onClick={() => handleConfirm(event.id, event.type)}>
                               <CheckCircle2 className="h-4 w-4" />
