@@ -102,17 +102,17 @@ export default function RegistrationLinks() {
   const PUBLIC_BASE_URL = "https://radar-eleitoral.lovable.app";
 
   const getBaseUrl = () => PUBLIC_BASE_URL;
+  const SHARE_URL = "https://radar-eleitoral.lovable.app/agendar/cadastro-geral";
 
   const buildUrl = (slug: string) => `${PUBLIC_BASE_URL}/cadastro/${slug}`;
 
   const buildMessage = (link: any) => {
-    const url = buildUrl(link.slug);
     if (link.link_type === "leader") {
-      return `Olá! 👋 Quer fazer parte da nossa equipe de lideranças do Deyvid Duarte? Faça seu cadastro rápido aqui: ${url}`;
+      return `Olá! 👋 Quer fazer parte da nossa equipe de lideranças do Deyvid Duarte? Faça seu cadastro rápido aqui: ${SHARE_URL}`;
     }
     const leaderName = link.leader?.nickname || link.leader?.name;
     if (leaderName) {
-      return `Olá! 👋 ${leaderName} está te convidando para apoiar o Deyvid Duarte. Faça seu cadastro rápido aqui: ${url}`;
+      return `Olá! 👋 ${leaderName} está te convidando para apoiar o Deyvid Duarte. Faça seu cadastro rápido aqui: ${SHARE_URL}`;
     }
     return `Olá! 👋 Faça seu cadastro de apoio ao Deyvid Duarte de forma rápida e prática aqui: ${url}`;
   };
