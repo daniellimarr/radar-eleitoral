@@ -22,6 +22,7 @@ import PublicRegistration from "@/pages/PublicRegistration";
 import PublicVisitRequest from "@/pages/PublicVisitRequest";
 import Georeferencing from "@/pages/Georeferencing";
 import ElectoralMap from "@/pages/ElectoralMap";
+import AiAssistant from "@/pages/AiAssistant";
 import UserManagement from "@/pages/UserManagement";
 import Campaigns from "@/pages/Campaigns";
 import Marketing from "@/pages/Marketing";
@@ -89,6 +90,7 @@ function App() {
             <Route path="/registration-links" element={<ProtectedRoute><RegistrationLinks /></ProtectedRoute>} />
             <Route path="/map" element={<ProtectedRoute><Georeferencing /></ProtectedRoute>} />
             <Route path="/electoral-map" element={<ProtectedRoute><ElectoralMap /></ProtectedRoute>} />
+            <Route path="/assistente-ia" element={<ProtectedRoute><AiAssistant /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             <Route path="/admin/tenants" element={<ProtectedRoute><TenantManagement /></ProtectedRoute>} />
             <Route path="/admin/plans" element={<ProtectedRoute><PlanManagement /></ProtectedRoute>} />
