@@ -280,7 +280,6 @@ export default function ElectoralMap() {
             <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
             <Button onClick={saveEdit}>Salvar</Button>
           </DialogFooter>
-        </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
