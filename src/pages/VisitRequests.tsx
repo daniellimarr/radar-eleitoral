@@ -214,6 +214,15 @@ export default function VisitRequests() {
     if (!selectedDate) { toast.error("Selecione uma data"); return; }
     if (!selectedTime) { toast.error("Selecione um horário"); return; }
 
+    const cepDigits = form.cep.replace(/\D/g, "");
+    if (form.cep && cepDigits.length !== 8) { toast.error("CEP deve ter 8 dígitos"); return; }
+    const ufNorm = normalizeUf(form.state);
+    if (ufNorm && ufNorm.length !== 2) { toast.error("UF inválida"); return; }
+    if (apiUf && ufNorm && apiUf !== ufNorm) {
+      toast.error(`UF (${ufNorm}) não confere com o CEP informado (${apiUf}).`);
+      return;
+    }
+
     // Build the datetime
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     const requestedDate = `${dateStr}T${selectedTime}:00`;
