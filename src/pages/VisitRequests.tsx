@@ -17,6 +17,7 @@ import { format, isSameDay, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { geocodeByCep } from "@/lib/geocoding";
+import { formatCep, normalizeUf } from "@/lib/addressNormalize";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
