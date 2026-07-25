@@ -20,6 +20,8 @@ import VisitRequests from "@/pages/VisitRequests";
 import RegistrationLinks from "@/pages/RegistrationLinks";
 import PublicRegistration from "@/pages/PublicRegistration";
 import PublicVisitRequest from "@/pages/PublicVisitRequest";
+import PublicNpsSurvey from "@/pages/PublicNpsSurvey";
+import NpsSurveys from "@/pages/NpsSurveys";
 import Georeferencing from "@/pages/Georeferencing";
 import ElectoralMap from "@/pages/ElectoralMap";
 import AiAssistant from "@/pages/AiAssistant";
@@ -66,6 +68,7 @@ function App() {
             <Route path="/cadastro/:slug" element={<PublicRegistration />} />
             <Route path="/agendar" element={<Navigate to="/agendar/cadastro-geral" replace />} />
             <Route path="/agendar/:slug" element={<PublicVisitRequest />} />
+            <Route path="/pesquisa/:slug" element={<PublicNpsSurvey />} />
             <Route path="/planos" element={<LandingPage />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/checkout" element={<Checkout />} />
@@ -90,6 +93,7 @@ function App() {
             <Route path="/registration-links" element={<ProtectedRoute><RegistrationLinks /></ProtectedRoute>} />
             <Route path="/map" element={<ProtectedRoute><Georeferencing /></ProtectedRoute>} />
             <Route path="/electoral-map" element={<ProtectedRoute><ElectoralMap /></ProtectedRoute>} />
+            <Route path="/pesquisas" element={<ProtectedRoute><NpsSurveys /></ProtectedRoute>} />
             <Route path="/assistente-ia" element={<ProtectedRoute><AiAssistant /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             <Route path="/admin/tenants" element={<ProtectedRoute><TenantManagement /></ProtectedRoute>} />

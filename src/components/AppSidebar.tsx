@@ -1,7 +1,7 @@
 import {
   Home, Users, FileText, Calendar, Car, Package, MapPin, Settings,
   BarChart3, ClipboardList, Link2, MessageSquare, LogOut, ChevronDown, Shield,
-  Flag, Megaphone, Database, FolderDown, Building2, KeyRound, Bot
+  Flag, Megaphone, Database, FolderDown, Building2, KeyRound, Bot, ClipboardCheck
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -27,6 +27,7 @@ const mainItems = [
   { title: "Arquivos da Campanha", url: "/campaign-files", icon: FolderDown, module: "campaign_files" },
   { title: "Mapa", url: "/map", icon: MapPin, module: "map" },
   { title: "Mapa Eleitoral", url: "/electoral-map", icon: BarChart3, module: "map" },
+  { title: "Pesquisa de Opinião", url: "/pesquisas", icon: ClipboardCheck, module: "dashboard" },
   { title: "Assistente IA", url: "/assistente-ia", icon: Bot, module: "dashboard" },
   { title: "Chat Interno", url: "/chat", icon: MessageSquare, module: "chat" },
 ];
