@@ -122,15 +122,18 @@ export default function Appointments() {
   const handleConfirm = async (id: string, type: "appointment" | "visit") => {
     const table = type === "appointment" ? "appointments" : "visit_requests";
     const newStatus = type === "visit" ? "aprovada" : "confirmado";
-    const { error } = await supabase.from(table).update({ status: newStatus }).eq("id", id);
+    // .select() permite detectar update bloqueado por RLS (0 linhas, sem erro)
+    const { data, error } = await supabase.from(table).update({ status: newStatus }).eq("id", id).select("id");
     if (error) toast.error(error.message);
-    else { toast.success("Confirmado!"); fetchData(); }
+    else if (!data || data.length === 0) toast.error("Não foi possível atualizar o status (sem permissão).");
+    else { toast.success("Confirmado!"); await fetchData(); }
   };
 
   const handleReject = async (id: string) => {
-    const { error } = await supabase.from("visit_requests").update({ status: "rejeitada" }).eq("id", id);
+    const { data, error } = await supabase.from("visit_requests").update({ status: "rejeitada" }).eq("id", id).select("id");
     if (error) toast.error(error.message);
-    else { toast.success("Solicitação rejeitada"); fetchData(); }
+    else if (!data || data.length === 0) toast.error("Não foi possível atualizar o status (sem permissão).");
+    else { toast.success("Solicitação rejeitada"); await fetchData(); }
   };
 
   // Considera confirmado tanto compromissos ("confirmado") quanto visitas aprovadas ("aprovada")
