@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2, MapPin } from "lucide-react";
+import { EventDetailsDialog, type AppointmentEvent } from "@/components/features/appointments/EventDetailsDialog";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -82,6 +83,9 @@ export default function Appointments() {
 
   // Selected date from calendar click
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  // Detalhes do compromisso (clique na linha)
+  const [detailEvent, setDetailEvent] = useState<AppointmentEvent | null>(null);
 
   const fetchData = async () => {
     if (!tenantId) return;
@@ -225,7 +229,7 @@ export default function Appointments() {
       <h1 className="text-2xl font-bold">Agenda de compromissos</h1>
 
       {/* Tabs */}
-      <div className="flex gap-1">
+      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
         {(["geral", "semanal", "mensal"] as const).map(tab => (
           <button
             key={tab}
@@ -265,7 +269,7 @@ export default function Appointments() {
                 </TableHeader>
                 <TableBody>
                   {pendingVisitRequests.map(v => (
-                    <TableRow key={v.id}>
+                    <TableRow key={v.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setDetailEvent({ ...v, type: "visit" })}>
                       <TableCell className="text-xs font-medium uppercase">{v.requester_name || "-"}</TableCell>
                       <TableCell className="text-xs">
                         {v.requester_phone || v.requester_email || "-"}
@@ -279,7 +283,7 @@ export default function Appointments() {
                       <TableCell className="text-xs">{v.location || "-"}</TableCell>
                       <TableCell className="text-xs max-w-[220px] truncate">{v.description || v.notes || ""}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex gap-1 justify-end">
+                        <div className="flex gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
                           <Button size="sm" className="h-7 bg-success text-success-foreground hover:bg-success/90" onClick={() => handleConfirm(v.id, "visit")}>
                             <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Aprovar
                           </Button>
@@ -498,8 +502,8 @@ export default function Appointments() {
                   </TableHeader>
                   <TableBody>
                     {selectedDateEvents.map(event => (
-                      <TableRow key={event.id}>
-                        <TableCell>
+                      <TableRow key={event.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setDetailEvent(event as AppointmentEvent)}>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <Checkbox
                             checked={selectedRows.has(event.id)}
                             onCheckedChange={() => toggleSelectedRow(event.id)}
@@ -539,7 +543,7 @@ export default function Appointments() {
                           {event.description || ""}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-1">
+                          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             {event.location && (
                               <a
 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
@@ -633,8 +637,8 @@ href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(even
                     </TableRow>
                   ) : (
                     listEvents.map(event => (
-                      <TableRow key={event.id}>
-                        <TableCell>
+                      <TableRow key={event.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setDetailEvent(event as AppointmentEvent)}>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <Checkbox
                             checked={selectedRows.has(event.id)}
                             onCheckedChange={() => toggleRow(event.id)}
@@ -677,7 +681,7 @@ href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(even
                           {event.description || ""}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-1">
+                          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             {event.location && (
                               <a
                                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
@@ -741,6 +745,13 @@ href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(even
         </Dialog>
 
       </div>
+      <EventDetailsDialog
+        event={detailEvent}
+        open={!!detailEvent}
+        onOpenChange={(o) => { if (!o) setDetailEvent(null); }}
+        onConfirm={(ev) => { handleConfirm(ev.id, ev.type); setDetailEvent(null); }}
+        onReject={(ev) => { handleReject(ev.id); setDetailEvent(null); }}
+      />
     </div>
   );
 }
