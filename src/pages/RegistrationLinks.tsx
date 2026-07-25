@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Copy, Trash2, Link2, UserPlus, Users } from "lucide-react";
+import { Plus, Copy, Trash2, Link2, UserPlus, Users, MessageCircle, Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function RegistrationLinks() {
@@ -107,9 +107,33 @@ export default function RegistrationLinks() {
     return origin;
   };
 
+  const buildUrl = (slug: string) => `${getBaseUrl()}/cadastro/${slug}`;
+
+  const buildMessage = (link: any) => {
+    const url = buildUrl(link.slug);
+    if (link.link_type === "leader") {
+      return `Olá! 👋 Quer fazer parte da nossa equipe de lideranças do Deyvid Duarte? Faça seu cadastro rápido aqui: ${url}`;
+    }
+    const leaderName = link.leader?.nickname || link.leader?.name;
+    if (leaderName) {
+      return `Olá! 👋 ${leaderName} está te convidando para apoiar o Deyvid Duarte. Faça seu cadastro rápido aqui: ${url}`;
+    }
+    return `Olá! 👋 Faça seu cadastro de apoio ao Deyvid Duarte de forma rápida e prática aqui: ${url}`;
+  };
+
   const copyLink = (slug: string) => {
-    navigator.clipboard.writeText(`${getBaseUrl()}/cadastro/${slug}`);
+    navigator.clipboard.writeText(buildUrl(slug));
     toast.success("Link copiado!");
+  };
+
+  const copyMessage = (link: any) => {
+    navigator.clipboard.writeText(buildMessage(link));
+    toast.success("Mensagem copiada!");
+  };
+
+  const shareWhatsApp = (link: any) => {
+    const msg = encodeURIComponent(buildMessage(link));
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
   return (
@@ -214,8 +238,10 @@ export default function RegistrationLinks() {
                   <TableCell>{new Date(l.created_at).toLocaleDateString("pt-BR")}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => copyLink(l.slug)}><Copy className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={async () => { await supabase.from("registration_links").delete().eq("id", l.id); fetchData(); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => copyLink(l.slug)} title="Copiar link"><Copy className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => copyMessage(l)} title="Copiar mensagem"><Share2 className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => shareWhatsApp(l)} title="Compartilhar no WhatsApp"><MessageCircle className="h-4 w-4 text-green-600" /></Button>
+                      <Button variant="ghost" size="icon" onClick={async () => { await supabase.from("registration_links").delete().eq("id", l.id); fetchData(); }} title="Excluir"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
