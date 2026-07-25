@@ -221,7 +221,8 @@ export default function PublicVisitRequest() {
             <div className="grid md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>CEP {cepLoading && <span className="text-xs text-muted-foreground">(buscando...)</span>}</Label>
-                <Input value={form.cep} onChange={(e) => handleCepChange(e.target.value)} placeholder="00000-000" inputMode="numeric" maxLength={9} />
+                <Input value={form.cep} onChange={(e) => handleCepChange(e.target.value)} placeholder="00000-000" inputMode="numeric" maxLength={9} aria-invalid={!!cepError} />
+                {cepError && <p className="text-xs text-destructive">{cepError}</p>}
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Rua / Logradouro</Label>
