@@ -377,7 +377,11 @@ Deno.serve(async (req) => {
       });
 
       return result.toUIMessageStreamResponse({
-        headers: { ...corsHeaders, "X-Ai-Model": modelId },
+        headers: {
+          ...corsHeaders,
+          "X-Ai-Model": modelId,
+          "Access-Control-Expose-Headers": "X-Ai-Model",
+        },
       });
     }
 
@@ -404,6 +408,7 @@ Deno.serve(async (req) => {
         ...corsHeaders,
         "Content-Type": "text/plain; charset=utf-8",
         "X-Ai-Model": modelId,
+        "Access-Control-Expose-Headers": "X-Ai-Model",
       },
     });
   } catch (error) {
