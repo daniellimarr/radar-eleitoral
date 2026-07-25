@@ -737,6 +737,74 @@ export type Database = {
           },
         ]
       }
+      electoral_sections: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          id: string
+          last_election_votes: number | null
+          latitude: number | null
+          location_name: string | null
+          longitude: number | null
+          neighborhood: string | null
+          registered_voters: number
+          section: string
+          source: string
+          tenant_id: string
+          uf: string
+          updated_at: string
+          vote_goal: number | null
+          zone: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          last_election_votes?: number | null
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          neighborhood?: string | null
+          registered_voters?: number
+          section: string
+          source?: string
+          tenant_id: string
+          uf?: string
+          updated_at?: string
+          vote_goal?: number | null
+          zone: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          last_election_votes?: number | null
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          neighborhood?: string | null
+          registered_voters?: number
+          section?: string
+          source?: string
+          tenant_id?: string
+          uf?: string
+          updated_at?: string
+          vote_goal?: number | null
+          zone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "electoral_sections_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           campaign_id: string | null
@@ -2082,6 +2150,25 @@ export type Database = {
       encrypt_sensitive: { Args: { val: string }; Returns: string }
       encryption_key: { Args: never; Returns: string }
       expire_overdue_subscriptions: { Args: never; Returns: undefined }
+      get_electoral_map: {
+        Args: { _tenant_id: string }
+        Returns: {
+          address: string
+          city: string
+          contacts_count: number
+          id: string
+          last_election_votes: number
+          latitude: number
+          location_name: string
+          longitude: number
+          neighborhood: string
+          registered_voters: number
+          section: string
+          uf: string
+          vote_goal: number
+          zone: string
+        }[]
+      }
       get_leader_name_for_link: {
         Args: { p_slug: string }
         Returns: {
