@@ -449,7 +449,7 @@ export default function Chat() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <MessageCircle className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">Chat Interno</h1>
@@ -460,9 +460,9 @@ export default function Chat() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-12rem)]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:h-[calc(100vh-12rem)]">
         {/* Sidebar: Conversations + New chat */}
-        <Card className="md:col-span-1 flex flex-col">
+        <Card className="md:col-span-1 flex flex-col max-h-[45vh] md:max-h-none">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Conversas</CardTitle>
           </CardHeader>
@@ -487,7 +487,7 @@ export default function Chat() {
                     <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background ${onlineUsers.has(conv.otherUser.user_id) ? "bg-green-500" : "bg-muted-foreground/40"}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <span className="text-sm font-medium truncate">{conv.otherUser.full_name}</span>
                       {conv.unreadCount > 0 && (
                         <Badge className="h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">

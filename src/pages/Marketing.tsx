@@ -75,7 +75,7 @@ export default function Marketing() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Marketing & Conteúdo</h1>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild><Button onClick={() => { setForm(defaultForm); setEditingId(null); }}><Plus className="h-4 w-4 mr-2" /> Novo Conteúdo</Button></DialogTrigger>

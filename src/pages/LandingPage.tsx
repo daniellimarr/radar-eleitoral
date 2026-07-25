@@ -331,7 +331,7 @@ export default function LandingPage() {
                   { emoji: "📝", text: "Dados de campanha em cadernos", pct: 52 },
                 ].map((item, i) => (
                   <div key={i} className="space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <span className="text-sm text-gray-600">{item.emoji} {item.text}</span>
                       <span className="text-sm font-bold text-red-500">{item.pct}%</span>
                     </div>

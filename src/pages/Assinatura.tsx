@@ -60,7 +60,7 @@ export default function Assinatura() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3">
             <span>Detalhes da Assinatura</span>
             {subscribed ? (
               <Badge className="bg-emerald-100 text-emerald-700">Ativa</Badge>

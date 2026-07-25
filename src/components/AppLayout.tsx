@@ -97,27 +97,27 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full max-w-full overflow-x-hidden">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 border-b flex items-center justify-between px-4 bg-card">
-            <div className="flex items-center gap-2">
+          <header className="h-14 border-b flex items-center justify-between gap-2 px-3 sm:px-4 bg-card">
+            <div className="flex items-center gap-2 min-w-0">
               <SidebarTrigger />
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <NotificationBell />
-              <span className="text-sm text-muted-foreground hidden sm:block">
+              <span className="text-sm text-muted-foreground hidden md:block truncate max-w-[220px]">
                 Olá, <strong>{profile?.full_name || "Usuário"}</strong>
               </span>
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-8 w-8 shrink-0">
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                   {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
             </div>
           </header>
-          <main className="flex-1 p-6 overflow-auto">
-            {children}
+          <main className="flex-1 min-w-0 w-full overflow-x-hidden p-3 sm:p-4 lg:p-6">
+            <div className="mx-auto w-full max-w-[1600px]">{children}</div>
           </main>
         </div>
       </div>

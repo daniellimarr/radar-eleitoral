@@ -251,7 +251,7 @@ export default function Demo() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full max-w-full overflow-x-hidden bg-background">
         <Sidebar collapsible="icon">
           <SidebarContent>
             <div className="p-4 flex items-center gap-2">
@@ -355,7 +355,7 @@ export default function Demo() {
             </div>
           </div>
 
-          <header className="h-14 border-b flex items-center justify-between px-4 bg-card">
+          <header className="h-14 border-b flex items-center justify-between gap-2 px-3 sm:px-4 bg-card">
             <div className="flex items-center gap-2">
               <SidebarTrigger />
               <h2 className="text-sm font-semibold text-muted-foreground">
@@ -372,7 +372,7 @@ export default function Demo() {
             </div>
           </header>
 
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 min-w-0 w-full overflow-x-hidden p-3 sm:p-4 lg:p-6">
             {activeTab === "dashboard" && <DemoDashboard />}
             {activeTab === "contacts" && <DemoContacts />}
             {activeTab === "demands" && <DemoDemands />}
@@ -410,7 +410,7 @@ function DemoDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Início</h1>
         <div className="flex items-center gap-2 text-sm bg-foreground text-background px-4 py-2 rounded-lg font-medium">
           <Calendar className="h-4 w-4" /> 08 de Abril, 2026
@@ -542,7 +542,7 @@ function DemoDashboard() {
 function DemoContacts() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Cadastro de Contatos</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><Users className="h-4 w-4 mr-2" /> Novo Contato</Button>
       </div>
@@ -586,7 +586,7 @@ function DemoContacts() {
 function DemoDemands() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Demandas</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><ClipboardList className="h-4 w-4 mr-2" /> Nova Demanda</Button>
       </div>
@@ -629,7 +629,7 @@ function DemoDemands() {
 function DemoAppointments() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Agenda</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><Calendar className="h-4 w-4 mr-2" /> Novo Agendamento</Button>
       </div>
@@ -659,7 +659,7 @@ function DemoAppointments() {
 function DemoLeaders() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Lideranças</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><Crown className="h-4 w-4 mr-2" /> Novo Líder</Button>
       </div>
@@ -756,7 +756,7 @@ function DemoMarketing() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Marketing</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><Megaphone className="h-4 w-4 mr-2" /> Novo Conteúdo</Button>
       </div>
@@ -813,7 +813,7 @@ function DemoCampaignFiles() {
   };
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Arquivos da Campanha</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><FolderDown className="h-4 w-4 mr-2" /> Upload</Button>
       </div>
@@ -952,7 +952,7 @@ function DemoChat() {
 function DemoWhatsApp() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">WhatsApp</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><Send className="h-4 w-4 mr-2" /> Nova Automação</Button>
       </div>
@@ -998,7 +998,7 @@ function DemoWhatsApp() {
 function DemoVehicles() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Veículos</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><Car className="h-4 w-4 mr-2" /> Novo Veículo</Button>
       </div>
@@ -1041,7 +1041,7 @@ function DemoVehicles() {
 function DemoMaterials() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Material de Campanha</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><Package className="h-4 w-4 mr-2" /> Novo Material</Button>
       </div>
@@ -1081,7 +1081,7 @@ function DemoMaterials() {
 function DemoVisitRequests() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Solicitações de Visita</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><Calendar className="h-4 w-4 mr-2" /> Nova Solicitação</Button>
       </div>
@@ -1126,7 +1126,7 @@ function DemoVisitRequests() {
 function DemoRegistrationLinks() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Links de Cadastro</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><Link2 className="h-4 w-4 mr-2" /> Novo Link</Button>
       </div>
@@ -1243,7 +1243,7 @@ function DemoBackup() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Backup</h1>
         <Button className="bg-emerald-500 hover:bg-emerald-600"><Database className="h-4 w-4 mr-2" /> Backup Manual</Button>
       </div>

@@ -329,7 +329,7 @@ export default function WhatsApp() {
 
             {/* Phone Preview */}
             <div className="hidden lg:flex justify-center">
-              <div className="relative w-[280px] h-[560px] bg-foreground/5 rounded-[3rem] border-4 border-foreground/20 overflow-hidden shadow-xl">
+              <div className="relative w-full max-w-[280px] mx-auto aspect-[280/560] bg-foreground/5 rounded-[3rem] border-4 border-foreground/20 overflow-hidden shadow-xl">
                 <div className="absolute top-0 inset-x-0 h-8 bg-foreground/10 rounded-t-[2.5rem]" />
                 <div className="mt-10 mx-3 flex-1 h-[calc(100%-6rem)] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMTUiIGZpbGw9IiM2NjYiLz48L3N2Zz4=')] rounded-xl p-3 flex flex-col justify-end">
                   <div className="bg-[hsl(120,60%,90%)] rounded-lg p-3 text-sm text-foreground/80 max-w-[90%] self-end shadow-sm">

@@ -93,7 +93,7 @@ export default function NpsSurveys() {
         </Button>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
         {(
           [
             [<BarChart3 key="i" className="h-5 w-5 text-primary" />, String(totals.surveys), "Pesquisas"],

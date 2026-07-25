@@ -249,7 +249,7 @@ export default function Appointments() {
       {pendingVisitRequests.length > 0 && (
         <Card className="border-warning/50">
           <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-lg font-bold text-warning">
                 Solicitações pendentes de confirmação ({pendingVisitRequests.length})
               </h3>
@@ -304,7 +304,7 @@ export default function Appointments() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Compromisso</Label>
               <Input placeholder="" value={searchText} onChange={e => setSearchText(e.target.value)} />

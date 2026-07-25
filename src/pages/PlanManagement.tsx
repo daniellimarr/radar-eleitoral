@@ -104,7 +104,7 @@ export default function PlanManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Package className="h-7 w-7 text-primary" />
           <h1 className="text-2xl font-bold">Gestão de Planos</h1>
@@ -162,11 +162,11 @@ export default function PlanManagement() {
               <div><Label>Limite de Contatos</Label><Input type="number" value={form.contact_limit} onChange={e => setForm(f => ({ ...f, contact_limit: e.target.value }))} /></div>
               <div><Label>Limite de Usuários</Label><Input type="number" value={form.user_limit} onChange={e => setForm(f => ({ ...f, user_limit: e.target.value }))} /></div>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <Label>Módulos Premium</Label>
               <Switch checked={form.has_premium_modules} onCheckedChange={v => setForm(f => ({ ...f, has_premium_modules: v }))} />
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <Label>Ativo</Label>
               <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
             </div>
