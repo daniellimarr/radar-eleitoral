@@ -1,0 +1,1 @@
+DELETE FROM public.nps_responses WHERE respondent_name = 'TESTE ANON';
