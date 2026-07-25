@@ -68,15 +68,22 @@ export function calcNps(scores: number[]): number {
   return Math.round(((promoters - detractors) / scores.length) * 100);
 }
 
-/** Gera um slug seguro para URL a partir do título da pesquisa. */
-export function buildSlug(title: string): string {
-  const base = title
+/** Normaliza um texto livre em slug válido para URL (sem sufixo aleatório). */
+export function sanitizeSlug(value: string): string {
+  return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-  const suffix = Math.random().toString(36).slice(2, 7);
+    .slice(0, 40);
+}
+
+/** Gera um slug curto e único a partir do título da pesquisa. */
+export function buildSlug(title: string): string {
+  // Mantemos apenas as 3 primeiras palavras para o link ficar curto.
+  const base = sanitizeSlug(title).split("-").filter(Boolean).slice(0, 3).join("-").slice(0, 24);
+  const suffix = Math.random().toString(36).slice(2, 6);
   return `${base || "pesquisa"}-${suffix}`;
 }
+
