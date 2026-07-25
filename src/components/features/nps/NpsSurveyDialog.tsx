@@ -158,7 +158,7 @@ export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved 
             <Label htmlFor="nps-slug">Link personalizado</Label>
             <div className="flex items-center gap-1 rounded-md border border-input bg-muted/40 px-2">
               <span className="shrink-0 text-xs text-muted-foreground">
-                {window.location.origin.replace(/^https?:\/\//, "")}/p/
+                radar-eleitoral.lovable.app/p/
               </span>
               <Input
                 id="nps-slug"
