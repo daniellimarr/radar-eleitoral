@@ -80,6 +80,27 @@ export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved 
 
     setSaving(true);
     try {
+      // Slug personalizado é sanitizado; se ficar vazio, geramos um curto automático.
+      const desired = sanitizeSlug(form.slug) || buildSlug(form.title);
+      if (desired.length < 3) {
+        toast.error("O link personalizado precisa ter ao menos 3 caracteres.");
+        setSaving(false);
+        return;
+      }
+
+      // Checagem de disponibilidade: o slug é público e precisa ser único.
+      const { data: taken, error: checkError } = await supabase
+        .from("nps_surveys")
+        .select("id")
+        .eq("slug", desired)
+        .limit(1);
+      if (checkError) throw checkError;
+      if (taken?.length && taken[0].id !== survey?.id) {
+        toast.error("Esse link já está em uso. Escolha outro.");
+        setSaving(false);
+        return;
+      }
+
       // Datas vazias precisam virar null: string vazia quebra colunas date no Postgres.
       const payload = {
         tenant_id: tenantId,
@@ -88,6 +109,7 @@ export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved 
         start_date: form.start_date || null,
         end_date: form.end_date || null,
         status: form.status,
+        slug: desired,
       };
 
       if (survey) {
@@ -95,12 +117,11 @@ export function NpsSurveyDialog({ open, onOpenChange, tenantId, survey, onSaved 
         if (error) throw error;
         toast.success("Pesquisa atualizada!");
       } else {
-        const { error } = await supabase
-          .from("nps_surveys")
-          .insert({ ...payload, slug: buildSlug(form.title) });
+        const { error } = await supabase.from("nps_surveys").insert(payload);
         if (error) throw error;
         toast.success("Pesquisa criada!");
       }
+
       onSaved();
       onOpenChange(false);
     } catch (err) {
