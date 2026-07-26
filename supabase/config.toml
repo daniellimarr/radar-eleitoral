@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.import-tse]
 verify_jwt = false
+
+[functions.migrate-helper]
+verify_jwt = false
