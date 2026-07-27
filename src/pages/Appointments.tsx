@@ -11,12 +11,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2, MapPin } from "lucide-react";
+import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2, MapPin, FileDown } from "lucide-react";
 import { EventDetailsDialog, type AppointmentEvent } from "@/components/features/appointments/EventDetailsDialog";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MapsLink } from "@/components/shared/MapsLink";
 import { toCampaignIso, toCampaignDate, formatCampaign } from "@/lib/datetime";
+import { exportAgendaToPdf } from "@/lib/exportAgendaPdf";
 
 const WEEKDAYS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
