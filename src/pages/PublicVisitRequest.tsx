@@ -13,6 +13,7 @@ import { format, isSameDay, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { formatCep, lookupCep, toTitleCase, normalizeUf, buildFullAddress } from "@/lib/addressNormalize";
+import { toCampaignIso, toCampaignDate } from "@/lib/datetime";
 
 const TIME_SLOTS = [
   "08:00","08:30","09:00","09:30","10:00","10:30",
@@ -85,7 +86,7 @@ export default function PublicVisitRequest() {
       if (info?.tenant_id) {
         setLinkInfo({ tenant_id: info.tenant_id, tenant_name: info.tenant_name });
         const { data: busy } = await supabase.rpc("get_tenant_busy_slots", { p_tenant_id: info.tenant_id });
-        setBusySlots((busy || []).map((b: any) => new Date(b.slot)));
+        setBusySlots((busy || []).map((b: any) => toCampaignDate(b.slot)).filter(Boolean) as Date[]);
       }
       setLoadingLink(false);
     })();
@@ -139,7 +140,7 @@ export default function PublicVisitRequest() {
     }
 
     setSubmitting(true);
-    const requested_date = `${format(selectedDate, "yyyy-MM-dd")}T${selectedTime}:00`;
+    const requested_date = toCampaignIso(`${format(selectedDate, "yyyy-MM-dd")}T${selectedTime}:00`);
     const requestId = crypto.randomUUID();
     const { error } = await supabase.from("visit_requests").insert({
       id: requestId,

@@ -21,6 +21,7 @@ import { formatCep, normalizeUf } from "@/lib/addressNormalize";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { toCampaignIso, toCampaignDate, formatCampaign } from "@/lib/datetime";
 
 const visitIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -182,7 +183,8 @@ Será uma alegria conversar com você. Até breve! 🤝`;
     const map = new Map<string, Set<string>>();
     requests.forEach((r) => {
       if (!r.requested_date || r.status === "rejeitado" || r.status === "cancelado") return;
-      const d = new Date(r.requested_date);
+      const d = toCampaignDate(r.requested_date)!;
+      if (!d) return;
       const dateKey = format(d, "yyyy-MM-dd");
       if (!map.has(dateKey)) map.set(dateKey, new Set());
       map.get(dateKey)!.add(format(d, "HH:mm"));
@@ -235,7 +237,7 @@ Será uma alegria conversar com você. Até breve! 🤝`;
 
     // Build the datetime
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const requestedDate = `${dateStr}T${selectedTime}:00`;
+    const requestedDate = toCampaignIso(`${dateStr}T${selectedTime}:00`);
 
     // Double-check not already booked
     if (bookedTimesForSelected.has(selectedTime)) {
@@ -461,8 +463,8 @@ Será uma alegria conversar com você. Até breve! 🤝`;
               ) : requests.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.title}</TableCell>
-                  <TableCell>{r.requested_date ? format(new Date(r.requested_date), "dd/MM/yyyy", { locale: ptBR }) : "-"}</TableCell>
-                  <TableCell>{r.requested_date ? format(new Date(r.requested_date), "HH:mm") : "-"}</TableCell>
+                  <TableCell>{formatCampaign(r.requested_date, "dd/MM/yyyy")}</TableCell>
+                  <TableCell>{formatCampaign(r.requested_date, "HH:mm")}</TableCell>
                   <TableCell>{r.location || "-"}</TableCell>
                   <TableCell>
                     <Badge variant={r.status === "aprovado" ? "default" : r.status === "rejeitado" ? "destructive" : "secondary"}>

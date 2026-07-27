@@ -8,6 +8,7 @@ import {
   Armchair, Megaphone, Image as ImageIcon, Volume2, CheckCircle2, X,
 } from "lucide-react";
 import { MapsLink } from "@/components/shared/MapsLink";
+import { formatCampaign } from "@/lib/datetime";
 
 export interface AppointmentEvent {
   id: string;
@@ -41,11 +42,7 @@ interface EventDetailsDialogProps {
 /** Formata datas de forma defensiva — valores inválidos não devem quebrar a UI. */
 function safeFormat(value?: string | null, pattern = "dd/MM/yyyy 'às' HH:mm") {
   if (!value) return null;
-  try {
-    return format(new Date(value), pattern, { locale: ptBR });
-  } catch {
-    return null;
-  }
+  return formatCampaign(value, pattern, "") || null;
 }
 
 function Row({ icon: Icon, label, value }: { icon: any; label: string; value?: React.ReactNode }) {
