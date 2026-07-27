@@ -2360,6 +2360,10 @@ export type Database = {
         Returns: boolean
       }
       safe_uuid: { Args: { val: string }; Returns: string }
+      tenant_has_active_leader_link: {
+        Args: { p_tenant_id: string }
+        Returns: boolean
+      }
       tenant_has_active_registration_link: {
         Args: { p_tenant_id: string }
         Returns: boolean
