@@ -11,12 +11,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2, MapPin } from "lucide-react";
+import { Plus, Search, Eraser, ChevronLeft, ChevronRight, MessageSquare, X, CheckCircle2, MapPin, FileDown } from "lucide-react";
 import { EventDetailsDialog, type AppointmentEvent } from "@/components/features/appointments/EventDetailsDialog";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MapsLink } from "@/components/shared/MapsLink";
 import { toCampaignIso, toCampaignDate, formatCampaign } from "@/lib/datetime";
+import { exportAgendaToPdf } from "@/lib/exportAgendaPdf";
 
 const WEEKDAYS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
@@ -236,9 +237,48 @@ export default function Appointments() {
 
   const today = new Date();
 
+  /** Todos os eventos (compromissos + visitas), sem recorte de período. */
+  const allEvents = useMemo(
+    () => [
+      ...appointments.map(a => ({ ...a, type: "appointment" as const, date: a.start_time })),
+      ...visitRequests.map(v => ({ ...v, type: "visit" as const, date: v.requested_date })),
+    ],
+    [appointments, visitRequests]
+  );
+
+  const handleExportPeriod = () => {
+    if (listEvents.length === 0) { toast.error("Nenhum compromisso no período selecionado"); return; }
+    exportAgendaToPdf(listEvents, {
+      title: "Agenda de Compromissos",
+      filename: `agenda_${dateFrom}_a_${dateTo}`,
+      periodLabel: `${format(new Date(dateFrom + "T12:00:00"), "dd/MM/yyyy")} a ${format(new Date(dateTo + "T12:00:00"), "dd/MM/yyyy")}`,
+    });
+    toast.success("PDF gerado com sucesso!");
+  };
+
+  const handleExportAll = () => {
+    if (allEvents.length === 0) { toast.error("Nenhum compromisso cadastrado"); return; }
+    exportAgendaToPdf(allEvents, {
+      title: "Relatório Geral da Agenda",
+      filename: `agenda_relatorio_geral_${format(new Date(), "yyyy-MM-dd")}`,
+    });
+    toast.success("Relatório geral gerado!");
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Agenda de compromissos</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Agenda de compromissos</h1>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={handleExportPeriod}>
+            <FileDown className="h-4 w-4 mr-1" /> PDF do período
+          </Button>
+          <Button size="sm" onClick={handleExportAll}>
+            <FileDown className="h-4 w-4 mr-1" /> Relatório geral (PDF)
+          </Button>
+        </div>
+      </div>
+
 
       {/* Tabs */}
       <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
