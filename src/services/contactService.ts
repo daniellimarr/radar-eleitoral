@@ -132,40 +132,63 @@ export const contactService = {
     if (error) throw error;
   },
 
-  async ensureLeaderAndLink(contactId: string, tenantId: string, userId: string) {
-    // Ensure leader record exists
+  async ensureLeaderAndLink(contactId: string, tenantId: string, userId: string): Promise<string | null> {
+    // 1) Garante o registro na tabela de líderes
     const { data: existingLeader } = await supabase
       .from("leaders").select("id").eq("contact_id", contactId).maybeSingle();
-    
+
     if (!existingLeader) {
-      await supabase.from("leaders").insert({ contact_id: contactId, tenant_id: tenantId });
+      const { error: leaderError } = await supabase
+        .from("leaders")
+        .insert({ contact_id: contactId, tenant_id: tenantId });
+      if (leaderError && leaderError.code !== "23505") throw leaderError;
     }
 
-    // Ensure registration link exists
+    // 2) Garante o link público de cadastro
     const { data: existingLink } = await supabase
-      .from("registration_links").select("id").eq("leader_contact_id", contactId).eq("tenant_id", tenantId).maybeSingle();
-    
-    if (!existingLink) {
-      const { data: contact } = await supabase.from("contacts_decrypted").select("name, nickname").eq("id", contactId).single();
-      
-      const generateSlug = (name: string) =>
-        name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-          .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      .from("registration_links")
+      .select("id, slug")
+      .eq("leader_contact_id", contactId)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
 
-      let slug = generateSlug(contact?.nickname || contact?.name || contactId);
-      const { data: slugExists } = await supabase.from("registration_links").select("id, tenant_id").eq("slug", slug).maybeSingle();
-      
-      if (slugExists && slugExists.tenant_id !== tenantId) {
-        slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
-      }
+    if (existingLink?.slug) return existingLink.slug;
 
-      if (!slugExists) {
-        await supabase.from("registration_links").insert({ tenant_id: tenantId, slug, leader_contact_id: contactId, coordinator_id: userId });
-      } else if (slugExists.tenant_id === tenantId) {
-        await supabase.from("registration_links").update({ leader_contact_id: contactId, coordinator_id: userId }).eq("id", slugExists.id);
+    const { data: contact } = await supabase
+      .from("contacts_decrypted").select("name, nickname").eq("id", contactId).maybeSingle();
+
+    const generateSlug = (name: string) =>
+      name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+    let slug = generateSlug(contact?.nickname || contact?.name || contactId) || contactId;
+    const { data: slugExists } = await supabase
+      .from("registration_links").select("id, tenant_id").eq("slug", slug).maybeSingle();
+
+    if (slugExists) {
+      if (slugExists.tenant_id === tenantId) {
+        const { error } = await supabase
+          .from("registration_links")
+          .update({ leader_contact_id: contactId, coordinator_id: userId, link_type: "leader", is_active: true })
+          .eq("id", slugExists.id);
+        if (error) throw error;
+        return slug;
       }
+      slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
     }
+
+    const { error: insertError } = await supabase
+      .from("registration_links")
+      .insert({ tenant_id: tenantId, slug, leader_contact_id: contactId, coordinator_id: userId, link_type: "leader", is_active: true });
+    if (insertError) throw insertError;
+
+    return slug;
   },
+
+  async removeLeaderRole(contactId: string) {
+    await supabase.from("leaders").delete().eq("contact_id", contactId);
+  },
+
 
   async fetchVoterCounts(tenantId: string, leaderIds: string[]) {
     const { data, error } = await supabase

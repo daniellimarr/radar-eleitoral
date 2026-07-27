@@ -51,16 +51,29 @@ export function useContacts() {
         registered_by: user.id,
       };
       const saved = await contactService.saveContact(sanitizedPayload, editingId);
-      
-      if (form.is_leader && saved) {
-        await contactService.ensureLeaderAndLink(saved.id, effectiveTenantId, user.id);
+
+      let leaderSlug: string | null = null;
+      if (saved) {
+        if (form.is_leader) {
+          try {
+            leaderSlug = await contactService.ensureLeaderAndLink(saved.id, effectiveTenantId, user.id);
+          } catch (e: any) {
+            toast.error(`Contato salvo, mas falhou ao gerar link de liderança: ${e.message}`);
+          }
+        } else if (editingId) {
+          await contactService.removeLeaderRole(saved.id);
+        }
       }
-      return saved;
+      return { saved, leaderSlug };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (result, variables) => {
       toast.success(variables.editingId ? "Contato atualizado!" : "Contato cadastrado!");
+      if (result?.leaderSlug) {
+        toast.success(`Liderança adicionada! Link: https://radar-eleitoral.lovable.app/cadastro/${result.leaderSlug}`);
+      }
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["leaders"] });
+      queryClient.invalidateQueries({ queryKey: ["registration-links"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["operator-stats"] });
       queryClient.invalidateQueries({ queryKey: ["electoral-map"] });
@@ -69,6 +82,7 @@ export function useContacts() {
       toast.error(error.message);
     },
   });
+
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => contactService.deleteContact(id),
