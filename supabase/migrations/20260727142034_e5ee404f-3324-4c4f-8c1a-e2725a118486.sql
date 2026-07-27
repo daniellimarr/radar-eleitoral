@@ -1,0 +1,1 @@
+ALTER TABLE public.leaders ADD CONSTRAINT leaders_contact_id_key UNIQUE (contact_id);
