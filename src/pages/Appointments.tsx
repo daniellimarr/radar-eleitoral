@@ -237,9 +237,48 @@ export default function Appointments() {
 
   const today = new Date();
 
+  /** Todos os eventos (compromissos + visitas), sem recorte de período. */
+  const allEvents = useMemo(
+    () => [
+      ...appointments.map(a => ({ ...a, type: "appointment" as const, date: a.start_time })),
+      ...visitRequests.map(v => ({ ...v, type: "visit" as const, date: v.requested_date })),
+    ],
+    [appointments, visitRequests]
+  );
+
+  const handleExportPeriod = () => {
+    if (listEvents.length === 0) { toast.error("Nenhum compromisso no período selecionado"); return; }
+    exportAgendaToPdf(listEvents, {
+      title: "Agenda de Compromissos",
+      filename: `agenda_${dateFrom}_a_${dateTo}`,
+      periodLabel: `${format(new Date(dateFrom + "T12:00:00"), "dd/MM/yyyy")} a ${format(new Date(dateTo + "T12:00:00"), "dd/MM/yyyy")}`,
+    });
+    toast.success("PDF gerado com sucesso!");
+  };
+
+  const handleExportAll = () => {
+    if (allEvents.length === 0) { toast.error("Nenhum compromisso cadastrado"); return; }
+    exportAgendaToPdf(allEvents, {
+      title: "Relatório Geral da Agenda",
+      filename: `agenda_relatorio_geral_${format(new Date(), "yyyy-MM-dd")}`,
+    });
+    toast.success("Relatório geral gerado!");
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Agenda de compromissos</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Agenda de compromissos</h1>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={handleExportPeriod}>
+            <FileDown className="h-4 w-4 mr-1" /> PDF do período
+          </Button>
+          <Button size="sm" onClick={handleExportAll}>
+            <FileDown className="h-4 w-4 mr-1" /> Relatório geral (PDF)
+          </Button>
+        </div>
+      </div>
+
 
       {/* Tabs */}
       <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
