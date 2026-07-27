@@ -911,14 +911,14 @@ export type Database = {
           {
             foreignKeyName: "leaders_contact_id_fkey"
             columns: ["contact_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "leaders_contact_id_fkey"
             columns: ["contact_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "contacts_decrypted"
             referencedColumns: ["id"]
           },

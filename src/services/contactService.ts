@@ -169,7 +169,7 @@ export const contactService = {
       if (slugExists.tenant_id === tenantId) {
         const { error } = await supabase
           .from("registration_links")
-          .update({ leader_contact_id: contactId, coordinator_id: userId, link_type: "leader", is_active: true })
+          .update({ leader_contact_id: contactId, coordinator_id: userId, is_active: true })
           .eq("id", slugExists.id);
         if (error) throw error;
         return slug;
@@ -179,7 +179,7 @@ export const contactService = {
 
     const { error: insertError } = await supabase
       .from("registration_links")
-      .insert({ tenant_id: tenantId, slug, leader_contact_id: contactId, coordinator_id: userId, link_type: "leader", is_active: true });
+      .insert({ tenant_id: tenantId, slug, leader_contact_id: contactId, coordinator_id: userId, is_active: true });
     if (insertError) throw insertError;
 
     return slug;
