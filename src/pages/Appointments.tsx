@@ -16,6 +16,7 @@ import { EventDetailsDialog, type AppointmentEvent } from "@/components/features
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MapsLink } from "@/components/shared/MapsLink";
+import { toCampaignIso, toCampaignDate, formatCampaign } from "@/lib/datetime";
 
 const WEEKDAYS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
@@ -105,7 +106,8 @@ export default function Appointments() {
     setLoading(true);
     const { error } = await supabase.from("appointments").insert({
       ...form, tenant_id: tenantId, created_by: user?.id,
-      end_time: form.end_time || null,
+      start_time: toCampaignIso(form.start_time),
+      end_time: toCampaignIso(form.end_time),
     });
     if (error) toast.error(error.message);
     else { toast.success("Compromisso adicionado!"); setIsOpen(false); setForm({ title: "", description: "", start_time: "", end_time: "", location: "" }); fetchData(); }
@@ -163,10 +165,10 @@ export default function Appointments() {
   const appointmentDates = useMemo(() => {
     const set = new Set<string>();
     for (const a of appointments) {
-      if (a.start_time) set.add(format(new Date(a.start_time), "yyyy-MM-dd"));
+      if (a.start_time) set.add(formatCampaign(a.start_time, "yyyy-MM-dd"));
     }
     for (const v of visitRequests) {
-      if (v.requested_date) set.add(format(new Date(v.requested_date), "yyyy-MM-dd"));
+      if (v.requested_date) set.add(formatCampaign(v.requested_date, "yyyy-MM-dd"));
     }
     return set;
   }, [appointments, visitRequests]);
@@ -187,9 +189,9 @@ export default function Appointments() {
       ...visitRequests.map(v => ({ ...v, type: "visit" as const, date: v.requested_date })),
     ].filter(e => {
       if (!e.date) return false;
-      const d = new Date(e.date);
-      return d >= from && d <= to;
-    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const d = toCampaignDate(e.date);
+      return !!d && d >= from && d <= to;
+    }).sort((a, b) => (toCampaignDate(a.date)?.getTime() ?? 0) - (toCampaignDate(b.date)?.getTime() ?? 0));
     return all;
   }, [appointments, visitRequests, dateFrom, dateTo]);
 
@@ -214,9 +216,9 @@ export default function Appointments() {
       ...visitRequests.map(v => ({ ...v, type: "visit" as const, date: v.requested_date })),
     ].filter(e => {
       if (!e.date) return false;
-      const d = new Date(e.date);
-      return d >= from && d <= to;
-    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const d = toCampaignDate(e.date);
+      return !!d && d >= from && d <= to;
+    }).sort((a, b) => (toCampaignDate(a.date)?.getTime() ?? 0) - (toCampaignDate(b.date)?.getTime() ?? 0));
   }, [appointments, visitRequests, selectedDate]);
 
   const toggleSelectedRow = (id: string) => {
@@ -286,7 +288,7 @@ export default function Appointments() {
                       </TableCell>
                       <TableCell className="text-xs">
                         {v.requested_date
-                          ? (() => { try { return format(new Date(v.requested_date), "dd/MM/yyyy HH:mm"); } catch { return "-"; } })()
+                          ? formatCampaign(v.requested_date, "dd/MM/yyyy HH:mm")
                           : "-"}
                       </TableCell>
                       <TableCell className="text-xs uppercase font-medium">{v.title || "-"}</TableCell>
@@ -526,14 +528,14 @@ export default function Appointments() {
                           {event.date
                             ? (() => {
                                 try {
-                                  return format(new Date(event.start_time || event.date), "HH:mm");
+                                  return formatCampaign(event.start_time || event.date, "HH:mm");
                                 } catch { return "-"; }
                               })()
                             : "-"}
                           {event.end_time && (
                             (() => {
                               try {
-                                return <><br />{format(new Date(event.end_time), "HH:mm")}</>;
+                                return <><br />{formatCampaign(event.end_time, "HH:mm")}</>;
                               } catch { return null; }
                             })()
                           )}
@@ -662,14 +664,14 @@ export default function Appointments() {
                           {event.date
                             ? (() => {
                                 try {
-                                  return format(new Date(event.start_time || event.date), "HH:mm");
+                                  return formatCampaign(event.start_time || event.date, "HH:mm");
                                 } catch { return "-"; }
                               })()
                             : "-"}
                           {event.end_time && (
                             (() => {
                               try {
-                                return <><br />{format(new Date(event.end_time), "HH:mm")}</>;
+                                return <><br />{formatCampaign(event.end_time, "HH:mm")}</>;
                               } catch { return null; }
                             })()
                           )}
