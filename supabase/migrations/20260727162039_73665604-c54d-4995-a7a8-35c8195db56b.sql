@@ -1,0 +1,1 @@
+DELETE FROM public.contacts WHERE name IN ('QA MINIMAL TEST', 'QA LEADER MIN');
