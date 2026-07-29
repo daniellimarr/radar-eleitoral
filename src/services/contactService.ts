@@ -84,8 +84,47 @@ export const contactService = {
     return data || [];
   },
 
+  /**
+   * Verifica no backend se o CPF já pertence a outro contato ativo do mesmo gabinete.
+   * Retorna o nome do contato existente (ou null quando o CPF está livre).
+   */
+  async findContactByCpf(tenantId: string, cpf: string, excludeId?: string | null): Promise<string | null> {
+    const digits = onlyDigits(cpf);
+    if (digits.length !== 11) return null;
+
+    const { data, error } = await (supabase as any).rpc("check_contact_cpf_exists", {
+      p_tenant_id: tenantId,
+      p_cpf: digits,
+      p_exclude_id: excludeId ?? null,
+    });
+
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    return row?.contact_name ?? (row?.exists_contact ? "outro contato" : null);
+  },
+
   async saveContact(payload: Record<string, unknown>, editingId?: string | null) {
     const databasePayload = normalizeNullableDatabaseFields(payload);
+
+    // Validação de CPF único (formato + duplicidade no banco)
+    const rawCpf = typeof databasePayload.cpf === "string" ? databasePayload.cpf : "";
+    const cpfDigits = onlyDigits(rawCpf);
+    if (cpfDigits) {
+      if (!isValidCpf(cpfDigits)) {
+        throw new Error("CPF inválido. Verifique os dígitos informados.");
+      }
+      const tenantForCheck = typeof databasePayload.tenant_id === "string" ? databasePayload.tenant_id : null;
+      if (tenantForCheck) {
+        const duplicated = await contactService.findContactByCpf(tenantForCheck, cpfDigits, editingId);
+        if (duplicated) {
+          throw new Error(`Já existe um contato cadastrado com este CPF: ${duplicated}.`);
+        }
+      }
+      databasePayload.cpf = cpfDigits;
+    } else {
+      databasePayload.cpf = null;
+    }
+
 
     if (editingId) {
       const { data, error } = await supabase
