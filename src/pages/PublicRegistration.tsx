@@ -236,8 +236,10 @@ export default function PublicRegistration() {
       latitude: finalLat,
       longitude: finalLon,
     });
-    if (error) toast.error(error.message);
-    else setSubmitted(true);
+    if (error) {
+      const isDuplicatedCpf = error.code === "23505" && (error.message || "").includes("contacts_tenant_cpf_unique");
+      toast.error(isDuplicatedCpf ? "Este CPF já está cadastrado." : error.message);
+    } else setSubmitted(true);
     setSaving(false);
   };
 
