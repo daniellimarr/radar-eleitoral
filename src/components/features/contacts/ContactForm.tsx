@@ -39,9 +39,23 @@ export function ContactForm({
             <Input value={form.name} onChange={(e) => updateField("name", e.target.value)} required />
           </div>
           <div className="space-y-2">
+            <Label>CPF</Label>
+            <Input
+              value={formatCpf(form.cpf || "")}
+              onChange={(e) => updateField("cpf", formatCpf(e.target.value))}
+              placeholder="000.000.000-00"
+              inputMode="numeric"
+              aria-invalid={cpfInvalid}
+            />
+            {cpfInvalid && (
+              <p className="text-xs text-destructive">CPF inválido. Verifique os dígitos.</p>
+            )}
+          </div>
+          <div className="space-y-2">
             <Label>Apelido</Label>
             <Input value={form.nickname} onChange={(e) => updateField("nickname", e.target.value)} />
           </div>
+
           <div className="space-y-2">
             <Label>Liderança (Apelido)</Label>
             {isOperador ? (
