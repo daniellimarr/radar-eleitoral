@@ -26,6 +26,10 @@ export function ContactForm({
   profileName, 
   leaders 
 }: ContactFormProps) {
+  // Feedback imediato: só sinaliza erro quando o CPF já foi digitado por completo.
+  const cpfDigits = onlyDigits(form.cpf || "");
+  const cpfInvalid = cpfDigits.length === 11 && !isValidCpf(cpfDigits);
+
   return (
     <Tabs defaultValue="dados" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
