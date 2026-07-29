@@ -164,7 +164,7 @@ export const contactService = {
         .insert(insertPayload)
         .select()
         .single();
-      if (error) throw error;
+      if (error) throw translateContactError(error);
       return data;
     }
   },
