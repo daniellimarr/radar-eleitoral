@@ -138,8 +138,9 @@ export const contactService = {
         .eq("id", editingId)
         .select()
         .single();
-      if (error) throw error;
+      if (error) throw translateContactError(error);
       return data;
+
     } else {
       const name = databasePayload.name;
       const tenantId = databasePayload.tenant_id;
