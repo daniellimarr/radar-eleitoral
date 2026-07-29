@@ -23,6 +23,14 @@ function normalizeNullableDatabaseFields(payload: Record<string, unknown>) {
   }, {});
 }
 
+/** Converte erros técnicos do Postgres em mensagens amigáveis. */
+function translateContactError(error: { code?: string; message?: string }): Error {
+  if (error?.code === "23505" && (error.message || "").includes("contacts_tenant_cpf_unique")) {
+    return new Error("Já existe um contato cadastrado com este CPF neste gabinete.");
+  }
+  return new Error(error?.message || "Não foi possível salvar o contato.");
+}
+
 export const contactService = {
   async fetchContacts(tenantId: string, search?: string) {
     let query = supabase
