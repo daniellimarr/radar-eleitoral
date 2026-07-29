@@ -177,9 +177,27 @@ export default function PublicRegistration() {
     if (!cleanedCpf || cleanedCpf.length !== 11) { toast.error("CPF é obrigatório"); return; }
     if (cpfStatus.valid === false) { toast.error("CPF inválido"); return; }
     if (cpfStatus.loading) { toast.error("Aguarde a validação do CPF"); return; }
-    
+
     setSaving(true);
-    
+
+    // Verificação de unicidade do CPF no gabinete (backend seguro)
+    try {
+      const { data: dup, error: dupError } = await (supabase as any).rpc("check_contact_cpf_exists", {
+        p_tenant_id: tenantId,
+        p_cpf: cleanedCpf,
+        p_exclude_id: null,
+      });
+      if (dupError) throw dupError;
+      const found = Array.isArray(dup) ? dup[0] : dup;
+      if (found?.exists_contact) {
+        setSaving(false);
+        toast.error("Este CPF já está cadastrado. Cada pessoa pode se cadastrar apenas uma vez.");
+        return;
+      }
+    } catch {
+      // Se a verificação falhar, o índice único do banco ainda protege os dados
+    }
+
     // Final check for coordinates if missing
     let finalLat = geoCoords.latitude;
     let finalLon = geoCoords.longitude;
@@ -195,7 +213,8 @@ export default function PublicRegistration() {
     const { error } = await supabase.from("contacts").insert({
       name: form.name,
       nickname: form.nickname || null,
-      cpf: form.cpf || null,
+      cpf: cleanedCpf || null,
+
       gender: form.gender || null,
       birth_date: form.birth_date || null,
       phone: form.phone || null,
