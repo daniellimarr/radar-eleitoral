@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { GENDER_OPTIONS, ENGAGEMENT_OPTIONS } from "@/constants/options";
+import { formatCpf, isValidCpf, onlyDigits } from "@/lib/cpf";
 
 interface ContactFormProps {
   form: any;
