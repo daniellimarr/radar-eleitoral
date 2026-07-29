@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { Contact } from "@/types";
+import { isValidCpf, onlyDigits } from "@/lib/cpf";
 
 type ContactInsert = Database["public"]["Tables"]["contacts"]["Insert"];
 type ContactUpdate = Database["public"]["Tables"]["contacts"]["Update"];
@@ -20,6 +21,14 @@ function normalizeNullableDatabaseFields(payload: Record<string, unknown>) {
     acc[key] = value;
     return acc;
   }, {});
+}
+
+/** Converte erros técnicos do Postgres em mensagens amigáveis. */
+function translateContactError(error: { code?: string; message?: string }): Error {
+  if (error?.code === "23505" && (error.message || "").includes("contacts_tenant_cpf_unique")) {
+    return new Error("Já existe um contato cadastrado com este CPF neste gabinete.");
+  }
+  return new Error(error?.message || "Não foi possível salvar o contato.");
 }
 
 export const contactService = {
@@ -84,8 +93,51 @@ export const contactService = {
     return data || [];
   },
 
+  /**
+   * Verifica no backend se o CPF já pertence a outro contato ativo do mesmo gabinete.
+   * Retorna o nome do contato existente (ou null quando o CPF está livre).
+   */
+  async findContactByCpf(tenantId: string, cpf: string, excludeId?: string | null): Promise<string | null> {
+    const digits = onlyDigits(cpf);
+    if (digits.length !== 11) return null;
+
+    const { data, error } = await (supabase as any).rpc("check_contact_cpf_exists", {
+      p_tenant_id: tenantId,
+      p_cpf: digits,
+      p_exclude_id: excludeId ?? null,
+    });
+
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    return row?.contact_name ?? (row?.exists_contact ? "outro contato" : null);
+  },
+
   async saveContact(payload: Record<string, unknown>, editingId?: string | null) {
     const databasePayload = normalizeNullableDatabaseFields(payload);
+
+    // Validação de CPF único (formato + duplicidade no banco).
+    // Só processa quando o campo foi enviado, para não apagar o CPF existente em edições parciais.
+    if ("cpf" in databasePayload) {
+      const rawCpf = typeof databasePayload.cpf === "string" ? databasePayload.cpf : "";
+      const cpfDigits = onlyDigits(rawCpf);
+      if (cpfDigits) {
+        if (!isValidCpf(cpfDigits)) {
+          throw new Error("CPF inválido. Verifique os dígitos informados.");
+        }
+        const tenantForCheck = typeof databasePayload.tenant_id === "string" ? databasePayload.tenant_id : null;
+        if (tenantForCheck) {
+          const duplicated = await contactService.findContactByCpf(tenantForCheck, cpfDigits, editingId);
+          if (duplicated) {
+            throw new Error(`Já existe um contato cadastrado com este CPF: ${duplicated}.`);
+          }
+        }
+        databasePayload.cpf = cpfDigits;
+      } else {
+        databasePayload.cpf = null;
+      }
+    }
+
+
 
     if (editingId) {
       const { data, error } = await supabase
@@ -94,8 +146,9 @@ export const contactService = {
         .eq("id", editingId)
         .select()
         .single();
-      if (error) throw error;
+      if (error) throw translateContactError(error);
       return data;
+
     } else {
       const name = databasePayload.name;
       const tenantId = databasePayload.tenant_id;
@@ -119,7 +172,7 @@ export const contactService = {
         .insert(insertPayload)
         .select()
         .single();
-      if (error) throw error;
+      if (error) throw translateContactError(error);
       return data;
     }
   },

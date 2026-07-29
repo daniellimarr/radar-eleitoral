@@ -10,6 +10,7 @@ export interface Contact {
   id: string;
   name: string;
   nickname: string | null;
+  cpf?: string | null;
   gender: string | null;
   birth_date: string | null;
   phone: string | null;

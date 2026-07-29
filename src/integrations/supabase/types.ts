@@ -389,6 +389,7 @@ export type Database = {
           cep: string | null
           city: string | null
           cpf: string | null
+          cpf_hash: string | null
           created_at: string
           deleted_at: string | null
           email: string | null
@@ -423,6 +424,7 @@ export type Database = {
           cep?: string | null
           city?: string | null
           cpf?: string | null
+          cpf_hash?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string | null
@@ -457,6 +459,7 @@ export type Database = {
           cep?: string | null
           city?: string | null
           cpf?: string | null
+          cpf_hash?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string | null
@@ -2247,6 +2250,15 @@ export type Database = {
       }
     }
     Functions: {
+      check_contact_cpf_exists: {
+        Args: { p_cpf: string; p_exclude_id?: string; p_tenant_id: string }
+        Returns: {
+          contact_id: string
+          contact_name: string
+          exists_contact: boolean
+        }[]
+      }
+      cpf_fingerprint: { Args: { val: string }; Returns: string }
       decrypt_sensitive: { Args: { val: string }; Returns: string }
       encrypt_sensitive: { Args: { val: string }; Returns: string }
       encryption_key: { Args: never; Returns: string }

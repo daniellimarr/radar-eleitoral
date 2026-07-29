@@ -16,6 +16,7 @@ import { Contact, EngagementLevel } from "@/types";
 interface ContactFormState {
   name: string;
   nickname: string;
+  cpf: string;
   gender: string;
   birth_date: string | null;
   phone: string;
@@ -35,7 +36,7 @@ interface ContactFormState {
 }
 
 const defaultContact: ContactFormState = {
-  name: "", nickname: "", gender: "", birth_date: null,
+  name: "", nickname: "", cpf: "", gender: "", birth_date: null,
   phone: "", has_whatsapp: false, cep: "", address: "",
   address_number: "", neighborhood: "", city: "Boa Vista", state: "RR",
   voting_zone: "", voting_section: "", voting_location: "",
@@ -107,6 +108,7 @@ export default function Contacts() {
   const handleEdit = (contact: Contact) => {
     setForm({
       name: contact.name || "", nickname: contact.nickname || "",
+      cpf: contact.cpf || "",
       gender: contact.gender || "", birth_date: contact.birth_date || null,
       phone: contact.phone || "", has_whatsapp: contact.has_whatsapp || false,
       cep: contact.cep || "", address: contact.address || "",

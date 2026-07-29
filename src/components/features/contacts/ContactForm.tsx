@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { GENDER_OPTIONS, ENGAGEMENT_OPTIONS } from "@/constants/options";
+import { formatCpf, isValidCpf, onlyDigits } from "@/lib/cpf";
 
 interface ContactFormProps {
   form: any;
@@ -25,6 +26,10 @@ export function ContactForm({
   profileName, 
   leaders 
 }: ContactFormProps) {
+  // Feedback imediato: só sinaliza erro quando o CPF já foi digitado por completo.
+  const cpfDigits = onlyDigits(form.cpf || "");
+  const cpfInvalid = cpfDigits.length === 11 && !isValidCpf(cpfDigits);
+
   return (
     <Tabs defaultValue="dados" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
@@ -39,9 +44,23 @@ export function ContactForm({
             <Input value={form.name} onChange={(e) => updateField("name", e.target.value)} required />
           </div>
           <div className="space-y-2">
+            <Label>CPF</Label>
+            <Input
+              value={formatCpf(form.cpf || "")}
+              onChange={(e) => updateField("cpf", formatCpf(e.target.value))}
+              placeholder="000.000.000-00"
+              inputMode="numeric"
+              aria-invalid={cpfInvalid}
+            />
+            {cpfInvalid && (
+              <p className="text-xs text-destructive">CPF inválido. Verifique os dígitos.</p>
+            )}
+          </div>
+          <div className="space-y-2">
             <Label>Apelido</Label>
             <Input value={form.nickname} onChange={(e) => updateField("nickname", e.target.value)} />
           </div>
+
           <div className="space-y-2">
             <Label>Liderança (Apelido)</Label>
             {isOperador ? (
