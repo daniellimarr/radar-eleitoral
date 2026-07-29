@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { Contact } from "@/types";
+import { isValidCpf, onlyDigits } from "@/lib/cpf";
 
 type ContactInsert = Database["public"]["Tables"]["contacts"]["Insert"];
 type ContactUpdate = Database["public"]["Tables"]["contacts"]["Update"];
